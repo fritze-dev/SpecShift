@@ -1,0 +1,186 @@
+name: opsx-enhanced
+version: 1
+description: Research -> Propose -> Specs -> Design -> Pre-Flight -> Tasks -> Apply -> QA -> Sync -> Archive
+
+artifacts:
+  - id: research
+    description: Discovery research, coverage assessment, and clarification questions
+    generates: research.md
+    template: research.md
+    instruction: |
+      If existing specs are present in openspec/specs/, first check whether
+      they still reflect the current codebase. Note any stale-spec risks
+      from code changed outside the spec process.
+      Document your research findings for this feature request.
+      Capture what you learned: affected code, external dependencies,
+      possible approaches with trade-offs, and risks.
+
+      Before proceeding, rate each category as Clear/Partial/Missing:
+      Scope, Behavior, Data Model, UX, Integration, Edge Cases,
+      Constraints, Terminology, Non-Functional Requirements.
+
+      Only ask questions for Partial/Missing categories.
+      Max 5 questions, prioritized by Impact × Uncertainty.
+      If everything is Clear — state that and move on.
+
+      After the user responds, record decisions with rationale
+      in the Decisions section before proceeding.
+    requires: []
+
+  - id: proposal
+    description: Problem statement, proposed solution, and expected impact
+    generates: proposal.md
+    template: proposal.md
+    instruction: |
+      Create the proposal document that establishes WHY this change is needed.
+
+      Sections:
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
+      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+      - **Scope & Boundaries**: Explicitly state what is and isn't part of this change.
+
+      IMPORTANT: The Capabilities section is critical. It creates the contract between
+      proposal and specs phases. Research existing specs before filling this in.
+      Each capability listed here will need a corresponding spec file.
+
+      Keep it concise (1-2 pages). Focus on the "why" not the "how" —
+      implementation details belong in design.md.
+    requires: [research]
+
+  - id: specs
+    description: Requirements with Gherkin scenarios (BDD) and optional user stories
+    generates: "specs/**/*.md"
+    template: specs/spec.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
+      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior — MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features — MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only — use FROM:/TO: format
+
+      Format requirements (strict ordering):
+      1. `### Requirement: <name>` header
+      2. Normative description using SHALL/MUST (mandatory — this is the requirement)
+      3. Optionally: `**User Story:** As a [role] I want [goal], so that [benefit]` — captures intent and motivation. Recommended for user-facing requirements, omit for purely technical or non-functional ones.
+      4. `#### Scenario: <name>` with GIVEN/WHEN/THEN format
+      - **IMPORTANT**: Description MUST come before User Story. The description is the normative requirement; the User Story is supplementary context.
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
+      - Scenarios use full Gherkin: GIVEN establishes preconditions, WHEN triggers, THEN asserts.
+      - Every requirement MUST have at least one scenario.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+      Common pitfall: Using MODIFIED with partial content loses detail at archive time.
+      If adding new concerns without changing existing behavior, use ADDED instead.
+
+      Example:
+      ```
+      ## ADDED Requirements
+
+      ### Requirement: User can export data
+      The system SHALL allow users to export their data in CSV format.
+
+      **User Story:** As a user I want to export my data, so that I can use it in other tools.
+
+      #### Scenario: Successful export
+      - **GIVEN** a user with existing data
+      - **WHEN** user clicks "Export" button
+      - **THEN** system downloads a CSV file with all user data
+
+      ## REMOVED Requirements
+
+      ### Requirement: Legacy export
+      **Reason**: Replaced by new export system
+      **Migration**: Use new export endpoint at /api/v2/export
+      ```
+
+      Include an "Edge Cases" section for boundary conditions and error states.
+      Mark every assumption with `<!-- ASSUMPTION: [reason] -->`.
+      If zero assumptions were made, state: "No assumptions made."
+      Specs should be testable — each scenario is a potential test case.
+    requires: [proposal]
+
+  - id: design
+    description: Architecture, success metrics, and non-goals
+    generates: design.md
+    template: design.md
+    instruction: |
+      Create the design document that explains HOW to implement the change.
+
+      When to include design.md (create only if any apply):
+      - Cross-cutting change (multiple services/modules) or new architectural pattern
+      - New external dependency or significant data model changes
+      - Security, performance, or migration complexity
+      - Ambiguity that benefits from technical decisions before coding
+
+      Sections:
+      - **Context**: Background, current state, constraints, stakeholders
+      - **Architecture & Components**: Specific modules/files affected and interactions
+      - **Goals & Success Metrics**: Hard, measurable criteria verified as PASS/FAIL during QA. Every metric needs a concrete threshold.
+      - **Non-Goals**: What is explicitly out of scope
+      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered for each decision.
+      - **Risks & Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
+      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable). Remove section if not needed.
+      - **Open Questions**: Outstanding decisions or unknowns to resolve
+      - **Assumptions**: Mark with `<!-- ASSUMPTION: [reason] -->`. If none: "No assumptions made."
+
+      If this feature introduces new technologies, patterns, or architectural
+      changes, update openspec/constitution.md accordingly.
+
+      Focus on architecture and approach, not line-by-line implementation.
+      Reference the proposal for motivation and specs for requirements.
+    requires: [specs]
+
+  - id: preflight
+    description: Quality gate — traceability, gaps, side effects, assumption audit
+    generates: preflight.md
+    template: preflight.md
+    instruction: |
+      Mandatory quality review BEFORE task creation.
+      Map every story to scenarios and components (traceability).
+      Identify gaps, side effects, duplication across stories, and inconsistencies with existing specs or constitution.
+      Audit all assumption markers from spec.md and design.md — rate each as Acceptable Risk, Needs Clarification, or Blocking.
+    requires: [design]
+
+  - id: tasks
+    description: Implementation checklist with QA loop
+    generates: tasks.md
+    template: tasks.md
+    instruction: |
+      Create a clean implementation checklist based on design and pre-flight.
+      Use `- [ ]` checkbox format — the apply phase parses these for tracking.
+      Group tasks under ## numbered headings by dependency: foundational/shared work first, then features.
+      Tasks should be small enough to complete in one session.
+      Mark parallelizable tasks with `[P]`.
+      Where applicable, place test tasks before their implementation tasks.
+      Carry over every Success Metric from design.md as a PASS/FAIL checkbox
+      in the QA Loop (before Auto-Verify).
+      Add the QA loop with an explicit human approval gate.
+
+      IMPORTANT: Do NOT include sync or archive as tasks. Sync (`/opsx:sync`)
+      and archive (`/opsx:archive`) are separate workflow steps invoked AFTER
+      apply completes. The apply phase covers only implementation and QA.
+      For documentation-only changes (no code), implementation sections may
+      be empty — the QA loop alone is sufficient.
+    requires: [preflight]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.
