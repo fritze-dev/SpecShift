@@ -33,4 +33,5 @@
 
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
 - **Version bump:** Every commit that changes plugin behavior (skills, schema, config, constitution) MUST bump the `version` field in `.claude-plugin/plugin.json`. Without a version bump, `/plugin update` won't detect changes in target projects.
+- **README accuracy:** When plugin behavior changes (skills, schema, config, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.

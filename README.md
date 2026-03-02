@@ -154,7 +154,7 @@ The system consists of three strictly separated layers:
 | Layer | Files | Responsibility |
 |-------|-------|----------------|
 | **Constitution** | `openspec/constitution.md` | Global project rules (tech stack, code style, architecture). Created by bootstrap, auto-updated in the design step when features introduce changes. Referenced by every AI prompt via config. Defines the **"How"**. |
-| **Schema** | `openspec/schemas/opsx-enhanced/schema.yaml` | Defines the process: which artifacts are generated in which order. Defines the **"What"** and **"When"**. |
+| **Schema** | `openspec/schemas/opsx-enhanced/schema.yaml` | Defines the process: which artifacts are generated in which order. Also owns universal workflow rules (Definition of Done, post-apply sequence) via artifact `instruction` fields. Defines the **"What"** and **"When"**. |
 | **Skills** | `skills/*/SKILL.md` | All 12 user-facing commands: workflow skills drive the artifact pipeline (new, continue, ff, apply, verify, archive), supporting skills handle setup, discovery, governance, and documentation (init, bootstrap, discover, preflight, changelog, docs). Defines the **"How to interact"**. |
 
 > **Why separated?** If the constitution lives in the schema, the AI loses the rules during coding (`/opsx:apply`), because the schema only controls artifact generation. The constitution is referenced in the `config.yaml` workflow rules, instructing AI to read and follow it at every step.
@@ -187,16 +187,16 @@ The system consists of three strictly separated layers:
 
 #### Workflow Principles
 
-The rules in `config.yaml` encode these design decisions:
+These design principles are enforced across the three-layer architecture — each rule lives at its authoritative source (schema, constitution, or skills) rather than being duplicated:
 
-- **User Stories encouraged** — Requirements SHOULD include User Stories to capture intent and user value. Stories are the bridge between stakeholders and engineers. Omit for purely technical or non-functional requirements.
-- **Gherkin mandatory** — Strict Given/When/Then scenarios make behavior unambiguous and directly testable. No "the system should work well" hand-waving.
-- **Preflight mandatory** — The pre-flight check catches gaps, side effects, and inconsistencies before implementation begins. Skipping it means discovering problems during coding.
-- **No silent archiving** — The AI must wait for explicit "Approved" because only a human can verify that the implementation actually works as intended. This prevents premature spec merges.
-- **Constitution always loaded** — The constitution defines project-wide rules that must inform every AI action — not just artifact generation but also implementation and verification. Referenced in workflow rules, instructing AI to read it before proceeding.
-- **Verify findings are binding** — All critical/warning issues from verification must be resolved (code fix or spec update) before archiving. Findings are not optional suggestions.
-- **Bidirectional feedback** — When implementation reveals new edge cases or design flaws, specs and design are updated (not just the code). The QA fix loop is the enforcement point.
-- **Definition of Done is emergent** — Gherkin scenarios define functional completeness, success metrics define quality targets, preflight findings define risk resolution, and explicit approval gates implementation completeness. No separate DoD checklist needed.
+- **User Stories encouraged** — Requirements SHOULD include User Stories to capture intent and user value. Stories are the bridge between stakeholders and engineers. Omit for purely technical or non-functional requirements. *(Schema: spec template)*
+- **Gherkin mandatory** — Strict Given/When/Then scenarios make behavior unambiguous and directly testable. No "the system should work well" hand-waving. *(Schema: spec template)*
+- **Preflight mandatory** — The pre-flight check catches gaps, side effects, and inconsistencies before implementation begins. Skipping it means discovering problems during coding. *(Schema: artifact dependency chain)*
+- **No silent archiving** — The AI must wait for explicit "Approved" because only a human can verify that the implementation actually works as intended. This prevents premature spec merges. *(Skill: archive)*
+- **Constitution always loaded** — The constitution defines project-wide rules that must inform every AI action — not just artifact generation but also implementation and verification. *(Config: context pointer)*
+- **Verify findings are binding** — All critical/warning issues from verification must be resolved (code fix or spec update) before archiving. Findings are not optional suggestions. *(Skill: verify)*
+- **Bidirectional feedback** — When implementation reveals new edge cases or design flaws, specs and design are updated (not just the code). The QA fix loop is the enforcement point. *(Schema: tasks template)*
+- **Definition of Done is emergent** — Gherkin scenarios define functional completeness, success metrics define quality targets, preflight findings define risk resolution, and explicit approval gates implementation completeness. No separate DoD checklist needed. *(Schema: tasks instruction)*
 
 #### Bootstrap
 
@@ -272,7 +272,7 @@ opsx-enhanced-flow/
 │   └── marketplace.json                   # Self-hosted marketplace definition
 │
 ├── openspec/                              # Canonical source + project specs (dogfooding)
-│   ├── config.yaml                        # Workflow rules & context (copied to consumer projects)
+│   ├── config.yaml                        # Bootstrap pointer (schema reference + constitution path)
 │   ├── constitution.md                    # Project constitution (generated by bootstrap)
 │   ├── schemas/
 │   │   └── opsx-enhanced/                 # Schema source of truth (copied to consumer projects)
@@ -304,7 +304,7 @@ opsx-enhanced-flow/
 ```
 your-project/
 ├── openspec/
-│   ├── config.yaml                        # Copied from plugin template
+│   ├── config.yaml                        # Generated by /opsx:init (minimal bootstrap)
 │   ├── constitution.md                    # Generated by /opsx:bootstrap
 │   ├── specs/                             # Single source of truth (merged specs)
 │   ├── schemas/
@@ -331,7 +331,7 @@ your-project/
 
 | File | Purpose |
 |------|---------|
-| [config.yaml](openspec/config.yaml) | Workflow rules injected into every artifact prompt |
+| [config.yaml](openspec/config.yaml) | Bootstrap pointer: schema reference + constitution path |
 | [schema.yaml](openspec/schemas/opsx-enhanced/schema.yaml) | Artifact pipeline: `research → proposal → specs → design → preflight → tasks → [apply]` |
 | [constitution.md](openspec/constitution.md) | Living project rules (created by bootstrap, auto-updated in design step) |
 | [templates/](openspec/schemas/opsx-enhanced/templates/) | Artifact templates (`research.md`, `proposal.md`, `spec.md`, `design.md`, `preflight.md`, `tasks.md`) |
