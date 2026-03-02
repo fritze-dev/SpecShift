@@ -27,6 +27,8 @@ Running `/opsx:preflight` reviews your specs and design across six dimensions: (
 
 Running `/opsx:verify` checks your implementation against the change artifacts across three dimensions: Completeness (task and spec coverage), Correctness (requirement accuracy and scenario coverage), and Coherence (design adherence and code pattern consistency). Each issue gets a severity level, with the system defaulting to lower severity when uncertain.
 
+The verify command serves as both the initial verification (step 3.2 in the QA loop) and the final verification (step 3.5) after the fix loop. It operates identically in both cases — always checking the current state of code and artifacts. No special flags or modes are needed.
+
 ### Verification Report
 
 The report includes a summary scorecard, issues grouped by priority, and specific recommendations. If critical issues exist, you must fix them before archiving. Warnings are recommended fixes. Suggestions are optional improvements.

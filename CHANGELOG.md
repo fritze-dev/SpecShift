@@ -3,6 +3,14 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-02 — Final Verify Step
+
+### Changed
+- QA loop now includes a mandatory final verification step (3.5) after the fix loop, ensuring all post-fix changes are verified before approval
+- Approval step renumbered from 3.5 to 3.6 to accommodate the new final verify step
+- Approval is now gated by a clean final verify pass — if the fix loop introduced new issues, they must be resolved first
+- If the initial verify was clean and no fixes were needed, the final verify step is automatically satisfied
+
 ## 2026-03-02 — Fix Workflow Friction
 
 ### Changed

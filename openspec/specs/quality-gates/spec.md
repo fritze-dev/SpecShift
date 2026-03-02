@@ -62,6 +62,8 @@ The system SHALL run a mandatory quality review before task creation when the us
 
 The system SHALL verify the implementation against change artifacts when the user invokes `/opsx:verify`. Verification SHALL assess three dimensions: Completeness (task completion and spec coverage), Correctness (requirement implementation accuracy and scenario coverage), and Coherence (design adherence and code pattern consistency). Each issue found SHALL be classified as CRITICAL (must fix before archive), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
 
+The `/opsx:verify` command SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When invoked as a final verify after the fix loop, the command SHALL operate identically — checking completeness, correctness, and coherence against the current state of code and artifacts. No special flags or modes are needed; the verify skill is stateless and always checks the current state.
+
 <!-- ASSUMPTION: The codebase is accessible and searchable for verification of requirement implementation -->
 
 **User Story:** As a developer I want post-implementation verification that checks my code against the specs, so that I can catch gaps, divergences, and inconsistencies before archiving the change.
@@ -117,6 +119,15 @@ The system SHALL verify the implementation against change artifacts when the use
 - **THEN** the system skips requirement-level verification
 - **AND** focuses on task completion and code pattern coherence
 - **AND** notes "No delta specs to verify against"
+
+#### Scenario: Final verify confirms fix loop resolved all issues
+
+- **GIVEN** a change where the initial verify found 2 CRITICAL issues
+- **AND** the developer fixed both issues in the fix loop
+- **WHEN** the developer runs `/opsx:verify` as the final verification step (3.5)
+- **THEN** the verification report SHALL show 0 CRITICAL issues
+- **AND** the report SHALL reflect the current state of all artifacts (including any specs updated during the fix loop)
+- **AND** the final assessment SHALL be "All checks passed. Ready for archive." or note remaining warnings
 
 ## Edge Cases
 

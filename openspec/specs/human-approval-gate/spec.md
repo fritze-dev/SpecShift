@@ -8,6 +8,19 @@ Defines the QA loop with mandatory explicit human approval before archiving, inc
 
 The system SHALL require explicit human approval before a change can be archived. The QA loop consists of: (1) running `/opsx:verify` to produce a verification report, (2) presenting findings to the user, and (3) waiting for an explicit "Approved" response. The system SHALL NOT archive a change without receiving explicit human approval. Approval SHALL only be requested after verification has been run and all CRITICAL issues have been resolved. The tasks.md template SHALL include a QA Loop section with an explicit human approval checkbox that MUST be checked before archiving proceeds. Every Success Metric from design.md SHALL be carried over as a PASS/FAIL checkbox in the QA Loop section.
 
+Approval SHALL be gated by a final verification pass. After the fix loop completes (all CRITICAL issues resolved, code and specs in sync), a final `/opsx:verify` SHALL be run before the user is asked for approval. This ensures that all changes made during the fix loop — including spec updates, design changes, and code fixes — are verified as consistent before archiving. If the fix loop was not entered (first verify was clean), the initial verify at step 3.2 satisfies this requirement and the final verify step can be marked complete immediately.
+
+The tasks.md template QA Loop section SHALL include the final verify step:
+
+```
+3.1. Metric Check
+3.2. Auto-Verify: Run /opsx:verify
+3.3. User Testing: Stop here!
+3.4. Fix Loop: fix → re-verify
+3.5. Final Verify: Run /opsx:verify to confirm all fixes are consistent
+3.6. Approval: Only finish on explicit "Approved"
+```
+
 <!-- ASSUMPTION: The user is available to provide approval in a timely manner within the same session or a subsequent session -->
 
 **User Story:** As a developer I want a mandatory human approval step before archiving, so that no change is finalized without my explicit review and sign-off.
@@ -54,6 +67,33 @@ The system SHALL require explicit human approval before a change can be archived
 - **THEN** the QA Loop section SHALL contain 3 PASS/FAIL checkboxes, one for each success metric
 - **AND** each checkbox SHALL be marked by the user or verifier during the QA phase
 - **AND** all checkboxes MUST be marked PASS before approval can be granted
+
+#### Scenario: Final verify after fix loop
+
+- **GIVEN** a change where the initial verify (3.2) found CRITICAL issues
+- **AND** the developer completed the fix loop (3.4), fixing all issues
+- **WHEN** the fix loop is complete
+- **THEN** the system SHALL run `/opsx:verify` one final time (step 3.5)
+- **AND** the final verify report SHALL confirm 0 CRITICAL issues
+- **AND** only then SHALL the system proceed to request approval (step 3.6)
+
+#### Scenario: Final verify skipped when first verify is clean
+
+- **GIVEN** a change where the initial verify (3.2) found no CRITICAL or WARNING issues
+- **AND** the user testing (3.3) found no bugs
+- **AND** the fix loop (3.4) was not entered
+- **WHEN** the QA loop reaches step 3.5
+- **THEN** the final verify step SHALL be marked complete immediately
+- **AND** the system SHALL proceed to approval (3.6)
+
+#### Scenario: Final verify finds new issues from fix loop changes
+
+- **GIVEN** a fix loop where the developer updated specs and code
+- **WHEN** the final verify (3.5) is run
+- **AND** it discovers that a spec update introduced an inconsistency
+- **THEN** the system SHALL report the new issue
+- **AND** the developer SHALL return to the fix loop (3.4) to resolve it
+- **AND** SHALL re-run the final verify (3.5) after the fix
 
 ### Requirement: Fix Loop
 
