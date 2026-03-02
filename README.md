@@ -340,7 +340,7 @@ your-project/
 
 ### Skills
 
-Skills are provided by the plugin and available as `/opsx:*` commands when the plugin is installed. All skills are model-invocable (`disable-model-invocation: false`), except `/opsx:init` which is user-only because it's a one-time project setup action.
+Skills are provided by the plugin and available as `/opsx:*` commands when the plugin is installed. All skills are model-invocable (`disable-model-invocation: false`), including `/opsx:init` (idempotent one-time setup).
 
 #### `/opsx:init` — Project Setup
 
@@ -407,9 +407,8 @@ After installing the plugin, run `/opsx:init` in your project to install the sch
 
 For tools other than Claude Code, set up manually:
 
-1. Initialize OpenSpec and register the schema:
+1. Register the schema (do **not** run `openspec init --tools claude` — it creates duplicate skills):
    ```bash
-   openspec init --tools claude
    openspec schema init opsx-enhanced --force
    ```
 2. Copy schema and config from this repo:
@@ -433,10 +432,30 @@ For tools other than Claude Code, set up manually:
 
 5. Run your tool's equivalent of `/opsx:bootstrap` to scan your codebase and generate the constitution + initial specs.
 
+#### Updating the Plugin
+
+After the plugin repo is updated (new commits pushed), update the installed plugin in your target project:
+
+```bash
+# In your target project, open Claude Code and run:
+/plugin update opsx@opsx-enhanced-flow
+
+# Restart Claude Code for changes to take effect
+```
+
+Alternatively, uninstall and reinstall:
+
+```bash
+/plugin uninstall opsx@opsx-enhanced-flow
+/plugin install opsx@opsx-enhanced-flow
+```
+
+> **Note:** The plugin is cached locally at `~/.claude/plugins/cache/`. Updates pull the latest version from the marketplace repo.
+
 #### Development & Testing
 
 ```bash
-# Load the plugin locally for testing
+# Load the plugin locally for testing (bypasses cache)
 claude --plugin-dir .
 
 # Test skills
