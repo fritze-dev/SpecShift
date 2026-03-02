@@ -95,7 +95,7 @@ The constitution SHALL contain only rules that are specific to the project and n
 - **WHEN** its sections are inspected
 - **THEN** it SHALL contain Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions
 - **AND** Architecture Rules SHALL include directory paths and structural decisions
-- **AND** Conventions SHALL include commit style, version bump, and friction tracking
+- **AND** Conventions SHALL include commit style, version bump, README accuracy, and friction tracking
 
 ### Requirement: Friction Tracking Convention
 

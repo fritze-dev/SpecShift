@@ -391,7 +391,7 @@ Generates user-facing documentation from merged specs. Supports full regeneratio
 
 ### Setup
 
-#### Claude Code (Plugin — Recommended)
+#### Claude Code Plugin
 
 ```bash
 # Add the marketplace (one-time)
@@ -403,34 +403,6 @@ Generates user-facing documentation from merged specs. Supports full regeneratio
 
 After installing the plugin, run `/opsx:init` in your project to install the schema and configure OpenSpec. Then run `/opsx:bootstrap` to scan your codebase and generate the constitution + initial specs.
 
-#### Other AI Tools (Manual)
-
-For tools other than Claude Code, set up manually:
-
-1. Register the schema (do **not** run `openspec init --tools claude` — it creates duplicate skills):
-   ```bash
-   openspec schema init opsx-enhanced --force
-   ```
-2. Copy schema and config from this repo:
-   ```bash
-   cp -r openspec/schemas/opsx-enhanced/ <your-project>/openspec/schemas/opsx-enhanced/
-   cp openspec/config.yaml <your-project>/openspec/config.yaml
-   ```
-3. Verify the schema is available:
-   ```bash
-   openspec schema which opsx-enhanced
-   ```
-4. Copy the skill contents from `skills/*/SKILL.md` into your tool's commands directory:
-
-   | Tool | Copy to |
-   |------|---------|
-   | Cursor | `.cursor/commands/opsx-<name>.md` |
-   | Windsurf | `.windsurf/workflows/opsx-<name>.md` |
-   | GitHub Copilot | `.github/prompts/opsx-<name>.prompt.md` |
-   | Roo Code | `.roo/commands/opsx-<name>.md` |
-   | Cline | `.clinerules/workflows/opsx-<name>.md` |
-
-5. Run your tool's equivalent of `/opsx:bootstrap` to scan your codebase and generate the constitution + initial specs.
 
 #### Updating the Plugin
 
