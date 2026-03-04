@@ -451,7 +451,6 @@ Ideas for future versions:
 - [ ] **Checklist Gem (Definition of Done)** — A consolidated, machine-readable DoD checklist auto-generated from existing artifacts: Gherkin scenarios (functional criteria), success metrics (quality targets), and preflight findings (risk items). Includes per-artifact acceptance criteria — explicit rules for when each artifact (research, spec, design, etc.) is considered complete.
 - [ ] **Autonomous Agent Flow** — Fully automated pipeline run via specialized sub-agents: a Reviewer agent reviews artifacts, a Q&A agent answers discovery questions, a Test agent validates implementation, and an Approval agent gates quality checks — replacing all manual user steps with domain-specific agents orchestrated by a single `/opsx:auto` command.
 - [ ] **Agent Handoff Protocol** — Explicit handoff criteria between agents in the Autonomous Agent Flow. Each agent validates its output against the Checklist Gem's per-artifact acceptance criteria before passing to the next agent. Includes rollback rules.
-- [ ] **ADR Generation** — Auto-generate Architecture Decision Records from `design.md` artifacts after archive (`/opsx:adr`).
 - [ ] **Auto GitHub Releases** — Automatically create GitHub Releases from changelog entries after `/opsx:changelog`.
 - [ ] **Multi-Tool Plugin Support** — Package as plugins for Cursor, Windsurf, and other AI tools as they add plugin support.
 
