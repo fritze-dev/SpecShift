@@ -2,7 +2,7 @@
 title: "Quality Gates"
 capability: "quality-gates"
 description: "Pre-implementation preflight checks and post-implementation verification"
-order: 10
+order: 7
 lastUpdated: "2026-03-04"
 ---
 
@@ -10,10 +10,15 @@ lastUpdated: "2026-03-04"
 
 Two quality gates protect your implementation: `/opsx:preflight` checks specs and design before task creation, and `/opsx:verify` validates implementation against specs after coding is complete.
 
+## Why This Exists
+
+The QA loop ran `/opsx:verify` once, then entered the fix loop where code, specs, or design could be modified. After fixes, there was no final verification pass — post-fix changes went unverified before archiving. Adding a final verify step closes this gap.
+
 ## Features
 
 - Pre-implementation preflight check across six quality dimensions
 - Post-implementation verification for completeness, correctness, and coherence
+- Final verify step after the fix loop ensures all changes are consistent before archiving
 - Actionable findings with severity levels (CRITICAL, WARNING, SUGGESTION)
 - Specific recommendations with file and line references where applicable
 - Graceful degradation when some artifacts are missing

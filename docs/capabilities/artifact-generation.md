@@ -2,13 +2,17 @@
 title: "Artifact Generation"
 capability: "artifact-generation"
 description: "Step-by-step and fast-forward commands for generating pipeline artifacts"
-order: 9
+order: 4
 lastUpdated: "2026-03-04"
 ---
 
 # Artifact Generation
 
 Generate pipeline artifacts one at a time with `/opsx:continue` or all at once with `/opsx:ff`. Both commands wrap the OpenSpec CLI, so updating the schema automatically updates generation behavior.
+
+## Why This Exists
+
+The artifact pipeline needs user-facing commands to advance through its stages. `/opsx:continue` gives you control to review each artifact before moving on, while `/opsx:ff` lets you generate everything at once for straightforward changes.
 
 ## Features
 

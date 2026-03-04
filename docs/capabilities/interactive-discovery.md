@@ -10,6 +10,10 @@ lastUpdated: "2026-03-04"
 
 Run a dedicated research phase with `/opsx:discover` to explore complex features thoroughly. The system generates research findings, assesses coverage across key categories, and asks targeted questions only where ambiguity exists — then pauses for your answers.
 
+## Why This Exists
+
+Complex features benefit from a dedicated exploration phase before the artifact pipeline generates specs and design. `/opsx:discover` provides this standalone research with targeted Q&A, ensuring all ambiguities are resolved early.
+
 ## Features
 
 - Standalone research session independent from the artifact pipeline

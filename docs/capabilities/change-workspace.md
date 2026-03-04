@@ -2,13 +2,17 @@
 title: "Change Workspace"
 capability: "change-workspace"
 description: "Create, structure, and archive change workspaces for the spec-driven workflow"
-order: 7
+order: 5
 lastUpdated: "2026-03-04"
 ---
 
 # Change Workspace
 
 Manage the full lifecycle of changes — from creating a new workspace with `/opsx:new` through to archiving completed work with `/opsx:archive`. Each workspace is pre-structured according to the workflow schema.
+
+## Why This Exists
+
+The spec-driven workflow requires a structured workspace for each change, with a clear progression from research through implementation. Workspaces provide this structure, and archiving preserves the project history chronologically while keeping baseline specs up to date.
 
 ## Features
 

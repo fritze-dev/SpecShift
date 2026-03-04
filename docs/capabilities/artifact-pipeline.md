@@ -1,51 +1,64 @@
 ---
 title: "Artifact Pipeline"
 capability: "artifact-pipeline"
-description: "Six-stage pipeline from research to tasks with strict dependency gating"
-order: 5
+description: "Schema-driven 6-stage artifact pipeline with strict dependency gating"
+order: 3
 lastUpdated: "2026-03-04"
 ---
 
 # Artifact Pipeline
 
-The artifact pipeline guides you through six stages — research, proposal, specs, design, preflight, and tasks — ensuring no critical thinking step is skipped and every decision is documented before implementation begins.
+The artifact pipeline guides every change through six structured stages — from research through to implementation tasks — ensuring no critical thinking step is skipped and every decision is documented.
+
+## Why This Exists
+
+The first workflow runs revealed that rules governing the pipeline were scattered across config.yaml, constitution, and schema with heavy redundancy. Fixing this established clean rule ownership: the schema owns universal workflow rules, the constitution owns project-specific rules, and config.yaml is just a bootstrap pointer.
+
+## Background
+
+Research into OpenSpec config.yaml confirmed that per-artifact `rules` provide targeted enforcement alongside global `context`. The schema's `instruction` fields are the correct location for rules that apply to all projects using the schema, such as the Definition of Done and post-apply workflow sequence.
 
 ## Features
 
-- Structured 6-stage pipeline: research → proposal → specs → design → preflight → tasks
-- Strict dependency gating — each stage must complete before the next can begin
-- Every stage produces a verifiable artifact file
-- Implementation gated by task completion — you cannot start coding until the full analysis cycle is done
-- Minimal configuration bootstrap — workflow rules live in the schema, not in config files
+- Six-stage pipeline: research, proposal, specs, design, preflight, tasks — in strict dependency order
+- Automatic dependency gating prevents skipping stages
+- Apply phase gated by task completion — implementation cannot start until all planning stages are done
+- Config.yaml serves as minimal bootstrap (schema reference + constitution pointer)
+- Schema owns universal workflow rules (DoD, post-apply sequence)
 
 ## Behavior
 
 ### Pipeline Stages
 
-The pipeline enforces a strict order: research first, then proposal, then specs, then design, then preflight, then tasks. You cannot skip stages — each must complete before the next begins. When the full pipeline is complete, the workspace contains research.md, proposal.md, one or more spec files, design.md, preflight.md, and tasks.md.
+The pipeline enforces strict ordering: research first, then proposal, then specs, then design, then preflight, then tasks. Each stage produces a verifiable artifact file. No stage can be skipped — each must complete before the next can begin. An artifact is considered complete when its corresponding file exists and is non-empty.
 
 ### Dependency Gating
 
-Each artifact declares its dependencies. The system checks that all required preceding artifacts are complete before allowing the next one to be generated. An artifact is considered complete when its file exists and is non-empty.
+Before generating an artifact, the system checks that all required preceding artifacts are complete. If you try to generate specs before proposal is done, the system rejects the attempt and tells you what needs to be completed first.
 
-### Implementation Gate
+### Apply Gate
 
-Implementation (the apply phase) is gated by completion of the tasks artifact. You cannot start coding until tasks.md exists and is non-empty. During implementation, progress is tracked against the task checklist.
+Implementation (the apply phase) only begins after tasks.md exists and is non-empty. The apply phase tracks progress against the task checklist, marking items complete as implementation proceeds.
 
-### Configuration Bootstrap
+### Config Bootstrap
 
-The configuration file serves as a minimal bootstrap — it contains only the schema reference and a pointer to the project constitution. All workflow rules are owned by the schema or the constitution, not by the config file.
+The `config.yaml` contains only a schema reference and a constitution pointer. All workflow rules live in the schema (for universal rules) or the constitution (for project-specific rules).
 
 ### Schema-Owned Workflow Rules
 
 The schema's artifact instructions contain workflow rules that apply to all projects. The tasks instruction includes the Definition of Done rule, and the apply instruction includes the post-apply workflow sequence (`/opsx:verify` → `/opsx:archive` → `/opsx:changelog` → `/opsx:docs` → commit).
 
+## Known Limitations
+
+- Config.yaml does not contain workflow rules — if you need project-specific artifact rules, define them in the constitution.
+- Reduced defense-in-depth: rules live in one authoritative place instead of being duplicated across layers.
+- If an artifact file exists but is empty (0 bytes), it is treated as incomplete.
+
 ## Edge Cases
 
-- If an artifact file exists but is empty (0 bytes), it is treated as incomplete and does not satisfy dependency checks.
+- If a project has no constitution, the config.yaml context pointer is harmless — the system notes the missing file and proceeds.
+- Existing projects with workflow rules in config.yaml context continue to work — the rules are additive to schema instructions.
 - If you manually delete an artifact file mid-pipeline, the system detects the gap and requires regeneration before proceeding.
 - If the schema is modified to add a new artifact stage while a change is in progress, the new schema applies to new changes only — in-progress changes continue with the schema version active when they were created.
 - If tasks.md contains no checkbox items (e.g., documentation-only change), the apply phase is still gated by tasks.md existence but reports that there are no implementation tasks.
-- If multiple spec files are required (one per capability), the specs stage is not considered complete until all capability specs listed in the proposal have been generated.
-- If a project has no constitution file, the config pointer is harmless — the system notes the missing file and proceeds.
-- Existing projects with workflow rules in the config continue to work — the rules are additive to schema instructions.
+- If multiple spec files are required (one per capability), the specs stage is not complete until all capability specs listed in the proposal have been generated.

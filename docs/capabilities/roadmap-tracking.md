@@ -2,13 +2,17 @@
 title: "Roadmap Tracking"
 capability: "roadmap-tracking"
 description: "Track planned improvements as GitHub Issues with a roadmap label and a single always-current view"
-order: 15
+order: 9
 lastUpdated: "2026-03-04"
 ---
 
 # Roadmap Tracking
 
 Planned improvements and future features are tracked as GitHub Issues with a `roadmap` label. The project README links to the filtered issue list, providing a single always-current view of planned work.
+
+## Why This Exists
+
+Projects need a way to capture planned improvements that are outside the scope of the current change. GitHub Issues with a `roadmap` label provide this, and the filtered link in the README ensures the roadmap is always current without manual updates.
 
 ## Features
 

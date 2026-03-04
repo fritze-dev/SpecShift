@@ -1,48 +1,48 @@
 ---
 title: "Three-Layer Architecture"
 capability: "three-layer-architecture"
-description: "Constitution, Schema, and Skills — three independently modifiable layers that structure the plugin"
-order: 3
+description: "Constitution, Schema, and Skills layers with distinct responsibilities and independent modification"
+order: 13
 lastUpdated: "2026-03-04"
 ---
 
 # Three-Layer Architecture
 
-The plugin is structured into three independently modifiable layers: the Constitution (project rules), the Schema (artifact pipeline), and Skills (commands). Each layer has distinct responsibilities, and changes to one layer do not require changes to the others.
+The plugin is structured into three independent layers: the Constitution (project rules), the Schema (pipeline definition), and the Skills (commands). Each layer has its own responsibility, and you can modify one without affecting the others.
+
+## Why This Exists
+
+A clear separation of concerns ensures that project-wide rules, pipeline structure, and individual commands can evolve independently. You can change global coding standards without touching the pipeline, add new pipeline stages without rewriting commands, or refine a command without altering project rules.
 
 ## Features
 
-- Constitution layer for project-wide rules that govern all AI behavior
-- Schema layer defining the 6-stage artifact pipeline declaratively
-- Skills layer delivering all 13 commands as discoverable plugin files
-- Independent modifiability — update one layer without touching the others
+- Constitution layer: a single file that governs all project-wide rules (tech stack, architecture, code style, constraints, conventions)
+- Schema layer: a declarative definition of the 6-stage artifact pipeline (research, proposal, specs, design, preflight, tasks)
+- Skills layer: 13 commands delivered as individually discoverable skill files
+- Independent modification of each layer without requiring changes to the others
+- Skills categorized as workflow (6), governance (5), or documentation (2)
 
 ## Behavior
 
-### Constitution Layer
+### Constitution
 
-The constitution file defines global project rules covering Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. Every AI action reads the constitution before performing work, ensuring consistency across all commands and artifacts.
+The constitution is a single file that defines global project rules. It includes sections for tech stack, architecture rules, code style, constraints, and conventions. Every command reads the constitution before performing any work, ensuring consistent behavior across the entire system.
 
-### Schema Layer
+### Schema
 
-The schema defines the 6-stage artifact pipeline (research, proposal, specs, design, preflight, tasks). Each stage has a template, instruction, and dependency list. The schema is the single source of truth for pipeline structure and artifact generation instructions.
+The schema declares the artifact pipeline as a structured definition. It specifies exactly 6 stages -- research, proposal, specs, design, preflight, and tasks -- each with a template, instructions, and dependency list. The implementation phase is gated: tasks must be complete before coding begins. You can inspect the schema to understand the pipeline without reading any command code.
 
-### Skills Layer
+### Skills
 
-All 13 commands are delivered as skill files within the Claude Code plugin system. They are categorized as:
-- **Workflow** (6): new, continue, ff, apply, verify, archive
-- **Governance** (5): init, bootstrap, discover, preflight, sync
-- **Documentation** (2): changelog, docs
+All 13 commands are delivered as skill files within the Claude Code plugin system. The `init` command is user-only (one-time setup); all other commands can be invoked by both users and the AI agent. Skills depend on the schema through the OpenSpec CLI, not directly -- so schema changes do not require skill changes.
 
-All skills are model-invocable except `init`, which is user-only (one-time setup).
+### Layer Independence
 
-### Layer Separation
-
-The schema does not embed skill logic — skills depend on the schema via the OpenSpec CLI. The constitution does not contain schema-specific artifact definitions. You can update pipeline stages without rewriting skills, or change global rules without touching the schema.
+Modifications to one layer do not require changes to another layer. Adding a new code style rule to the constitution does not affect the schema. Adding a new pipeline stage to the schema does not require rewriting skills. Refining a skill's instructions does not alter the constitution or schema.
 
 ## Edge Cases
 
-- If the constitution is missing or empty, skills report an error rather than proceeding without rules.
-- If the schema contains invalid YAML, the OpenSpec CLI rejects it with a validation error before any artifact generation begins.
+- If the constitution is missing or empty, commands report an error rather than proceeding without rules.
+- If the schema contains invalid YAML, the system rejects it with a validation error before any artifact generation begins.
 - If a skill directory exists but contains no skill file, the plugin system does not register that command.
-- If a new skill is added without updating documentation, the system still functions but documentation becomes stale (detected by `/opsx:verify`).
+- If a new skill is added without updating the constitution's documentation, the system still functions but the stale documentation is detected by verification.

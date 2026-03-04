@@ -10,6 +10,10 @@ lastUpdated: "2026-03-04"
 
 Bootstrap your existing project into the spec-driven workflow. `/opsx:bootstrap` scans your codebase, generates a constitution reflecting your actual patterns, creates an initial change workspace, and hands off to the standard pipeline.
 
+## Why This Exists
+
+Adopting the spec-driven workflow on an existing project requires understanding the codebase's patterns, creating a constitution, and establishing baseline specs. `/opsx:bootstrap` automates this entire onboarding process.
+
 ## Features
 
 - Automatic codebase scanning to detect tech stack, frameworks, conventions, and file structure
@@ -26,7 +30,7 @@ When you run `/opsx:bootstrap` on a project without existing specs, the system s
 
 ### Constitution Generation
 
-Based on the scan results, a constitution file is generated with sections for Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. Every entry reflects an observed pattern in your codebase. Items where the system is uncertain are marked with `<!-- REVIEW -->` for you to confirm or correct.
+Based on the scan results, a constitution file is generated with sections for Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. Every entry reflects an observed pattern. Where the system is uncertain, entries are marked with `<!-- REVIEW -->` for you to confirm or correct.
 
 ### Initial Change Creation and Handoff
 
