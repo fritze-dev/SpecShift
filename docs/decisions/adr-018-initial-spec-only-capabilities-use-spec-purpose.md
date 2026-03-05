@@ -41,4 +41,4 @@ Bootstrap proposal "Why" is about spec creation, not individual capabilities.
 ## References
 
 - [Spec: user-docs](../../openspec/specs/user-docs/spec.md)
-- [ADR-017: "Why This Exists" Uses Newest Archive's Proposal](adr-017-why-this-exists-uses-newest-archives-propos.md)
+- [ADR-017: "Why This Exists" Uses Newest Archive's Proposal](adr-017-why-this-exists-uses-newest-archives-proposal.md)

@@ -39,5 +39,5 @@ One operation, no drift.
 ## References
 
 - [Spec: release-workflow](../../openspec/specs/release-workflow/spec.md)
-- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modifica.md)
+- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modification.md)
 - [ADR-009: Patch-Only Auto-Bump](adr-009-patch-only-auto-bump.md)

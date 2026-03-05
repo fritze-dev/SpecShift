@@ -37,4 +37,4 @@ A single set of English templates eliminates the maintenance burden of per-langu
 ## References
 
 - ../../openspec/specs/user-docs/spec.md
-- adr-034-single-docs-language-field-in-configyaml.md
+- adr-034-single-docs-language-field-in-config-yaml.md

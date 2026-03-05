@@ -36,4 +36,4 @@ Use "Purpose" as the unified heading name for all capability docs, replacing "Wh
 ## References
 
 - [User Documentation spec](../../openspec/specs/user-docs/spec.md)
-- [ADR-017: "Why This Exists" uses newest archive's proposal](adr-017-why-this-exists-uses-newest-archives-propos.md) -- historical decision using the old naming
+- [ADR-017: "Why This Exists" uses newest archive's proposal](adr-017-why-this-exists-uses-newest-archives-proposal.md) -- historical decision using the old naming

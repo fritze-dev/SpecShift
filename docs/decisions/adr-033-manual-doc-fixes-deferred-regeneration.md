@@ -37,4 +37,4 @@ Manual fixes are safer for this change because they preserve established quality
 
 - [User Documentation spec](../../openspec/specs/user-docs/spec.md)
 - [GitHub Issue #18](https://github.com/fritze-dev/opsx-enhanced-flow/issues/18) -- the deferred regeneration pass
-- [ADR-032: "Read before write" guardrail](adr-032-read-before-write-guardrail-in-skillmd.md)
+- [ADR-032: "Read before write" guardrail](adr-032-read-before-write-guardrail-in-skill-md.md)

@@ -37,4 +37,4 @@ Users discover the feature organically while editing config.yaml, without requir
 ## References
 
 - ../../openspec/specs/project-setup/spec.md
-- adr-034-single-docs-language-field-in-configyaml.md
+- adr-034-single-docs-language-field-in-config-yaml.md

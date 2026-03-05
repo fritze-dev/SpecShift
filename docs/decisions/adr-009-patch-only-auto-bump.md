@@ -41,4 +41,4 @@ Patch-only auto-bump. 95%+ of changes are patches; minor/major are rare and inte
 ## References
 
 - [Spec: release-workflow](../../openspec/specs/release-workflow/spec.md)
-- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modifica.md)
+- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modification.md)

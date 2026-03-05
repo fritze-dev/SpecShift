@@ -43,4 +43,4 @@ Respects skill immutability; constitution is always loaded and authoritative.
 
 - [Spec: artifact-generation](../../openspec/specs/artifact-generation/spec.md)
 - [Spec: constitution-management](../../openspec/specs/constitution-management/spec.md)
-- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modifica.md)
+- [ADR-008: Convention in Constitution, Not Skill Modification](adr-008-convention-in-constitution-not-skill-modification.md)

@@ -42,4 +42,4 @@ Consumer projects need automated migration from old 3-file to new 1-file structu
 ## References
 
 - [Spec: user-docs](../../openspec/specs/user-docs/spec.md)
-- [ADR-024: Consolidated README Replaces 3 Separate Files](adr-024-consolidated-readme-replaces-3-separate-fil.md)
+- [ADR-024: Consolidated README Replaces 3 Separate Files](adr-024-consolidated-readme-replaces-3-separate-files.md)

@@ -42,4 +42,4 @@ README needs ADR file paths for inline links; reversing order would require a tw
 
 - [Spec: decision-docs](../../openspec/specs/decision-docs/spec.md)
 - [Spec: architecture-docs](../../openspec/specs/architecture-docs/spec.md)
-- [ADR-024: Consolidated README Replaces 3 Separate Files](adr-024-consolidated-readme-replaces-3-separate-fil.md)
+- [ADR-024: Consolidated README Replaces 3 Separate Files](adr-024-consolidated-readme-replaces-3-separate-files.md)
