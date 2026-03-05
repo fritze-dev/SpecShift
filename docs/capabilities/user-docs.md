@@ -36,7 +36,7 @@ When you run `/opsx:docs`, the system reads each baseline spec and produces a do
 ### Enrichment from Archives
 
 For each capability, the system checks archived changes for proposal, research, design, and preflight artifacts. When found, it enriches:
-- **Purpose**: Describes what the capability does and why it matters (always derived from the capability's purpose, never from change motivation) (max 3 sentences)
+- **Purpose**: Describes what the capability does and why it matters, using problem-framing: what goes wrong without this capability. Always derived from the spec's Purpose section, never from archive proposal "Why" sections (which describe change motivation, not capability purpose) (max 3 sentences)
 - **Rationale**: Design context and key decisions from research and design artifacts (max 3-5 sentences)
 - **Known Limitations**: From design Non-Goals (current constraints), design Risks, and preflight Assumption Audit (max 5 bullets)
 - **Future Enhancements**: From design Non-Goals marked "(deferred)" or "(separate feature)", plus sensible out-of-scope items that are natural extensions (max 5 bullets)

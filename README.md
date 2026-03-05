@@ -129,6 +129,8 @@ Quality practices baked into the workflow. Each "gem" is a specific artifact or 
 | **Pre-Flight Check** | `preflight.md` | Quality review before implementation: traceability, gap analysis, side effects, duplication & consistency checks, assumption audit. |
 | **Changelog** | `CHANGELOG.md` | Auto-generated release notes from archived specs — tracks what changed, when, and why. Follows [Keep a Changelog](https://keepachangelog.com/) format. |
 | **User Docs** | `docs/capabilities/*.md` | Auto-generated end-user documentation from merged specs — always reflects the full current state of the project. |
+| **Decision Records** | `docs/decisions/adr-*.md` | Auto-generated Architecture Decision Records from archived design decisions — preserves the "why" behind every architectural choice. |
+| **Architecture Overview** | `docs/README.md` | Auto-generated consolidated documentation entry point — architecture, tech stack, key design decisions, and capability index. |
 
 ---
 
@@ -239,7 +241,11 @@ opsx-enhanced-flow/
 │   │   └── opsx-enhanced/                 # Schema source of truth (copied to consumer projects)
 │   │       ├── schema.yaml                # Artifact pipeline definition
 │   │       ├── README.md                  # Schema documentation
-│   │       └── templates/                 # Artifact templates
+│   │       └── templates/                 # Artifact + documentation templates
+│   │           ├── docs/                  # Documentation output templates
+│   │           │   ├── capability.md      # Capability doc skeleton with Purpose/Rationale guidance
+│   │           │   ├── adr.md             # ADR template with split Consequences
+│   │           │   └── readme.md          # Consolidated docs README template
 │   ├── specs/                             # Merged specs (one per capability)
 │   └── changes/archive/                   # Archived feature workspaces
 │
@@ -297,7 +303,7 @@ your-project/
 | [config.yaml](openspec/config.yaml) | Bootstrap pointer: schema reference + constitution path |
 | [schema.yaml](openspec/schemas/opsx-enhanced/schema.yaml) | Artifact pipeline: `research → proposal → specs → design → preflight → tasks → [apply]` |
 | [constitution.md](openspec/constitution.md) | Living project rules (created by bootstrap, auto-updated in design step) |
-| [templates/](openspec/schemas/opsx-enhanced/templates/) | Artifact templates (`research.md`, `proposal.md`, `spec.md`, `design.md`, `preflight.md`, `tasks.md`) |
+| [templates/](openspec/schemas/opsx-enhanced/templates/) | Artifact templates (`research.md`, `proposal.md`, `spec.md`, `design.md`, `preflight.md`, `tasks.md`) and documentation templates (`docs/capability.md`, `docs/adr.md`, `docs/readme.md`) |
 
 ---
 

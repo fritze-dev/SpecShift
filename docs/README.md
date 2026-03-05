@@ -52,6 +52,11 @@ The layers interact through well-defined interfaces: skills depend on the schema
 | ADR generation runs before README generation | README needs ADR file paths for inline links; reversing order would require a two-pass approach | [ADR-026](decisions/adr-026-adr-generation-runs-before-readme-generatio.md) |
 | Ordering and grouping via order and category YAML frontmatter | Project-specific, deterministic, set during spec creation; SKILL.md stays project-independent | [ADR-027](decisions/adr-027-ordering-grouping-via-order-and-category-ya.md) |
 | README shortening is a separate implementation task | README is hand-written; changes are independent of auto-generated docs; allows separate review | [ADR-028](decisions/adr-028-readme-shortening-is-a-separate-implementat.md) |
+| Unified "Purpose" heading for all docs | Standard, unambiguous term; eliminates enriched vs spec-only heading inconsistency | [ADR-029](decisions/adr-029-unified-purpose-heading-for-all-docs.md) |
+| Unified "Rationale" heading for all docs | Standard ADR terminology; covers both research-based and assumption-based design reasoning | [ADR-030](decisions/adr-030-unified-rationale-heading-for-all-docs.md) |
+| Separate "Future Enhancements" from "Known Limitations" | Limitations = current constraints; Enhancements = actionable future ideas with different audiences | [ADR-031](decisions/adr-031-separate-future-enhancements-from-known-limitation.md) |
+| "Read before write" guardrail in SKILL.md | Prevents quality regression by requiring agent to read existing doc before generating | [ADR-032](decisions/adr-032-read-before-write-guardrail-in-skillmd.md) |
+| Manual doc fixes + deferred regeneration | Safer: preserves established quality, validates guardrails separately | [ADR-033](decisions/adr-033-manual-doc-fixes-deferred-regeneration.md) |
 
 ### Notable Trade-offs
 
@@ -61,6 +66,8 @@ The layers interact through well-defined interfaces: skills depend on the schema
 - **Initial-spec-only capabilities use spec Purpose**: These capability docs are noticeably less rich than those with dedicated archives, since they lack proposal motivation, research context, and design trade-offs.
 - **Consolidated README replaces 3 separate files**: External links to `docs/architecture-overview.md` and `docs/decisions/README.md` will break, though docs are internal to the repo.
 - **"Why This Exists" uses newest archive's proposal**: Historical context from earlier proposals is not directly visible in capability docs, though it is preserved in the archives.
+- **"Read before write" guardrail**: Advisory only -- relies on agent compliance with SKILL.md guidance rather than hard enforcement. Mitigated by clear, explicit language in the Guardrails section.
+- **Manual doc fixes + deferred regeneration**: Docs are manually curated until the regeneration pass validates the guardrails. May diverge slightly from what `/opsx:docs` would produce.
 
 ## Conventions
 
