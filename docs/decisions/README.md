@@ -20,3 +20,7 @@
 | [ADR-016](adr-016-patch-only-auto-bump.md) | Patch-Only Auto-Bump | 2026-03-04 | release-workflow |
 | [ADR-017](adr-017-sync-marketplace-json-in-same-convent.md) | Sync marketplace.json in Same Convention | 2026-03-04 | release-workflow |
 | [ADR-018](adr-018-docs-page-for-minor-major-releases.md) | Docs Page for Minor/Major Releases | 2026-03-04 | release-workflow |
+| [ADR-019](adr-019-constitution-convention-only-for-design.md) | Constitution Convention Only for Design Review Checkpoint | 2026-03-05 | design-review-checkpoint |
+| [ADR-020](adr-020-checkpoint-after-design-specifically.md) | Checkpoint After Design Specifically | 2026-03-05 | design-review-checkpoint |
+| [ADR-021](adr-021-skip-checkpoint-when-preflight-already-do.md) | Skip Checkpoint When Preflight Already Done | 2026-03-05 | design-review-checkpoint |
+| [ADR-022](adr-022-update-constitution-before-spec.md) | Update Constitution Before Spec | 2026-03-05 | design-review-checkpoint |

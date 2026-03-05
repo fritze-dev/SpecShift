@@ -75,8 +75,8 @@ Or use the chat slash commands: `/plugin marketplace add` and `/plugin install`.
 
 # 4. Build a feature (repeat for each feature)
 /opsx:new feature-x             # Create a workspace for the new feature
-/opsx:ff                        # AI generates all planning artifacts (research, proposal, specs, design, pre-flight, tasks)
-# → You review the plan
+/opsx:ff                        # AI generates planning artifacts, pauses for review after design, then generates pre-flight + tasks
+# → You review specs + design, confirm alignment
 /opsx:apply                     # AI implements according to the plan
 # → You test the result
 /opsx:verify                    # Automated checks → you confirm "Approved"
@@ -199,6 +199,7 @@ These design principles are enforced across the three-layer architecture — eac
 - **Verify findings are binding** — All critical/warning issues from verification must be resolved (code fix or spec update) before archiving. Findings are not optional suggestions. *(Skill: verify)*
 - **Bidirectional feedback** — When implementation reveals new edge cases or design flaws, specs and design are updated (not just the code). The QA fix loop is the enforcement point. *(Schema: tasks template)*
 - **Definition of Done is emergent** — Gherkin scenarios define functional completeness, success metrics define quality targets, preflight findings define risk resolution, and explicit approval gates implementation completeness. No separate DoD checklist needed. *(Schema: tasks instruction)*
+- **Design review mandatory** — The design phase is the mandatory review checkpoint in every workflow. `/opsx:ff` pauses after design for user alignment before generating preflight and tasks. This ensures the human reviews approach and architecture before the system proceeds to quality checks and implementation planning. *(Constitution: convention)*
 
 #### Bootstrap
 
@@ -213,8 +214,8 @@ These design principles are enforced across the three-layer architecture — eac
 
 | Step | Command | What Happens |
 |------|---------|--------------|
-| 1. Plan | `/opsx:new feature-x` + `/opsx:ff` | Create workspace, generate all artifacts (research through tasks). |
-| 2. Review | *Manual* | Review all artifacts — especially `preflight.md` for gaps and side effects. |
+| 1. Plan | `/opsx:new feature-x` + `/opsx:ff` | Create workspace, generate planning artifacts (research through design). ff pauses for review. |
+| 2. Review | *Manual* | Review specs + design, confirm alignment. ff continues with pre-flight + tasks. |
 | 3. Execute | `/opsx:apply` | AI implements according to `tasks.md`, stops at QA gate. |
 | 4. QA | *Manual + `/opsx:verify`* | User tests → Fix Loop → explicit "Approved". |
 | 5. Archive | `/opsx:archive` | Merge specs into `openspec/specs/`, move workspace to `archive/`. |

@@ -25,19 +25,21 @@ The system SHALL provide `/opsx:continue` as the command for generating one arti
 - **THEN** the system SHALL generate proposal.md as the next required artifact, not skip ahead to specs
 
 ### Requirement: Fast-Forward Generation
-The system SHALL provide `/opsx:ff` as the command for generating all remaining artifacts in dependency order without pausing between stages. Fast-forward SHALL query the current pipeline status, identify all pending artifacts, and generate each one sequentially in dependency order. After completion, ff SHALL report a summary of all generated artifacts. If all artifacts are already complete, ff SHALL inform the user and suggest `/opsx:apply`.
+The system SHALL provide `/opsx:ff` as the command for generating all remaining artifacts in dependency order. Fast-forward SHALL query the current pipeline status, identify all pending artifacts, and generate them in two phases: (1) planning artifacts up to and including design, then (2) a mandatory review checkpoint where the user reviews specs and design and confirms alignment, then (3) execution artifacts (preflight and tasks) after user confirmation. After completion, ff SHALL report a summary of all generated artifacts. If all artifacts are already complete, ff SHALL inform the user and suggest `/opsx:apply`. If the user resumes ff when preflight is already complete, the review checkpoint SHALL be skipped since the user has already reviewed past the design phase.
 
-**User Story:** As a developer working on a straightforward change I want to generate all remaining artifacts in one command, so that I do not have to run continue repeatedly when I trust the AI to handle the full pipeline.
+**User Story:** As a developer working on a straightforward change I want to generate all remaining artifacts in one command, so that I do not have to run continue repeatedly when I trust the AI to handle the full pipeline — while still getting a chance to review the approach after design before the system proceeds to quality checks and task creation.
 
 #### Scenario: Fast-forward from research to tasks
 - **GIVEN** a change workspace where only research.md is complete
 - **WHEN** the user runs `/opsx:ff`
-- **THEN** the system SHALL generate proposal, specs, design, preflight, and tasks in order, then report a summary listing all 5 generated artifacts
+- **THEN** the system SHALL generate proposal, specs, and design in order, then pause for user review
+- **AND** after user confirms alignment, the system SHALL generate preflight and tasks, then report a summary listing all 5 generated artifacts
 
 #### Scenario: Fast-forward with some artifacts already complete
 - **GIVEN** a change workspace where research.md, proposal.md, and specs are complete
 - **WHEN** the user runs `/opsx:ff`
-- **THEN** the system SHALL generate only design, preflight, and tasks (the remaining artifacts), skipping already-completed stages
+- **THEN** the system SHALL generate design, then pause for user review
+- **AND** after user confirms alignment, the system SHALL generate preflight and tasks
 
 #### Scenario: Fast-forward when pipeline is already complete
 - **GIVEN** a change workspace where all 6 artifacts are complete
@@ -48,6 +50,16 @@ The system SHALL provide `/opsx:ff` as the command for generating all remaining 
 - **GIVEN** a change workspace with no artifacts generated
 - **WHEN** the user runs `/opsx:ff`
 - **THEN** the system SHALL generate artifacts in strict order (research, proposal, specs, design, preflight, tasks) and not attempt parallel generation
+
+#### Scenario: Review checkpoint pauses after design
+- **GIVEN** a change workspace where research, proposal, specs, and design are complete but preflight is not
+- **WHEN** the user runs `/opsx:ff`
+- **THEN** the system SHALL present the review checkpoint summarizing the existing planning artifacts and ask for user alignment before proceeding to preflight
+
+#### Scenario: Checkpoint skipped when resuming past design
+- **GIVEN** a change workspace where research, proposal, specs, design, and preflight are all complete
+- **WHEN** the user runs `/opsx:ff`
+- **THEN** the system SHALL generate only tasks without presenting a review checkpoint, since the user has already reviewed past the design phase
 
 ### Requirement: Unified Skill Delivery for Generation Commands
 Both `/opsx:continue` and `/opsx:ff` SHALL be delivered as plugin SKILL.md files located at `skills/continue/SKILL.md` and `skills/ff/SKILL.md` respectively. These skill files SHALL wrap the OpenSpec CLI by invoking CLI commands for status checking and artifact instruction retrieval. Both skills SHALL be model-invocable (not user-only). The skill files SHALL reference the schema's artifact instructions via the CLI rather than duplicating instruction content.
@@ -74,6 +86,7 @@ Both `/opsx:continue` and `/opsx:ff` SHALL be delivered as plugin SKILL.md files
 - If the OpenSpec CLI returns an error during generation (e.g., schema not found), the skill SHALL report the error to the user and halt rather than producing a malformed artifact.
 - If `/opsx:continue` is run when no active change exists, the system SHALL instruct the user to create a change first via `/opsx:new`.
 - If `/opsx:ff` encounters an error mid-pipeline (e.g., fails on the design artifact), it SHALL stop, report the error and the last successfully generated artifact, and not attempt subsequent stages.
+- If the user provides feedback at the review checkpoint indicating misalignment, the system SHALL incorporate the feedback by regenerating affected artifacts before re-presenting the checkpoint.
 - If the user modifies an artifact file manually after generation, subsequent `/opsx:continue` calls SHALL treat that artifact as complete and move to the next stage, respecting the user's edits.
 - If multiple capabilities are listed in the proposal, the specs stage SHALL generate one spec file per capability before marking the stage as complete.
 

@@ -52,6 +52,10 @@ The three layers are independently modifiable. The schema does not embed skill l
 | Research context integrated into ADR Context section | One place for "why did we decide this?" — avoids separate research log | doc-ecosystem |
 | Convention in constitution for auto-bump, not skill modification | Skills are shared across consumers; project-specific behavior in constitution | release-workflow |
 | Patch-only auto-bump on archive | 95%+ of changes are patches; minor/major are rare and intentional | release-workflow |
+| Constitution convention only for design review checkpoint | Respects skill immutability; constitution is always loaded and authoritative | design-review-checkpoint |
+| Checkpoint after design specifically | Design finalizes approach/architecture — last point where feedback is cheap before quality gates | design-review-checkpoint |
+| Skip checkpoint when preflight already done | Avoids unnecessary friction on resume; preflight existence implies prior design review | design-review-checkpoint |
+| Update constitution before spec | Constitution establishes the governance rule; spec formalizes the behavioral change | design-review-checkpoint |
 
 ## Conventions
 
@@ -59,3 +63,4 @@ The three layers are independently modifiable. The schema does not embed skill l
 - **Post-archive version bump:** After `/opsx:archive`, automatically increment patch version in `plugin.json` and sync `marketplace.json`. Display the new version in the archive summary with next steps.
 - **README accuracy:** When plugin behavior changes, update the README to reflect the new state.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
+- **Design review checkpoint:** After creating specs + design artifacts, always pause for user alignment before proceeding to preflight/tasks. The design phase is the mandatory review checkpoint in every OpenSpec workflow.

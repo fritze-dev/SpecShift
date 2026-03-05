@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-05 — Design Review Checkpoint
+
+### Changed
+- `/opsx:ff` now pauses after generating the design artifact for user review before proceeding to preflight and tasks
+- Fast-forward generation operates in two phases: planning artifacts first, then a mandatory review checkpoint, then execution artifacts
+- If resuming `/opsx:ff` when preflight is already complete, the review checkpoint is skipped
+
+### Added
+- "Design review checkpoint" convention in the project constitution — the design phase is the mandatory review point in every workflow
+- "Design review mandatory" workflow principle in the README
+
 ## 2026-03-04 — Documentation Ecosystem
 
 ### Added
