@@ -23,7 +23,7 @@ Skills depend on the schema via the OpenSpec CLI rather than embedding schema lo
 - **Schema layer**: Declarative 6-stage artifact pipeline with templates, instructions, and dependencies
 - **Skills layer**: 13 commands delivered as SKILL.md files (6 workflow, 5 governance, 2 documentation)
 - All layers independently modifiable without cascading changes
-- Init is user-only; all other skills are model-invocable
+- All skills are model-invocable (including init, which bootstrap workflows invoke programmatically)
 
 ## Behavior
 
@@ -42,7 +42,7 @@ All 13 commands are delivered as `skills/*/SKILL.md` files within the Claude Cod
 - **Governance** (5): init, bootstrap, discover, preflight, sync
 - **Documentation** (2): changelog, docs
 
-The init skill is user-only (one-time setup). All other skills are model-invocable.
+All skills are model-invocable, including init (bootstrap workflows invoke it programmatically; its idempotent design makes this safe).
 
 ### Layer Independence
 

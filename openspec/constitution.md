@@ -37,3 +37,4 @@
 - **README accuracy:** When plugin behavior changes (skills, schema, config, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
 - **Design review checkpoint:** After creating specs + design artifacts, always pause for user alignment before proceeding to preflight/tasks. The design phase is the mandatory review checkpoint in every OpenSpec workflow.
+- **No ADR references in specs:** Specs MUST NOT reference ADRs (e.g., "see ADR-019"). ADRs are generated after archiving — specs exist before ADRs do. Specs describe requirements; ADRs document the decisions that shaped them.

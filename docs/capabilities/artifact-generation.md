@@ -7,7 +7,7 @@ lastUpdated: "2026-03-05"
 
 # Artifact Generation
 
-This capability provides two commands for generating pipeline artifacts: `/opsx:continue` for one stage at a time, and `/opsx:ff` for generating all remaining stages with a built-in review checkpoint.
+This capability provides two commands for generating pipeline artifacts: `/opsx:continue` for one stage at a time, and `/opsx:ff` for generating all remaining stages in one go.
 
 ## Purpose
 
@@ -15,16 +15,16 @@ Different situations call for different levels of control. Sometimes you want to
 
 ## Rationale
 
-Both commands are delivered as thin SKILL.md wrappers around the OpenSpec CLI. This means updating the schema automatically updates generation behavior without changing skill files. The review checkpoint in `/opsx:ff` was placed after the design stage because that is the last point where the approach can be changed cheaply before quality checks and task creation commit to a direction.
+Both commands are delivered as thin SKILL.md wrappers around the OpenSpec CLI. This means updating the schema automatically updates generation behavior without changing skill files. The design review checkpoint is a constitution convention (not skill logic) placed after the design stage because that is the last point where the approach can be changed cheaply before quality checks and task creation commit to a direction.
 
 ## Features
 
 - `/opsx:continue` generates the next pending artifact in the pipeline
-- `/opsx:ff` generates all remaining artifacts with a mandatory review checkpoint after design
+- `/opsx:ff` generates all remaining artifacts in dependency order
 - Both commands respect dependency gating and generate in strict order
 - Reports what was generated and what the next step is
 - Handles partially completed pipelines by resuming from the current state
-- Review checkpoint allows feedback and artifact regeneration before proceeding
+- Design review checkpoint (constitution convention) pauses after design for user alignment
 
 ## Behavior
 
@@ -34,13 +34,7 @@ When you run `/opsx:continue`, the system determines which artifact is next, gen
 
 ### Fast-Forward Generation (/opsx:ff)
 
-When you run `/opsx:ff`, the system generates all remaining artifacts in two phases:
-
-1. **Planning phase**: Generates artifacts up to and including design (research, proposal, specs, design as needed)
-2. **Review checkpoint**: Pauses for you to review the specs and design and confirm alignment
-3. **Execution phase**: After you confirm, generates preflight and tasks
-
-If you provide feedback at the checkpoint indicating misalignment, the system incorporates your feedback by regenerating affected artifacts before re-presenting the checkpoint.
+When you run `/opsx:ff`, the system generates all remaining artifacts in dependency order (research, proposal, specs, design, preflight, tasks as needed). The design review checkpoint — a constitution convention, not skill logic — causes the agent to pause after the design stage for you to review specs and design and confirm alignment before proceeding to preflight and tasks. If you provide feedback indicating misalignment, the agent incorporates your feedback by regenerating affected artifacts before proceeding.
 
 ### Resuming a Partial Pipeline
 

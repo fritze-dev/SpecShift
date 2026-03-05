@@ -42,9 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## 2026-03-05 — Design Review Checkpoint
 
 ### Changed
-- `/opsx:ff` now pauses after generating the design artifact for user review before proceeding to preflight and tasks
-- Fast-forward generation operates in two phases: planning artifacts first, then a mandatory review checkpoint, then execution artifacts
-- If resuming `/opsx:ff` when preflight is already complete, the review checkpoint is skipped
+- Design review is now governed by a constitution convention — agents pause after design in any multi-artifact workflow (including `/opsx:ff`) for user alignment
 
 ### Added
 - "Design review checkpoint" convention in the project constitution — the design phase is the mandatory review point in every workflow
