@@ -1,3 +1,7 @@
+---
+order: 12
+category: finalization
+---
 ## Purpose
 
 Define the release workflow conventions for the plugin, including automatic patch version bumps on archive, version synchronization between plugin files, manual minor/major release processes, consumer update guidance, skill immutability rules, end-to-end install/update checklists, and changelog generation from archived changes.

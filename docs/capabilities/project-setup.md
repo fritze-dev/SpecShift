@@ -1,63 +1,59 @@
 ---
 title: "Project Setup"
 capability: "project-setup"
-description: "One-time project initialization with CLI installation, schema setup, and validation"
-order: 1
-lastUpdated: "2026-03-04"
+description: "One-time project initialization via /opsx:init"
+lastUpdated: "2026-03-05"
 ---
 
 # Project Setup
 
-Set up a project for the spec-driven workflow with a single `/opsx:init` command. This handles CLI installation, schema registration, config creation, and validation.
+The `/opsx:init` command handles one-time project initialization, installing the OpenSpec CLI, setting up the schema, creating configuration files, and validating the result.
 
 ## Why This Exists
 
-The init skill previously copied the plugin's own config.yaml into consumer projects, leaking project-specific rules. This was fixed so init generates a minimal config template, giving consumer projects a clean starting point without inherited rules.
+Without a single initialization command, you would need to manually install the OpenSpec CLI, register the schema, copy template files, and create configuration -- each step prone to mistakes and version mismatches. This capability ensures every project starts from a consistent, validated foundation so you can focus on spec-driven development instead of environment setup.
 
-## Background
+## Design Rationale
 
-Research into OpenSpec config.yaml structure confirmed that the init skill should generate config from a hardcoded template rather than copying the plugin's own config. This prevents project-specific content from leaking into consumer environments.
+The init command generates config.yaml from a built-in template rather than copying the plugin's own config file. This prevents project-specific rules from leaking into consumer projects. The command deliberately avoids running `openspec init --tools claude` because that would create duplicate skill files that conflict with the plugin's own commands. Schema initialization uses `openspec schema init` directly, which works independently.
 
 ## Features
 
-- Single command (`/opsx:init`) for complete project setup
-- Automatic OpenSpec CLI installation via npm
-- Schema registration and custom schema file setup
-- Minimal config.yaml generation (schema reference + constitution pointer only)
-- Constitution placeholder creation
-- Post-setup validation
-- Idempotent — safe to run again on already-initialized projects
+- Installs the OpenSpec CLI globally via npm if not already present
+- Registers the opsx-enhanced schema via the OpenSpec CLI
+- Copies custom schema files and templates into the project
+- Creates a minimal config.yaml with schema reference and constitution pointer
+- Creates a constitution placeholder if none exists
+- Validates the setup after all steps complete
+- Runs idempotently -- safe to re-run on already-initialized projects
+- Checks CLI version compatibility (requires ^1.2.0)
 
 ## Behavior
 
 ### First-Time Initialization
 
-Run `/opsx:init` to set up everything. The system installs the OpenSpec CLI globally, registers the schema, copies custom schema files from the plugin, creates a minimal config.yaml, creates a constitution placeholder, and validates the setup.
+When you run `/opsx:init` on a fresh project, the system installs the OpenSpec CLI (if needed), registers the schema, copies schema files, creates config.yaml, and creates a constitution placeholder. After all steps, it runs validation to confirm everything is working and reports the results.
 
-### Idempotent Re-Initialization
+### Re-Running Init
 
-Running `/opsx:init` on an already-initialized project skips completed steps, preserves the existing constitution, and reports which components were already in place.
+If you run `/opsx:init` on an already-initialized project, the system skips completed steps. It preserves your existing constitution.md and config.yaml, and reports which components were already in place.
 
-### Config Generation
+### CLI Installation
 
-Config.yaml is generated from a template containing only a schema reference and a constitution pointer. It does not contain workflow rules or content copied from the plugin's own config.
-
-### CLI Prerequisite Check
-
-The system checks whether the OpenSpec CLI is installed and compatible with `^1.2.0`. If not installed, it auto-installs via npm. If npm is not available, it reports a clear error.
+If the OpenSpec CLI is not installed and npm is available, the system installs it automatically. If the CLI is installed but at an incompatible version (below 1.2.0), the system upgrades it. If npm is not available, the system reports a clear error with installation guidance.
 
 ### Validation
 
-After setup, the system validates CLI accessibility, schema validity, and config presence. Any failures are reported with specific details about which check failed.
+After setup, the system confirms that the CLI is accessible, the schema directory contains a valid schema.yaml, and config.yaml is present. If any check fails, it reports exactly which validation step failed.
 
 ## Known Limitations
 
-- The init config template is hardcoded in the skill, not read from the plugin's config.yaml — even if the plugin maintainer changes their config, consumer projects get the clean template.
-- Requires Node.js and npm to be available for OpenSpec CLI installation.
+- Requires Node.js and npm to be installed on the system
+- Global npm installs may fail without appropriate permissions (e.g., may need `sudo` or npm prefix configuration)
+- Version constraint (^1.2.0) means any CLI version from 1.2.0 up to (but not including) 2.0.0 is accepted
 
 ## Edge Cases
 
-- If you lack write permissions to the global npm prefix, the install fails with a clear error suggesting `sudo` or an npm prefix configuration change.
 - If the project directory is read-only, init fails before making any changes and reports the permission issue.
-- If network connectivity is unavailable during npm install, the system reports a network error with a suggestion to retry.
-- No duplicate skill creation — init does not create `.claude/skills/openspec-*` files that would duplicate the plugin's `/opsx:*` skills.
+- If network connectivity is unavailable during npm install, the system reports a network error with a retry suggestion.
+- If the plugin's own config.yaml has project-specific rules, consumer projects still get a clean template because the init template is hardcoded in the skill.

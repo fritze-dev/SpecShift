@@ -1,3 +1,7 @@
+---
+order: 5
+category: change-workflow
+---
 ## Purpose
 
 Provides the step-by-step (`/opsx:continue`) and fast-forward (`/opsx:ff`) commands for generating pipeline artifacts, both delivered as thin SKILL.md wrappers around the OpenSpec CLI.

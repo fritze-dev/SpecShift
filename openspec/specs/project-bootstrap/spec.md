@@ -1,3 +1,7 @@
+---
+order: 2
+category: setup
+---
 ## Purpose
 
 Provides `/opsx:bootstrap` for initial codebase scanning, constitution generation, initial change creation with handoff to the standard pipeline, and recovery mode for detecting drift between code and specs.

@@ -1,48 +1,48 @@
 ---
 title: "Architecture Documentation"
 capability: "architecture-docs"
-description: "Cross-cutting architecture overview synthesized from constitution, specs, and design decisions"
-order: 16
-lastUpdated: "2026-03-04"
+description: "Cross-cutting architecture overview as part of the consolidated docs/README.md"
+lastUpdated: "2026-03-05"
 ---
 
 # Architecture Documentation
 
-The `/opsx:docs` command generates a cross-cutting architecture overview that brings together the project's structure, tech stack, key design decisions, and conventions into a single document.
+The `/opsx:docs` command generates a cross-cutting architecture overview as part of the consolidated `docs/README.md`, synthesized from the project constitution, the three-layer-architecture spec, and archived design decisions.
 
 ## Why This Exists
 
-Understanding a project's architecture requires reading multiple sources: the constitution for rules, the three-layer-architecture spec for structure, and individual design artifacts for decisions. This capability synthesizes all of these into one accessible document so that developers and contributors can understand the system without reading individual artifacts.
+Understanding a project's architecture typically requires reading the constitution, schema, multiple design documents, and scattered decision records. Without a synthesized overview, new contributors must piece together the architecture from fragments. This capability produces a single, coherent view of system architecture, tech stack, key decisions, and conventions.
+
+## Design Rationale
+
+The architecture overview is embedded in `docs/README.md` rather than generated as a separate file to provide a single entry point for all documentation. Key Design Decisions include direct ADR links so readers can drill into the reasoning behind each decision without searching for the relevant record.
 
 ## Features
 
-- System architecture section describing the three-layer model (Constitution, Schema, Skills)
-- Tech stack section drawn from the project constitution
-- Key design decisions aggregated from all archived design artifacts, deduplicated
+- System Architecture section describing the three-layer model
+- Tech Stack section from the constitution
+- Key Design Decisions table aggregating decisions across all archived changes
+- ADR column linking directly to corresponding Architecture Decision Records
+- Notable trade-offs surfaced from ADR Consequences sections
 - Conventions section from the constitution
-- Fully regenerated on each run of `/opsx:docs`
+- Fully regenerated on each `/opsx:docs` run
 
 ## Behavior
 
-### Generating the Architecture Overview
+### Architecture Overview Generation
 
-When you run `/opsx:docs`, the system reads the project constitution, the three-layer-architecture spec, and all design artifacts from archived changes. It synthesizes these into a single document with sections for system architecture, tech stack, key design decisions, and conventions.
+When you run `/opsx:docs`, the system reads the constitution, the three-layer-architecture spec, and all Decisions tables from archived design.md files. It synthesizes this into the architecture section of `docs/README.md`, covering system architecture, tech stack, key decisions with ADR links, and conventions.
 
-### Design Decision Aggregation
+### Key Design Decisions
 
-The system scans all archived design files for decision tables and aggregates notable decisions into the architecture overview. Duplicate decisions are removed. If no archived changes have design artifacts, the key design decisions section is omitted.
+The system aggregates all decisions from archived design.md files into a deduplicated table. Each row includes an ADR link column pointing to the corresponding ADR file. If a decision has significant negative consequences, the trade-off is mentioned as a note in the table or in a Notable Trade-offs subsection.
 
-### Regeneration
+### Stale File Cleanup
 
-The architecture overview is fully regenerated on each run. There is no incremental update -- the document always reflects the current state of the constitution, specs, and archived designs.
-
-## Known Limitations
-
-- Does not support generating the overview without a constitution; the system warns and skips generation if the constitution is missing
-- Does not include implementation-level architecture details; focuses on user-facing structure and decisions
-- Does not support custom sections beyond the four defined (System Architecture, Tech Stack, Key Design Decisions, Conventions)
+If `docs/architecture-overview.md` exists from a previous run, the system deletes it. The architecture overview now lives exclusively in `docs/README.md`.
 
 ## Edge Cases
 
-- If the constitution is not found, the system warns you and skips architecture overview generation entirely.
-- If the three-layer-architecture spec is missing, the system generates a minimal system architecture section from the constitution's architecture rules only.
+- If the constitution is not found, the system warns you and skips architecture overview generation.
+- If the three-layer-architecture spec is missing, the system generates a minimal System Architecture section from constitution Architecture Rules only.
+- If no archived changes have design.md files, the Key Design Decisions section is omitted.

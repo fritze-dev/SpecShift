@@ -1,3 +1,7 @@
+---
+order: 15
+category: reference
+---
 ## Purpose
 
 Tracks planned improvements and future features as GitHub Issues with a `roadmap` label, providing a single always-current view of planned work via the project README.

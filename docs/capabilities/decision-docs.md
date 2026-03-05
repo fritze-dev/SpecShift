@@ -1,54 +1,58 @@
 ---
-title: "Decision Records"
+title: "Decision Documentation"
 capability: "decision-docs"
-description: "Architecture Decision Records (ADRs) generated from archived design decisions"
-order: 17
-lastUpdated: "2026-03-04"
+description: "Architecture Decision Records generated from archived design decisions"
+lastUpdated: "2026-03-05"
 ---
 
-# Decision Records
+# Decision Documentation
 
-The `/opsx:docs` command generates formal Architecture Decision Records (ADRs) from the design decisions made across all archived changes. Each decision becomes a searchable record with context, rationale, alternatives considered, and consequences.
+The `/opsx:docs` command generates Architecture Decision Records (ADRs) from the Decisions tables found in archived design.md files. Each architectural decision becomes a formal, searchable record with context, rationale, alternatives, and consequences.
 
 ## Why This Exists
 
-Design decisions are captured in individual design artifacts during each change, but once archived they become difficult to find and cross-reference. This capability transforms scattered decision tables into a structured, indexed collection of ADRs so that you can understand why architectural choices were made and what alternatives were considered.
+Design decisions made during spec-driven development are captured in design.md files, but once a change is archived, that context becomes buried. Without ADRs, new team members and future contributors must excavate archived changes to understand why the system was built a certain way. ADRs preserve decision context in a standard, discoverable format.
+
+## Design Rationale
+
+ADRs are fully regenerated on each run rather than incrementally updated. This avoids stale records and ensures consistency with the current archive state. Numbering is global and sequential across all archives (sorted by date), providing a stable chronological order. The Context section requires at least 4-6 sentences to prevent thin records that fail to capture the full reasoning behind a decision.
 
 ## Features
 
-- One ADR file per design decision, with sequential numbering across all archives
-- Each ADR includes status, context, decision, rationale, alternatives considered, and consequences
-- ADR context enriched with research findings where available
-- Chronological numbering based on archive dates
-- ADR index listing all records with number, title, date, and source change
-- Fully regenerated on each run for consistent, deterministic numbering
+- One ADR file per decision at `docs/decisions/adr-NNN-<slug>.md`
+- Sequential numbering across all archives, sorted chronologically
+- Rich Context section including problem motivation, investigation, and constraints (4-6 sentences minimum)
+- Decision and Rationale from the design Decisions table
+- Alternatives Considered expanded into bullets
+- Consequences split into Positive and Negative subsections
+- References linking to related spec files and other ADRs
+- Fully regenerated on each `/opsx:docs` run
 
 ## Behavior
 
-### Generating ADRs
+### ADR Generation
 
-When you run `/opsx:docs`, the system scans all archived changes for design files containing decision tables. Each row in a decision table becomes one ADR file. The system reads the design context, research findings (where available), and risk assessments to produce a complete record for each decision.
+When you run `/opsx:docs`, the system reads all archived design.md files and processes each Decisions table. Each row becomes one ADR file. Archives are processed in chronological order (by date prefix), and decisions within each archive follow table row order.
 
-### Numbering and Ordering
+### Context Enrichment
 
-ADRs are numbered sequentially across all archives, sorted chronologically by archive date. Within each archive, decisions are numbered in the order they appear in the table. For example, if the first archive has 3 decisions and the second has 4, they are numbered ADR-001 through ADR-007.
+The ADR Context section draws from the design.md Context section and is enriched with findings from research.md when available. The context covers what motivated the decision, what was investigated, and what constraints shaped the choice.
 
-### Research Enrichment
+### Consequences
 
-When an archived change includes research data alongside its design decisions, the system incorporates relevant findings and investigated approaches into the ADR's context section, providing richer background for each decision.
+Each ADR splits consequences into Positive (benefits derived from the rationale and context) and Negative (drawbacks and trade-offs derived from the design Risks and Trade-offs section). If no negative consequences can be identified for a specific decision, the section states "No significant negative consequences identified."
 
-### ADR Index
+### References
 
-The system generates an index file listing all ADRs in a table with their number, decision title, date, and the name of the change that produced them.
+Each ADR includes links to the relevant spec file and related ADRs. For cross-cutting decisions not tied to a specific capability, the References section links to the constitution or the most relevant architectural spec.
 
-## Known Limitations
+### Stale File Cleanup
 
-- Does not support incremental ADR generation; all records are fully regenerated each run, so numbering may shift if archives are added or removed
-- Does not generate ADRs from archives that have no design artifacts
-- Does not automatically link related ADRs; each record stands alone
+If `docs/decisions/README.md` exists from a previous run, the system deletes it. ADR discovery is handled by inline links in the `docs/README.md` Key Design Decisions table.
 
 ## Edge Cases
 
-- If no archived changes contain design files, the system skips ADR generation entirely and does not create the decisions directory.
-- The system handles both 3-column and 4-column decision table formats.
-- If a design file contains an empty decision table, the system skips that archive for ADR generation.
+- If no archives have design.md files, ADR generation is skipped entirely and no `docs/decisions/` directory is created.
+- If a Decisions table is empty, that archive's design.md is skipped for ADR generation.
+- If the Decisions table uses a different column format (3-column or 4-column), the system handles both.
+- If a decision is cross-cutting and not tied to a specific capability spec, the References section links to the constitution or the most relevant architectural spec.

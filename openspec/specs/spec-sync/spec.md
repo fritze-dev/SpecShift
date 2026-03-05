@@ -1,3 +1,7 @@
+---
+order: 11
+category: finalization
+---
 ## Purpose
 
 Handles `/opsx:sync` for agent-driven merging of delta specs from completed changes into baseline specs, with intelligent partial updates and baseline format enforcement.

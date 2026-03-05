@@ -1,3 +1,7 @@
+---
+order: 10
+category: development
+---
 ## Purpose
 
 Defines the QA loop with mandatory explicit human approval before archiving, including success metric validation, fix-verify cycles, and bidirectional feedback between code and specs.

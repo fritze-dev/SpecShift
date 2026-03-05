@@ -1,3 +1,7 @@
+---
+order: 1
+category: setup
+---
 ## Purpose
 
 Handles one-time project initialization via `/opsx:init`, including OpenSpec CLI installation, schema setup, config creation, and post-setup validation.

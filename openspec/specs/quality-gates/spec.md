@@ -1,3 +1,7 @@
+---
+order: 8
+category: development
+---
 ## Purpose
 
 Provides `/opsx:preflight` for pre-implementation quality checks across six dimensions, and `/opsx:verify` for post-implementation verification of completeness, correctness, and coherence.

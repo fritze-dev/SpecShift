@@ -1,3 +1,7 @@
+---
+order: 13
+category: reference
+---
 ## Purpose
 
 Defines the three-layer architecture (Constitution, Schema, Skills) that structures the opsx-enhanced plugin. Each layer has distinct responsibilities, separation rules, and interaction patterns that allow independent modification.

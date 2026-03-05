@@ -1,3 +1,7 @@
+---
+order: 3
+category: change-workflow
+---
 ## Purpose
 
 Manages the change lifecycle including workspace creation (`/opsx:new`), schema-defined workspace structure, and change archiving (`/opsx:archive`) with date-prefixed directory naming and sync prompts.

@@ -1,63 +1,59 @@
 ---
 title: "Constitution Management"
 capability: "constitution-management"
-description: "Project constitution lifecycle: generation, global enforcement, updates, and deduplication"
-order: 6
-lastUpdated: "2026-03-04"
+description: "Project constitution lifecycle including generation, updates, and enforcement"
+lastUpdated: "2026-03-05"
 ---
 
 # Constitution Management
 
-The project constitution is a single file that defines global rules governing all AI behavior. It is generated from your codebase, read before every action, and updated as your project evolves.
+This capability manages the project constitution lifecycle: generating it from codebase observation during bootstrap, automatically updating it during design phases, and enforcing it as global context across all AI actions.
 
 ## Why This Exists
 
-The constitution previously contained 12 rules that duplicated what the schema already defines. Cleaning up this redundancy established clean rule ownership: the constitution holds only project-specific knowledge, while the schema handles universal workflow rules.
+Without a constitution, AI-generated code and specs default to generic best practices that may conflict with your project's actual conventions. Every time the AI produces output, you would need to manually correct style, architecture, and tooling choices. The constitution captures your project's real patterns once and enforces them automatically across every AI action.
 
-## Background
+## Design Rationale
 
-A rule ownership audit revealed heavy duplication between the constitution and schema instructions. Additionally, there was no convention for capturing workflow friction systematically. The cleanup removed redundancies and added a friction tracking convention requiring friction to be captured as GitHub Issues with the `friction` label.
+The constitution is generated from observed patterns rather than templates to ensure accuracy. Uncertain conventions are marked with `<!-- REVIEW -->` rather than guessed at, so you can confirm or correct them. Updates during design phases are additive by default -- existing entries are never removed without your explicit approval -- to prevent accidental loss of established conventions.
 
 ## Features
 
-- Bootstrap-generated constitution from codebase observation — reflects actual patterns, not generic best practices
-- Automatic global context enforcement — every AI action reads the constitution
-- Design-phase updates — new technologies and patterns are captured as your project grows
-- Deduplication with schema — constitution contains only project-specific rules
-- Friction tracking convention — workflow friction captured as GitHub Issues with the `friction` label
-- Uncertain patterns marked with `<!-- REVIEW -->` for user confirmation
+- Generates constitution from codebase scan during `/opsx:bootstrap`
+- Every entry is traceable to an observed pattern -- no invented rules
+- Uncertain conventions marked with `<!-- REVIEW -->` for your confirmation
+- All AI actions read the constitution automatically via config.yaml
+- Automatically updated when design phases introduce new technologies or patterns
+- Updates are additive -- existing entries preserved unless you approve removal
+- Constitution changes documented in the design artifact for visibility
+- Contains only project-specific rules, not duplicates of schema-defined rules
+- Includes a friction tracking convention for capturing workflow issues as GitHub Issues
 
 ## Behavior
 
-### Bootstrap Generation
+### Constitution Generation
 
-When you run `/opsx:bootstrap`, the agent scans your codebase and generates a constitution from observed patterns — tech stack, architecture rules, code style, constraints, and conventions. Every entry is traceable to an observed pattern; nothing is invented.
+During `/opsx:bootstrap`, the system scans source files, configurations, directory structures, and dependency manifests. It generates constitution.md with Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions sections. If the codebase shows conflicting patterns (e.g., both tabs and spaces), the system documents both and marks the entry with `<!-- REVIEW -->`.
 
 ### Global Context Enforcement
 
-The constitution is referenced by all AI actions through `config.yaml`. Every skill invocation and artifact generation step reads the constitution before proceeding. If the constitution is missing, the system warns you and recommends running `/opsx:bootstrap`.
+Every skill invocation and artifact generation step reads the constitution before proceeding. If constitution.md is missing, the system warns you and recommends running `/opsx:bootstrap`. This ensures generated code, specs, and documentation are consistent with your project conventions.
 
-### Design-Phase Updates
+### Automatic Updates During Design
 
-When a design introduces a new technology or pattern, the agent updates the constitution automatically. Updates are additive — existing entries are not removed without your approval. Constitution changes are noted in the design document for visibility.
+When a design introduces a new technology (e.g., Redis as a caching layer), the system adds it to the Tech Stack section. When a design replaces an existing technology (e.g., switching from Jest to Vitest), the system adds the new entry and marks the old one with `<!-- REVIEW -->` rather than removing it. All constitution changes are noted in the design document so you can review them.
 
 ### No Redundancy with Schema
 
-The constitution does not duplicate rules defined by the schema or its templates. Rules about spec format, task format, assumption markers, capability naming, or artifact pipeline ordering exist only in the schema.
+The constitution contains only project-specific rules. Rules about spec format, task format, assumption markers, and pipeline ordering live in the schema, not the constitution.
 
 ### Friction Tracking
 
-A convention in the constitution requires that workflow friction discovered during any workflow run be captured as a GitHub Issue with the `friction` label, including what happened, expected behavior, and a suggested fix.
-
-## Known Limitations
-
-- The constitution does not contain workflow rules that apply universally — those live in the schema's instruction fields.
-- `<!-- REVIEW -->` markers require manual user confirmation; the system does not auto-resolve uncertain conventions.
+The Conventions section includes a rule requiring that workflow friction discovered during any run be captured as a GitHub Issue with the `friction` label, including what happened, expected behavior, and a suggested fix.
 
 ## Edge Cases
 
-- On an empty project, a minimal constitution with placeholder sections is generated, all marked `<!-- REVIEW -->`.
-- Contradictory patterns in the codebase (e.g., mixed camelCase and snake_case) result in both being documented with a `<!-- REVIEW -->` marker.
-- Manual edits to the constitution are treated as authoritative and not overwritten by subsequent bootstrap or design updates.
-- When a new schema version adds rules, the constitution should be audited for newly-redundant entries.
-- In a monorepo with mixed tech stacks, all observed stacks are documented with notes on which directories each applies to.
+- If the project has no source files (empty repository), bootstrap generates a minimal constitution with placeholder sections, all marked `<!-- REVIEW -->`.
+- If you manually edit the constitution outside the workflow, the system treats your edits as authoritative and does not overwrite them.
+- If sequential design phases each add to the constitution, later updates preserve additions from earlier changes.
+- In a monorepo with mixed tech stacks, the constitution documents all observed stacks and notes which directories each applies to.

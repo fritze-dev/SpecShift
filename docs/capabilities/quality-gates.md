@@ -2,60 +2,65 @@
 title: "Quality Gates"
 capability: "quality-gates"
 description: "Pre-implementation preflight checks and post-implementation verification"
-order: 7
-lastUpdated: "2026-03-04"
+lastUpdated: "2026-03-05"
 ---
 
 # Quality Gates
 
-Two quality gates protect your implementation: `/opsx:preflight` checks specs and design before task creation, and `/opsx:verify` validates implementation against specs after coding is complete.
+This capability provides two quality checkpoints: `/opsx:preflight` for pre-implementation quality checks across six dimensions, and `/opsx:verify` for post-implementation verification of completeness, correctness, and coherence.
 
 ## Why This Exists
 
-The QA loop ran `/opsx:verify` once, then entered the fix loop where code, specs, or design could be modified. After fixes, there was no final verification pass — post-fix changes went unverified before archiving. Adding a final verify step closes this gap.
+Specifications and designs can contain gaps, contradictions, and untested assumptions that only surface during implementation -- when they are expensive to fix. Without pre-implementation checks, these issues propagate into code. Without post-implementation verification, divergence between specs and code goes undetected until it causes problems.
+
+## Design Rationale
+
+Preflight checks six specific dimensions rather than performing a generic review to ensure structured, repeatable coverage. Verification uses heuristic code search rather than exhaustive analysis, which means it may miss some things but runs quickly on large codebases. When uncertain about severity, verification errs on the side of lower severity (SUGGESTION over WARNING, WARNING over CRITICAL) to avoid false alarms.
 
 ## Features
 
-- Pre-implementation preflight check across six quality dimensions
-- Post-implementation verification for completeness, correctness, and coherence
-- Final verify step after the fix loop ensures all changes are consistent before archiving
-- Actionable findings with severity levels (CRITICAL, WARNING, SUGGESTION)
-- Specific recommendations with file and line references where applicable
-- Graceful degradation when some artifacts are missing
+- `/opsx:preflight` checks traceability, gaps, side effects, constitution compliance, duplication, and assumptions
+- Produces a preflight.md artifact with a verdict: PASS, PASS WITH WARNINGS, or BLOCKED
+- `/opsx:verify` assesses completeness, correctness, and coherence after implementation
+- Issues classified as CRITICAL (must fix), WARNING (should fix), or SUGGESTION (nice to fix)
+- Verification produces actionable recommendations with file and line references
+- Both commands serve as stateless checks against the current state
 
 ## Behavior
 
-### Preflight Quality Check
+This capability spans two commands used at different points in the workflow: `/opsx:preflight` runs after design and before task creation; `/opsx:verify` runs after implementation and during the QA loop.
 
-When you run `/opsx:preflight`, the system reviews your specs and design across six dimensions:
-- **Traceability Matrix** — maps every requirement to scenarios and components
-- **Gap Analysis** — identifies missing edge cases, error handling, and empty states
-- **Side-Effect Analysis** — assesses impact on existing systems and regression risks
-- **Constitution Check** — verifies consistency with project rules
-- **Duplication and Consistency** — detects overlaps and contradictions across specs
-- **Assumption Audit** — rates every `<!-- ASSUMPTION -->` marker as Acceptable Risk, Needs Clarification, or Blocking
+### Preflight Check (/opsx:preflight)
 
-The result is a preflight.md artifact with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED. Issues are reported for you to resolve — the system does not auto-fix them. If blockers are found, task creation is halted until they are resolved.
+When you run `/opsx:preflight`, the system reads your constitution, all change artifacts, and existing baseline specs, then evaluates six dimensions:
 
-### Post-Implementation Verification
+- **Traceability Matrix**: Maps every requirement to scenarios and components
+- **Gap Analysis**: Identifies missing edge cases, error handling, and empty states
+- **Side-Effect Analysis**: Assesses impact on existing systems and regression risks
+- **Constitution Check**: Verifies consistency with project rules
+- **Duplication and Consistency**: Detects overlaps and contradictions across specs
+- **Assumption Audit**: Rates every `<!-- ASSUMPTION -->` marker as Acceptable Risk, Needs Clarification, or Blocking
 
-When you run `/opsx:verify`, the system checks your implementation across three dimensions:
-- **Completeness** — task completion and spec coverage
-- **Correctness** — requirement implementation accuracy and scenario coverage
-- **Coherence** — design adherence and code pattern consistency
+The result is a preflight.md with a verdict. If blockers are found, you cannot proceed to task creation until they are resolved. The system reports findings but does not auto-fix them.
 
-Each issue is classified as CRITICAL (must fix before archive), WARNING (should fix), or SUGGESTION (nice to fix). The report includes a summary scorecard, issues grouped by priority, and specific actionable recommendations. When uncertain about severity, the system errs on the side of lower severity.
+### Post-Implementation Verification (/opsx:verify)
 
-### Stateless Verification
+When you run `/opsx:verify`, the system checks three dimensions:
 
-`/opsx:verify` always checks the current state of code and artifacts. It serves as both the initial verification and the final verification in the QA loop — no special flags or modes are needed.
+- **Completeness**: Task completion and spec coverage
+- **Correctness**: Whether requirements are implemented accurately and scenarios are satisfied
+- **Coherence**: Whether the code follows the design and project patterns
+
+Each issue includes a specific recommendation. The same command serves as both the initial verification and the final verification in the QA loop -- it always checks the current state with no special modes needed.
+
+## Known Limitations
+
+- Verification uses heuristic keyword search, which may produce false positives on large codebases
+- Verification focuses on files referenced in design.md and recently modified files rather than exhaustive search
+- Preflight does not auto-fix issues; all findings require manual resolution
 
 ## Edge Cases
 
-- If no change name is provided and multiple changes exist, the system prompts you to select one. For preflight, auto-selection is allowed with only one change; for verify, the system always asks.
-- If preflight is run on a change with no specs, it aborts and reports that specs must be created first.
-- If verify is run on a change with no tasks, it reports the missing artifact and suggests generating it.
-- If a change has tasks but no delta specs (e.g., documentation-only), verify skips requirement-level verification and focuses on task completion and code pattern coherence.
-- If required artifacts are missing when running preflight, the system aborts and suggests running `/opsx:continue` or `/opsx:ff` to generate them.
-- If a requirement keyword matches unrelated code during verification, the system prefers SUGGESTION severity to avoid false critical issues.
-- On very large codebases, verification focuses on files referenced in design.md and recently modified files rather than scanning exhaustively.
+- If required artifacts (specs, design) are missing when you run preflight, the system aborts and tells you which artifacts need to be generated.
+- If a change has only tasks.md (no specs or design), verify checks task completion only and notes which checks were skipped.
+- If a change has no delta specs (documentation-only), verify skips requirement-level checks and focuses on task completion and code pattern coherence.

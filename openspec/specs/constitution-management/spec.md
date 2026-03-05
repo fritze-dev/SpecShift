@@ -1,3 +1,7 @@
+---
+order: 7
+category: development
+---
 ## Purpose
 
 Manages the project constitution lifecycle including bootstrap-based generation from codebase observation, automatic updates during design phases, and global context enforcement across all AI actions.

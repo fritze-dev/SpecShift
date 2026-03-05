@@ -1,3 +1,13 @@
+<!-- Optional: YAML frontmatter for documentation ordering.
+     Set order (integer) and category (kebab-case string) to control
+     how this capability appears in generated docs.
+     Define categories that match your project's workflow phases.
+---
+order: [number]
+category: [category]
+---
+-->
+
 ## ADDED Requirements
 
 ### Requirement: <!-- requirement name -->

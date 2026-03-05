@@ -1,57 +1,65 @@
 ---
 title: "Human Approval Gate"
 capability: "human-approval-gate"
-description: "Mandatory human approval before archiving, with verification, fix loops, and success metrics"
-order: 10
-lastUpdated: "2026-03-04"
+description: "Mandatory human approval with QA loop, success metrics, and fix-verify cycles"
+lastUpdated: "2026-03-05"
 ---
 
 # Human Approval Gate
 
-No change is finalized without your explicit review and sign-off. The system enforces a structured QA loop that includes verification, issue resolution, and mandatory approval before archiving.
+This capability defines the QA loop that requires explicit human approval before a change can be archived. It includes success metric validation, fix-verify cycles, and bidirectional feedback between code and specs.
 
 ## Why This Exists
 
-The QA loop runs verification once, then enters a fix loop where code, specs, or design may be modified. Without a final verification pass after fixes, post-fix changes could go unverified before archiving. This capability formalizes the checkpoint so that all changes -- including those made during the fix loop -- are verified as consistent before you give approval.
+Without a mandatory approval step, changes could be archived and finalized without anyone confirming they actually work correctly. Automated checks catch many issues, but only a human can verify that the implementation matches the intent. The approval gate ensures every change gets a deliberate sign-off from someone who understands the context.
+
+## Design Rationale
+
+Approval requires the explicit word "Approved" rather than accepting ambiguous responses like "looks ok" to prevent accidental sign-offs. The fix loop supports bidirectional feedback -- you can fix the code to match the spec or update the spec to match the code -- because implementation sometimes reveals that the original spec was wrong. A final verification pass runs after the fix loop to ensure that fixes themselves did not introduce new inconsistencies.
 
 ## Features
 
-- Mandatory explicit approval before any change can be archived
-- Automated verification via `/opsx:verify` with structured findings
-- Fix-verify loop for resolving issues iteratively
-- Final verification pass after all fixes are applied
-- Success metric checkboxes carried from design into the QA loop
-- Bidirectional feedback: fix the code or update the spec, whichever is correct
+- Mandatory explicit "Approved" response required before archiving
+- QA loop with success metric checkboxes carried from design.md
+- Fix-verify cycle for resolving issues found by `/opsx:verify`
+- Bidirectional feedback: fix code to match spec, or update spec to match code
+- Final verification pass after fix loop to confirm consistency
+- Approval blocked while CRITICAL issues remain unresolved
+- Warnings can be acknowledged and approved with explicit sign-off
 
 ## Behavior
 
-### Verification and Approval
+### QA Loop Sequence
 
-Run `/opsx:verify` to produce a verification report. If the report has no critical or warning issues and all success metric checkboxes pass, the system asks for your explicit approval. Respond with "Approved" to allow archiving. Ambiguous responses like "looks ok" or "seems fine" are not accepted -- the system asks you to confirm with an explicit "Approved."
+The QA loop in tasks.md follows this sequence:
 
-If critical issues exist, the system does not request approval. It lists the specific issues that must be resolved first. If there are warnings but no critical issues, the system requests approval while highlighting the warnings, and you may approve to accept them.
+1. **Metric Check**: Validate success metrics from design.md as PASS/FAIL
+2. **Auto-Verify**: Run `/opsx:verify` for initial verification
+3. **User Testing**: You test the implementation manually
+4. **Fix Loop**: Fix issues and re-verify as needed
+5. **Final Verify**: Run `/opsx:verify` one final time to confirm all fixes are consistent
+6. **Approval**: Only finish on explicit "Approved"
 
-### Fix Loop
+### Approval After Clean Verification
 
-When verification finds issues, you resolve each one by either fixing the code to match the spec or updating the spec to match the intended implementation. After applying fixes, re-run `/opsx:verify` to confirm resolution. This cycle continues until all critical issues are resolved and you are satisfied with any remaining warnings. Updating a spec or design is a valid resolution -- when implementation reveals a better approach, the specs should reflect reality.
+When verification produces no CRITICAL or WARNING issues and all success metric checkboxes are marked PASS, the system asks for your explicit approval. You respond "Approved" and the system proceeds to allow archiving.
+
+### Handling Issues
+
+If verification finds CRITICAL issues, the system does not request approval. It lists the specific issues and states they must be resolved first. If only WARNING issues exist, the system requests approval while highlighting the warnings -- you can approve with acknowledged warnings.
+
+### Fix-Verify Cycles
+
+When issues are found, you resolve each one by either fixing the code to match the spec or updating the spec to match the intended implementation. After fixing, you re-run `/opsx:verify`. This cycle repeats until all CRITICAL issues are resolved.
 
 ### Final Verification
 
-After the fix loop completes, a final `/opsx:verify` runs to confirm that all changes made during the fix loop are consistent. If the final verification finds new issues introduced by the fixes, you return to the fix loop to resolve them. If the initial verification was clean and no fixes were needed, the final verification step is marked complete automatically.
-
-### Success Metrics
-
-Every success metric from the design is carried into the QA loop as a pass/fail checkbox. All checkboxes must be marked as passing before approval can be granted. If the design has no explicit success metrics, the approval checkbox still appears but without metric checkboxes.
-
-## Known Limitations
-
-- Does not automatically re-verify when code changes are made after the last verification run; the system notes the timestamp of the last run relative to recent changes
-- Does not enforce a maximum number of fix-verify iterations; the loop continues until you are satisfied
+After the fix loop completes, a final `/opsx:verify` runs to confirm that all changes made during fixing are consistent. If the first verification was clean and the fix loop was not entered, this step is satisfied automatically.
 
 ## Edge Cases
 
-- If you attempt to archive without ever running verification, the system warns that verification has not been performed.
-- If code changes are made after the last verification run, the verification report may be stale. The system notes this when you request archive.
-- If the user provides a partial or ambiguous approval response, the system clarifies that it needs an explicit "Approved."
-- If verification produces only suggestion-level findings with no critical or warning issues, the system proceeds directly to requesting approval without requiring fixes.
-- If a critical issue turns out to be a false positive, re-running verification with the same code is a valid fix loop iteration.
+- If you attempt to archive without ever running `/opsx:verify`, the system warns that verification has not been performed.
+- If code changes are made after the last verify run, the system notes the timestamp of the last verify relative to recent changes when you request archive.
+- If design.md has no success metrics, the QA loop still includes the mandatory approval checkbox but has no PASS/FAIL metric checkboxes.
+- If you respond with something ambiguous (e.g., "seems fine"), the system clarifies that it needs an explicit "Approved."
+- If a fix introduces a new issue, the system reports it and you must address it before approval.

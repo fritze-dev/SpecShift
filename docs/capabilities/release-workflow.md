@@ -1,72 +1,61 @@
 ---
 title: "Release Workflow"
 capability: "release-workflow"
-description: "Version management with auto-bump on archive, changelog generation, and consumer update guidance"
-order: 18
-lastUpdated: "2026-03-04"
+description: "Version management, changelog generation, and consumer update guidance"
+lastUpdated: "2026-03-05"
 ---
 
 # Release Workflow
 
-The release workflow handles version management, changelog generation, and update guidance. Patch versions are bumped automatically on each archive, version numbers stay in sync across plugin files, and changelogs are generated from archived changes.
+This capability defines the release workflow conventions: automatic patch version bumps on archive, version synchronization between plugin files, manual minor/major release processes, consumer update guidance, and changelog generation from archived changes.
 
 ## Why This Exists
 
-Plugin consumers cannot detect updates unless the version number is bumped -- a manual step that was regularly forgotten. Additionally, version numbers across plugin files drifted out of sync, there was no documented release process, and no end-to-end verification of the install/update flow. This capability automates the most common case (patch bumps) and documents the rest.
+Without automated version management, patch versions would need to be bumped manually after every archive, leading to forgotten bumps and version confusion. Without a changelog, users would need to read spec files or commit logs to understand what changed. This capability ensures versions stay current automatically and changes are communicated clearly.
 
-## Background
+## Design Rationale
 
-Research into the Claude Code plugin system confirmed that the update command compares version fields to detect changes, meaning forgotten bumps silently block consumers from receiving updates. A hybrid approach was chosen: automatic patch bumps on archive (covering 95%+ of changes) combined with a documented manual process for the rare minor/major releases. The auto-bump is implemented as a constitution convention rather than a skill modification, preserving skill immutability.
+Patch bumps are automatic on archive because every completed change warrants at least a patch version increment. Minor and major releases are manual because they represent intentional decisions about feature scope or breaking changes that require human judgment. The changelog follows the Keep a Changelog format because it is widely recognized and structures entries by change type.
 
 ## Features
 
-- Automatic patch version bump after each successful archive
-- Version synchronization between plugin files
-- Documented manual process for minor and major releases with git tags
-- Consumer update instructions (marketplace refresh, plugin update, restart)
-- Changelog generation from archived changes in Keep a Changelog format
+- Automatic patch version bump in plugin.json and marketplace.json after `/opsx:archive`
+- Version synchronization between plugin.json (source of truth) and marketplace.json
+- Manual minor/major release process with git tags and optional GitHub Releases
+- Consumer update guidance: marketplace refresh, plugin update, restart
+- `/opsx:changelog` generates release notes from archived changes in Keep a Changelog format
+- Post-archive next steps include changelog generation, push, and local plugin update
 - Skill immutability convention: project-specific behavior lives in the constitution, not in skills
-- End-to-end install and update checklists
-- Post-archive next steps guidance
-- Post-push developer plugin auto-update
 
 ## Behavior
 
 ### Automatic Patch Bump
 
-After a successful archive, the patch version is automatically incremented in both plugin files (e.g., 1.0.3 becomes 1.0.4). The new version is displayed in the archive summary. If the version numbers are out of sync before bumping, they are aligned first, then the patch bump is applied.
+When you archive a change via `/opsx:archive`, the system automatically increments the patch version in plugin.json and syncs it to marketplace.json. The archive summary displays the new version. If the two files are out of sync before bumping, plugin.json is used as the source of truth.
 
-### Manual Minor and Major Releases
+### Manual Minor/Major Releases
 
-For intentional minor or major version changes, you manually update the version in both plugin files, create a git tag (e.g., `v1.1.0`), push the tag, and optionally create a GitHub Release. This process is documented but not automated.
+For intentional minor or major version changes, you manually set the version in both plugin.json and marketplace.json, create a git tag (e.g., `v1.1.0`), push the tag, and optionally create a GitHub Release.
 
 ### Consumer Updates
 
-To update to the latest plugin version, run `claude plugin marketplace update opsx-enhanced-flow` to refresh the listing, then `claude plugin update opsx@opsx-enhanced-flow` to install the update, and restart Claude Code. If an update is not detected, refresh the marketplace listing first and retry. As a last resort, uninstall and reinstall the plugin.
+To update the plugin, consumers run the marketplace update command to refresh the listing, then the plugin update command, then restart Claude Code. If an update is not detected, refreshing the marketplace listing first usually resolves it.
 
 ### Changelog Generation
 
-Run `/opsx:changelog` to generate release notes from archived changes. The system reads each archived change, examines its proposal, delta specs, and design artifacts, and produces changelog entries summarizing what changed from your perspective. Entries follow the Keep a Changelog format (Added, Changed, Deprecated, Removed, Fixed, Security) and are ordered newest first. Existing manually written entries are preserved.
+When you run `/opsx:changelog`, the system reads archived changes from `openspec/changes/archive/`, examines each archive's proposal, delta specs, and design artifacts, and produces changelog entries in Keep a Changelog format (Added, Changed, Deprecated, Removed, Fixed, Security). Entries are ordered newest first. If CHANGELOG.md already exists, new entries are added at the top while preserving existing content.
 
-### Skill Immutability
+### Post-Archive Flow
 
-Skills are generic plugin code shared across all consumers. They are not modified for project-specific behavior. Project-specific workflows and conventions are defined in the constitution instead.
-
-### Post-Archive Next Steps
-
-After a successful archive, the output includes next steps guiding you through the complete post-archive workflow: generate changelog, push, and update the local plugin.
+After a successful archive, the system shows next steps: generate the changelog with `/opsx:changelog`, push to remote, and update the local plugin installation.
 
 ## Known Limitations
 
-- Does not support automatic git tagging; tags for minor and major releases are created manually
-- Does not include a dedicated `/opsx:release` skill; the auto-bump convention covers the majority of cases
-- Does not provide rollback for bad versions; consumers must wait for the next patch
-- Version bump depends on the agent reading and following the constitution convention
+- Patch bumps are automatic only -- minor and major releases require manual version setting
+- Changelog generation relies on archive artifacts; purely internal refactoring may result in minimal entries
 
 ## Edge Cases
 
-- If plugin files have version numbers that are out of sync, they are aligned to the plugin.json version before the patch bump is applied.
-- If the archive directory is empty or does not exist when running changelog generation, the system informs you that no archived changes were found.
-- If an archived change describes only internal refactoring with no user-visible changes, the changelog either omits the entry or includes a minimal note.
-- Existing changelog entries are preserved when new entries are added.
-- The clean install flow (marketplace add, install, init, bootstrap) and update flow (marketplace update, plugin update, verify) serve as end-to-end checklists.
+- If the archive directory is empty or does not exist when running `/opsx:changelog`, the system informs you that no archived changes were found.
+- If an archived change is purely internal refactoring with no user-visible changes, the changelog either omits the entry or includes a minimal "Internal improvements" note.
+- If CHANGELOG.md contains manually written entries, the system preserves them when adding new entries.

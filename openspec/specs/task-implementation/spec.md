@@ -1,3 +1,7 @@
+---
+order: 9
+category: development
+---
 ## Purpose
 
 Handles `/opsx:apply` for working through task checklists in tasks.md, with sequential implementation, progress tracking, pause-on-blocker behavior, and session-level progress reporting.

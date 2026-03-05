@@ -1,51 +1,61 @@
 ---
 title: "Spec Sync"
 capability: "spec-sync"
-description: "Agent-driven merging of delta specs into baseline specs with intelligent partial updates"
-order: 12
-lastUpdated: "2026-03-04"
+description: "Agent-driven merging of delta specs into baseline specs"
+lastUpdated: "2026-03-05"
 ---
 
 # Spec Sync
 
-Merge completed change specs into the project's baseline specs with `/opsx:sync`. The system intelligently combines new, modified, and removed requirements while keeping baseline specs clean and consistent.
+The `/opsx:sync` command merges delta specs from completed changes into their corresponding baseline specs. The merge is performed by the AI agent, which understands the semantic intent of each operation and produces coherent results.
 
 ## Why This Exists
 
-When a change is completed, its delta specs describe what was added, modified, or removed. These deltas need to be merged into the project's baseline specs so that baselines always reflect the current state of the system. This capability provides context-aware merging that produces coherent, well-structured baseline specs even when changes are complex.
+Delta specs capture what changed, but baseline specs need to reflect the current state of all requirements. Without a sync step, baselines would go stale after every change, and new team members or future changes would work from outdated references. Manual merging is tedious and error-prone, especially when multiple changes touch the same capability.
+
+## Design Rationale
+
+Sync uses an agent-driven approach rather than programmatic string manipulation. This means the AI reads both the delta and the baseline, understands what the delta intends, and produces a coherent merged result. This is especially important for partial updates -- when a delta adds a single scenario to an existing requirement, a mechanical merge would not know where to place it, but the agent can locate the right requirement and append the scenario naturally.
 
 ## Features
 
-- Merge new requirements into existing baselines without duplicating content
-- Replace modified requirements with their updated versions
-- Remove deprecated requirements cleanly
-- Create new baseline specs from scratch when a capability is introduced for the first time
-- Add individual scenarios or edge cases to existing requirements without copying the entire requirement
-- Strip delta operation markers (ADDED, MODIFIED, REMOVED) from baselines automatically
-- Enforce consistent baseline format: Purpose section followed by Requirements section
+- Merges delta specs into baseline specs using AI-driven semantic understanding
+- Supports ADDED, MODIFIED, REMOVED, and RENAMED operations
+- Creates new baseline specs from deltas when no baseline exists
+- Supports intelligent partial updates (e.g., adding one scenario to an existing requirement)
+- Strips delta operation prefixes to produce clean baseline format
+- Preserves baseline content that the delta does not address
 
 ## Behavior
 
-### Merging Changes
+### Syncing Added Requirements
 
-Run `/opsx:sync` after a change is approved. The system reads each delta spec and its corresponding baseline, understands the intent of each operation, and produces a merged result. New requirements are appended, modified requirements are replaced in full, and removed requirements are deleted.
+When a delta spec contains ADDED requirements, the agent reads the existing baseline and appends the new requirements under the Requirements section without duplicating existing content.
+
+### Syncing Modified Requirements
+
+When a delta contains MODIFIED requirements, the agent replaces the targeted requirement in the baseline with the updated content from the delta, preserving all other unmodified requirements.
+
+### Syncing Removed Requirements
+
+When a delta contains REMOVED requirements, the agent removes the targeted requirement from the baseline and confirms the removal.
+
+### Creating New Baselines
+
+If no baseline spec exists for a capability, the agent creates one with a Purpose section and Requirements section derived from the delta content.
 
 ### Partial Updates
 
-You can add a single scenario to an existing requirement without copying the entire requirement into your delta. The system locates the requirement in the baseline and appends the new scenario without disturbing existing content. Similarly, you can add edge cases or refine descriptions, and the system integrates the changes naturally.
+You can add a single scenario or edge case to an existing requirement without copying the entire requirement into your delta. The agent locates the target requirement in the baseline and appends the new content without disturbing existing scenarios or descriptions.
 
 ### Baseline Format
 
-After syncing, baselines always follow a clean format: a Purpose section describing the capability, followed by a Requirements section with all current requirements. Delta operation prefixes like "ADDED" or "MODIFIED" are stripped. Each requirement maintains the standard ordering: header, description, optional user story, and scenarios.
-
-### New Capabilities
-
-If a baseline does not yet exist for a capability, the system creates it from the delta content with the proper format.
+After sync, all baselines conform to a clean format: a Purpose section followed by a Requirements section. Delta operation prefixes (ADDED, MODIFIED, etc.) are stripped. Requirements maintain strict ordering: header, normative description, optional User Story, and scenarios.
 
 ## Edge Cases
 
-- If two changes modify the same requirement differently, the system flags the conflict and asks you to resolve it rather than silently overwriting.
-- If a delta section is empty (e.g., "MODIFIED Requirements" with no content), the system ignores it.
-- If a delta has MODIFIED operations but no baseline exists for the capability, the system reports an error.
-- If a requirement is renamed, the system warns about potential stale references in other documents.
-- If the baseline has changed since the delta was authored (due to a concurrent change), the system detects this and prompts for re-review.
+- If two changes modify the same requirement differently, the agent flags the conflict and asks you to resolve it.
+- If a delta contains an empty section (e.g., MODIFIED with no content beneath it), the agent ignores it.
+- If a delta has MODIFIED operations but no baseline exists, the agent reports this as an error.
+- If a requirement is renamed, the agent warns about potential stale references in other specs.
+- If a second sync detects the baseline has changed since the delta was authored, it prompts for re-review.

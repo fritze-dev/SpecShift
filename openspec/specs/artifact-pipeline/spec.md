@@ -1,3 +1,7 @@
+---
+order: 4
+category: change-workflow
+---
 ## Purpose
 
 Defines the schema-driven 6-stage artifact pipeline (research, proposal, specs, design, preflight, tasks) with strict dependency gating that ensures no stage is skipped and implementation is gated by task completion.

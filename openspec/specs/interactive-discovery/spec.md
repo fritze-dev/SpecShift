@@ -1,3 +1,7 @@
+---
+order: 6
+category: change-workflow
+---
 ## Purpose
 
 Provides `/opsx:discover` for standalone interactive research with targeted Q&A for complex features, generating only research.md with coverage assessment and clarification questions before pausing for user input.

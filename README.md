@@ -96,7 +96,9 @@ Or use the chat slash commands: `/plugin marketplace add` and `/plugin install`.
 
 ## Detailed Documentation
 
-The sections below dive deeper into the architecture, workflow mechanics, and configuration details.
+For full documentation — architecture overview, capability docs, and architecture decision records — see [docs/README.md](docs/README.md).
+
+The sections below cover workflow mechanics, configuration, and project structure.
 
 ### Table of Contents
 
@@ -151,41 +153,13 @@ Because these criteria live inside the artifacts — not in a separate checklist
 
 ### Three-Layer Architecture
 
-The system consists of three strictly separated layers:
-
-| Layer | Files | Responsibility |
-|-------|-------|----------------|
-| **Constitution** | `openspec/constitution.md` | Global project rules (tech stack, code style, architecture). Created by bootstrap, auto-updated in the design step when features introduce changes. Referenced by every AI prompt via config. Defines the **"How"**. |
-| **Schema** | `openspec/schemas/opsx-enhanced/schema.yaml` | Defines the process: which artifacts are generated in which order. Also owns universal workflow rules (Definition of Done, post-apply sequence) via artifact `instruction` fields. Defines the **"What"** and **"When"**. |
-| **Skills** | `skills/*/SKILL.md` | All 12 user-facing commands: workflow skills drive the artifact pipeline (new, continue, ff, apply, verify, archive), supporting skills handle setup, discovery, governance, and documentation (init, bootstrap, discover, preflight, changelog, docs). Defines the **"How to interact"**. |
-
-> **Why separated?** If the constitution lives in the schema, the AI loses the rules during coding (`/opsx:apply`), because the schema only controls artifact generation. The constitution is referenced in the `config.yaml` workflow rules, instructing AI to read and follow it at every step.
+The system separates concerns into three layers: **Constitution** (project rules — the "How"), **Schema** (artifact pipeline — the "What/When"), and **Skills** (user commands — the "How to interact"). This separation ensures the AI always has access to project rules during implementation, not just during planning. See [docs/README.md](docs/README.md) for a detailed breakdown.
 
 ---
 
 ### Workflow
 
 **Prerequisite:** Run `/opsx:init` once per project to install the schema and configure OpenSpec.
-
-#### Commands Overview
-
-| Command | Description |
-|---------|-------------|
-| **Workflow** | |
-| `/opsx:new` | Create a new change workspace. |
-| `/opsx:continue` | Generate the next missing artifact and stop. |
-| `/opsx:ff` | Generate all remaining artifacts in one pass. |
-| `/opsx:apply` | Implement according to `tasks.md`. |
-| `/opsx:verify` | Automated verification checks. |
-| `/opsx:archive` | Merge specs & archive workspace. |
-| **Setup & Discovery** | |
-| `/opsx:init` | Install OpenSpec + schema into project. |
-| `/opsx:bootstrap` | Full codebase scan → constitution + initial specs. |
-| `/opsx:discover` | Research + interactive Q&A → `research.md`. |
-| `/opsx:preflight` | Standalone pre-flight quality check. |
-| **Documentation** | |
-| `/opsx:changelog` | Generate release notes from archived specs. |
-| `/opsx:docs` | Generate user documentation. |
 
 #### Workflow Principles
 
@@ -235,23 +209,7 @@ For complex features, run discovery separately before fast-forward:
 
 #### Thorough Path (Alternative)
 
-Instead of `/opsx:ff`, each artifact can be generated and reviewed individually via `/opsx:continue`:
-
-```
-/opsx:continue → research.md  → Review / Answer questions
-/opsx:continue → proposal.md → Review
-/opsx:continue → spec.md     → Review
-/opsx:continue → design.md   → Review
-/opsx:continue → preflight.md → Review (Gate!)
-/opsx:continue → tasks.md    → Review
-/opsx:apply
-```
-
-#### Why Docs After Archive?
-
-The Docs skills are intentionally **post-archive**, because:
-- `/opsx:changelog` reads from the **archived** `proposal.md` and `spec.md`
-- `/opsx:docs` reads from the **merged** specs in `openspec/specs/` — the holistic single source of truth, not just the delta of the current feature
+Instead of `/opsx:ff`, each artifact can be generated and reviewed individually via `/opsx:continue`. This is useful when you want to review and refine each artifact before proceeding.
 
 #### Recovery Path
 
@@ -319,9 +277,11 @@ your-project/
 │       └── archive/                       # History: YYYY-MM-DD-<feature-name>/
 │
 ├── docs/                                  # End-user documentation (auto-generated)
-│   ├── README.md                          # Table of contents (auto-updated)
-│   └── capabilities/
-│       └── <capability>.md                # One document per capability
+│   ├── README.md                          # Architecture overview + capabilities + ADR index
+│   ├── capabilities/
+│   │   └── <capability>.md                # One document per capability
+│   └── decisions/
+│       └── adr-NNN-<slug>.md              # Architecture Decision Records
 ├── CHANGELOG.md                           # Project history (auto-generated)
 └── ...
 ```
@@ -343,52 +303,22 @@ your-project/
 
 ### Skills
 
-Skills are provided by the plugin and available as `/opsx:*` commands when the plugin is installed. All skills are model-invocable (`disable-model-invocation: false`), including `/opsx:init` (idempotent one-time setup).
+All 12 skills are available as `/opsx:*` commands when the plugin is installed. See [docs/README.md](docs/README.md) for detailed capability documentation.
 
-#### `/opsx:init` — Project Setup
-
-Installs OpenSpec and the opsx-enhanced schema into the current project. Idempotent — safe to run multiple times.
-
-- **Installs:** Schema, config.yaml, constitution.md placeholder
-- **When:** Once per project, before any other `/opsx:*` command
-
-#### `/opsx:bootstrap` — Bootstrap & Recovery
-
-Full codebase scan to generate the project constitution and initial specs. Detects first run vs. re-run and adapts accordingly.
-
-- **First Run:** Scan codebase → Generate constitution → Create initial specs via pipeline
-- **Re-Run (Recovery):** Drift detection → Update constitution → Consistency passes (terminology, boundaries, dependencies)
-- **When:** First run after setup, or re-run for recovery/consistency
-
-#### `/opsx:discover` — Research & Discovery
-
-Interactive research with Q&A for complex features. Generates only `research.md`, pauses for targeted clarification questions, records decisions, then stops.
-
-- **Flow:** Read context → Generate research → Pause for Q&A → Record decisions
-- **When:** Complex features with partial/missing coverage, external APIs, or multiple viable approaches
-
-#### `/opsx:preflight` — Standalone Quality Check
-
-Pre-flight quality review after manual spec edits. Covers traceability, gaps, side effects, constitution check, duplication, and assumption audit.
-
-- **Verdict:** PASS / PASS WITH WARNINGS / BLOCKED
-- **When:** After manual changes to specs or design artifacts
-
-#### `/opsx:changelog` — Generate Release Notes
-
-Incrementally generates changelog entries from archived specs. Only adds new entries — existing entries are never modified.
-
-- **Source:** Archived `proposal.md` + `spec.md`
-- **Target:** `CHANGELOG.md` (Keep a Changelog format)
-- **When:** After `/opsx:archive`
-
-#### `/opsx:docs` — Generate User Documentation
-
-Generates user-facing documentation from merged specs. Supports full regeneration or single-capability updates.
-
-- **Source:** Merged specs in `openspec/specs/`
-- **Target:** `docs/capabilities/<capability>.md` + `docs/README.md`
-- **When:** After `/opsx:archive`
+| Command | Purpose |
+|---------|---------|
+| `/opsx:init` | Install OpenSpec + schema into project (one-time setup) |
+| `/opsx:bootstrap` | Full codebase scan → constitution + initial specs |
+| `/opsx:new` | Create a new change workspace |
+| `/opsx:discover` | Interactive research with Q&A for complex features |
+| `/opsx:continue` | Generate the next missing artifact and stop |
+| `/opsx:ff` | Generate all remaining artifacts in one pass |
+| `/opsx:apply` | Implement according to `tasks.md` |
+| `/opsx:verify` | Automated verification checks |
+| `/opsx:archive` | Merge specs & archive workspace |
+| `/opsx:preflight` | Standalone pre-flight quality check |
+| `/opsx:changelog` | Generate release notes from archived specs |
+| `/opsx:docs` | Generate user documentation from merged specs |
 
 ---
 

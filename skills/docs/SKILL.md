@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Generate or update user-facing documentation from merged specs. Run after /opsx:archive to create capability docs, architecture overview, ADRs, and a table of contents.
+description: Generate or update user-facing documentation from merged specs. Run after /opsx:archive to create capability docs, ADRs, and a consolidated README with architecture overview.
 disable-model-invocation: false
 ---
 
@@ -9,7 +9,7 @@ disable-model-invocation: false
 > Run this **after** `/opsx:archive` to generate or update user-facing documentation.
 
 **Input**: Optional argument:
-- No argument → regenerate all docs (capability docs, architecture overview, ADRs, TOC)
+- No argument → regenerate all docs (capability docs, ADRs, consolidated README)
 - A capability name (e.g., `auth`) → regenerate only that capability's doc
 
 ## Instructions
@@ -42,54 +42,18 @@ For each archive found, read the following files from the archive root directory
 
 ### Step 3: Generate Enriched Capability Documentation
 
-For each capability, write or update `docs/capabilities/<capability>.md`:
+Read the capability doc template at `openspec/schemas/opsx-enhanced/templates/docs/capability.md` for the expected output format.
 
-```markdown
----
-title: "[Capability Title]"
-capability: "[capability-id]"
-description: "[One-line summary of what this capability does]"
-order: [number]
-lastUpdated: "[YYYY-MM-DD]"
----
+For each capability, read its baseline spec's YAML frontmatter (if present) to get the `order` and `category` values. Write or update `docs/capabilities/<capability>.md` following the template structure.
 
-# [Capability Title]
+**YAML Frontmatter Fields** (in the generated capability doc):
 
-[1-2 sentence overview derived from user stories or requirements.]
-
-## Why This Exists
-
-[1-3 sentences from proposal.md "Why" section of the relevant archive.
- Rewrite in user-facing language.
- OMIT this section if no archive data or initial-spec-only with no useful Purpose.]
-
-## Background
-
-[3-5 sentences summarizing research context: what was investigated,
- key findings, alternatives explored. Derived from research.md.
- OMIT this section entirely if research.md is trivial or missing.]
-
-## Features
-
-- [Bullet list of what users can do — derived from stories/requirements]
-
-## Behavior
-
-### [Feature Group]
-
-[Plain-language description of key scenarios. Derived from Gherkin scenario titles and WHEN/THEN structure. Group related scenarios.]
-
-## Known Limitations
-
-- [design.md Non-Goals rewritten as "Does not support X"]
-- [design.md Risks rewritten as user-relevant limitations]
-- [preflight.md assumptions rated "Acceptable Risk" that affect users]
-[Max 5 bullets. OMIT this section entirely if empty.]
-
-## Edge Cases
-
-- [All edge cases from the spec, rewritten in user-facing language. Include every edge case — do not drop any.]
-```
+| Field | Description |
+|-------|-------------|
+| `title` | Human-readable capability name |
+| `capability` | Machine-readable ID (matches spec directory name) |
+| `description` | One-line summary for the table of contents |
+| `lastUpdated` | Date of last generation (`YYYY-MM-DD`) |
 
 **Conciseness guards:**
 - "Why This Exists": max 3 sentences
@@ -98,16 +62,6 @@ lastUpdated: "[YYYY-MM-DD]"
 - Priority when space-constrained: Features + Behavior (mandatory) > Why (preferred) > Background + Limitations (optional)
 - Total: still 1-2 pages per capability
 
-#### YAML Frontmatter Fields
-
-| Field | Description |
-|-------|-------------|
-| `title` | Human-readable capability name |
-| `capability` | Machine-readable ID (matches spec directory name) |
-| `description` | One-line summary for the table of contents |
-| `order` | Display order in the TOC (lower = higher) |
-| `lastUpdated` | Date of last generation (`YYYY-MM-DD`) |
-
 #### Mapping Rules
 
 | Spec Element | Doc Element |
@@ -115,50 +69,15 @@ lastUpdated: "[YYYY-MM-DD]"
 | User Story title + motivation | Features bullet |
 | Gherkin scenario title | Behavior subsection |
 | GIVEN/WHEN/THEN detail | Plain-language example under behavior |
-| Edge Cases section | Edge Cases (simplified) |
+| Edge Cases section | Edge Cases (only surprising states, error conditions, or non-obvious interactions — normal flow variants belong in Behavior) |
 | Technical terms (API, DB, etc.) | Replaced with plain-language or omitted |
 | Product names (OpenSpec, Claude Code, etc.) | **Preserved as-is** — never abstract product names into generic terms |
 | Implementation details (file paths, configs) | Omitted entirely |
 | User-facing syntax/markers (`<!-- ASSUMPTION -->`, `<!-- REVIEW -->`, `[P]`, etc.) | **Included** — if users need to recognize or use a syntax convention, document it |
 
-### Step 4: Generate Architecture Overview
+### Step 4: Generate Architecture Decision Records
 
-Generate `docs/architecture-overview.md` — a cross-cutting document synthesized from:
-- `openspec/constitution.md` — Tech Stack, Architecture Rules, Conventions sections
-- `openspec/specs/three-layer-architecture/spec.md` — the three-layer model description
-- All `openspec/changes/archive/*/design.md` — aggregate `## Decisions` tables for key design decisions
-
-**Structure:**
-
-```markdown
-# Architecture Overview
-
-## System Architecture
-
-[Describe the three-layer model from the three-layer-architecture spec.
- If that spec doesn't exist, derive from constitution Architecture Rules.]
-
-## Tech Stack
-
-[From constitution Tech Stack section. Present as a readable list.]
-
-## Key Design Decisions
-
-[Aggregate notable decisions from all archived design.md Decisions tables.
- Deduplicate — if the same decision appears in multiple archives, include once.
- Present as a summary table or list. Focus on architectural decisions, not tactical ones.]
-
-## Conventions
-
-[From constitution Conventions section. Present as a readable list.]
-```
-
-**No constitution found:** Warn the user and skip architecture overview generation.
-**No archived design.md files:** Omit the Key Design Decisions section.
-
-This file is fully regenerated on each run.
-
-### Step 5: Generate Architecture Decision Records
+Read the ADR template at `openspec/schemas/opsx-enhanced/templates/docs/adr.md` for the expected output format.
 
 Generate formal ADRs from `## Decisions` tables across all archived `design.md` files.
 
@@ -172,85 +91,39 @@ Generate formal ADRs from `## Decisions` tables across all archived `design.md` 
 - 3-column: `| Decision | Rationale | Alternatives |`
 - 4-column: `| # | Decision | Rationale | Alternatives Considered |`
 
-**For each decision, generate `docs/decisions/adr-NNN-<slug>.md`:**
+**For each decision, generate `docs/decisions/adr-NNN-<slug>.md`** following the template structure. The template includes split Consequences (Positive/Negative) and a References section.
 
-```markdown
-# ADR-NNN: [Decision Title]
-
-## Status
-
-Accepted (YYYY-MM-DD)
-
-## Context
-
-[From the design.md "## Context" section.
- Enrich with research.md "## 3. Approaches" from the same archive if available —
- include relevant investigated approaches and findings.]
-
-## Decision
-
-[From the Decisions table "Decision" column.]
-
-## Rationale
-
-[From the Decisions table "Rationale" column.]
-
-## Alternatives Considered
-
-- [From the Decisions table "Alternatives" column, expanded into bullet points]
-
-## Consequences
-
-[From the design.md "## Risks & Trade-offs" section.
- Filter to entries relevant to this specific decision where possible.
- If no clear mapping, include the full Risks section for context.]
-```
-
-**Generate ADR index at `docs/decisions/README.md`:**
-
-```markdown
-# Architecture Decision Records
-
-| ADR | Decision | Date | Change |
-|-----|----------|------|--------|
-| [ADR-001](adr-001-slug.md) | Decision title | YYYY-MM-DD | change-name |
-| ... | ... | ... | ... |
-```
+**Do NOT generate an ADR index at `docs/decisions/README.md`.** ADR discovery is handled by inline links in the `docs/README.md` Key Design Decisions table.
 
 **No archives with design.md:** Skip ADR generation entirely, do not create `docs/decisions/`.
 
 ADRs are fully regenerated on each run (not incremental). Create `docs/decisions/` directory if it does not exist.
 
-### Step 6: Update Table of Contents
+### Step 5: Generate Consolidated README
 
-Create or update `docs/README.md` with links to all generated documentation:
+Read the README template at `openspec/schemas/opsx-enhanced/templates/docs/readme.md` for the expected output format.
 
-```markdown
-# Documentation
+Create or update `docs/README.md` as the **single entry point** for all generated documentation. This file merges the architecture overview and capabilities table into one document, synthesized from:
+- `openspec/constitution.md` — Tech Stack, Architecture Rules, Conventions sections
+- `openspec/specs/three-layer-architecture/spec.md` — the three-layer model description
+- All `openspec/changes/archive/*/design.md` — aggregate `## Decisions` tables for key design decisions
+- All generated ADR files (from Step 4) — for inline ADR links
+- All generated capability docs (from Step 3) — for the capabilities table
 
-## Architecture
+**Key Design Decisions table:** Use an "ADR" column linking directly to the corresponding ADR file (e.g., `[ADR-001](decisions/adr-001-slug.md)`). Include ALL decisions from archived design.md files. Surface notable trade-offs from ADR Negative Consequences — add a "Notable Trade-offs" subsection if any decisions have significant negative consequences.
 
-- [Architecture Overview](architecture-overview.md)
+**Capabilities section:** Group capabilities by the `category` field from baseline spec YAML frontmatter. Render each category as a group header (title-case of the kebab-case value, e.g., `change-workflow` → "Change Workflow"). Within each group, order by `order` field (lower first). If a capability has no `category`, place in an "Other" group.
 
-## Capabilities
+**No constitution found:** Warn the user and skip architecture overview generation.
+**No archived design.md files:** Omit the Key Design Decisions section.
 
-| Capability | Description |
-|---|---|
-| [Capability Title](capabilities/<capability-id>.md) | One-line summary (from frontmatter `description`) |
-| ... | ... |
+This file is fully regenerated on each run.
 
-## Decisions
+### Step 6: Cleanup Stale Files + Confirm
 
-- [Architecture Decision Records](decisions/README.md)
-```
+**Cleanup:** If `docs/architecture-overview.md` exists (from a previous run), delete it — its content is now part of `docs/README.md`. If `docs/decisions/README.md` exists, delete it — ADR discovery is now via inline links in `docs/README.md`.
 
-Order capabilities by the `order` frontmatter field (lower = higher).
-
-The architecture overview link appears before the capability table. The decisions link appears after.
-
-### Step 7: Confirm
-
-Show the user which docs were created/updated and a summary of changes.
+**Confirm:** Show the user which docs were created/updated and a summary of changes.
 
 ---
 
@@ -259,22 +132,23 @@ Show the user which docs were created/updated and a summary of changes.
 ```
 ## Docs Generated
 
-**Generated**: N capability docs + architecture overview + M ADRs + README
+**Generated**: N capability docs + M ADRs + consolidated README
 **Output**:
 - `docs/capabilities/*.md` (N capability docs)
-- `docs/architecture-overview.md`
-- `docs/decisions/adr-*.md` (M ADRs) + `docs/decisions/README.md`
-- `docs/README.md`
+- `docs/decisions/adr-*.md` (M ADRs)
+- `docs/README.md` (architecture overview + capabilities + ADR index)
 
 ### Capabilities
 - [x] Capability Title (capability-id) — enriched / spec-only
 - [x] ...
 
-### Architecture Overview
-- [x] Generated from constitution + N design artifacts
-
 ### Decision Records
 - [x] M ADRs generated from N archived design.md files
+
+### Cleaned Up
+- [x] Deleted docs/architecture-overview.md (merged into README)
+- [x] Deleted docs/decisions/README.md (replaced by inline ADR links)
+(only shown if files were deleted)
 
 ### Skipped (no changes)
 - ...
@@ -303,6 +177,7 @@ No specs found in openspec/specs/. Run /opsx:archive first to merge specs.
 - If a spec has no User Stories and no Requirements section, skip it and warn
 - If a doc file already exists, update it — don't overwrite manual additions
 - Preserve existing docs for specs not being regenerated (single-capability mode)
-- The overview page (`docs/README.md`) must always be regenerated — it links all capabilities
+- `docs/README.md` must always be regenerated — it contains the architecture overview and links all capabilities
+- Do NOT generate `docs/architecture-overview.md` or `docs/decisions/README.md` — these are replaced by the consolidated README
 - Use consistent terminology across all generated docs
 - **Internal consistency check**: After generating each doc, verify that the Behavior section and Edge Cases section do not contradict each other. If an edge case qualifies a behavior (e.g., "X is blocked, unless user explicitly confirms"), the behavior section must reflect the nuance — not state an absolute that the edge case then contradicts.

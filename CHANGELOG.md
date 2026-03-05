@@ -3,6 +3,25 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-05 — Improve Docs Quality
+
+### Added
+- Doc templates for capability docs, ADRs, and consolidated README — `/opsx:docs` now reads templates at runtime instead of inlining format definitions
+- "Design Rationale" section for initial-spec-only capability docs, derived from bootstrap research data
+- Workflow sequence notes for multi-command capabilities (e.g., quality-gates explains when to use preflight vs. verify)
+- `order` and `category` YAML frontmatter in baseline specs for deterministic, project-specific documentation ordering
+- "Notable Trade-offs" subsection in the architecture overview, surfacing significant negative consequences from ADRs
+- "References" section in ADRs linking to related specs and other ADRs
+
+### Changed
+- Architecture overview, capabilities table, and ADR index consolidated into a single `docs/README.md` entry point — `docs/architecture-overview.md` and `docs/decisions/README.md` are deleted on regeneration
+- Capabilities in documentation are now grouped by workflow phase (Setup, Change Workflow, Development, etc.) and ordered by position within each phase
+- ADR "Consequences" section split into "Positive" and "Negative" subsections for clearer trade-off visibility
+- ADR "Context" sections now require at least 4-6 sentences covering motivation, investigation, and constraints
+- Edge Cases in capability docs restricted to surprising states, error conditions, and non-obvious interactions — normal flow variants moved to Behavior
+- Initial-spec "Why This Exists" sections now use problem-framing (what goes wrong without the capability) instead of restating the spec Purpose
+- Project README shortened with links to `docs/README.md` for detailed documentation
+
 ## 2026-03-05 — Design Review Checkpoint
 
 ### Changed
