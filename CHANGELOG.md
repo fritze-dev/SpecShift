@@ -3,6 +3,23 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-05 — Improve Docs Sections
+
+### Added
+- "Future Enhancements" section in capability docs for deferred features and tracked GitHub Issues, separate from Known Limitations
+- "Read before write" guardrail — `/opsx:docs` now reads existing docs before regenerating, preserving established tone and quality
+- Purpose BAD/GOOD examples in the capability doc template to prevent change-motivation from replacing capability-purpose
+
+### Changed
+- Capability doc headings unified: "Why This Exists" → "Purpose", "Background"/"Design Rationale" → "Rationale" across all 18 docs
+- Purpose sections now always derive from the capability's spec Purpose using problem-framing, never from archive proposal "Why" sections
+- Non-Goals from design artifacts are now classified into Known Limitations (current constraints) and Future Enhancements (deferred features)
+- Enriched section order standardized: Overview, Purpose, Rationale, Features, Behavior, Known Limitations, Future Enhancements, Edge Cases
+
+### Fixed
+- 11 Rationale sections that had replaced design reasoning with change-event descriptions reverted to original content
+- 4 Purpose sections that had been weakened during regeneration reverted to original content
+
 ## 2026-03-05 — Improve Docs Quality
 
 ### Added

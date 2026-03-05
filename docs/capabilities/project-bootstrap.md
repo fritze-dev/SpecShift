@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:bootstrap` command scans your existing codebase, generates a project constitution from observed patterns, creates an initial change workspace, and hands off to the standard pipeline. It also provides recovery mode for detecting drift between code and specs.
 
-## Why This Exists
+## Purpose
 
 Starting spec-driven development on an existing project means bridging the gap between what your code already does and what the spec system needs to know. Without bootstrap, you would have to manually write a constitution, guess at conventions, and set up the first change workspace -- all tedious and error-prone. Bootstrap also solves the ongoing problem of code-spec drift by detecting when your codebase has evolved beyond what the specs describe.
 
-## Design Rationale
+## Rationale
 
 Bootstrap relies on static file analysis (file extensions, configuration files, package manifests) rather than executing project code. This keeps the scan safe and fast across any project size. Recovery mode compares structural and naming patterns rather than performing deep semantic analysis, making drift detection practical without requiring full code understanding.
 

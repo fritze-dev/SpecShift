@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:apply` command works through the task checklist in tasks.md, implementing each item sequentially, marking tasks complete as it goes, and pausing when it encounters blockers or ambiguities.
 
-## Why This Exists
+## Purpose
 
 Manually implementing each task from a spec-driven plan is time-consuming and error-prone. Without systematic task execution, developers lose track of progress, skip items, or implement tasks out of the intended order. This capability lets you focus on review and guidance while the AI handles the methodical work of implementing each task.
 
-## Design Rationale
+## Rationale
 
 Tasks are implemented sequentially rather than in parallel to maintain a clear, reviewable progression. The system pauses on ambiguity rather than guessing, because incorrect assumptions during implementation are far more expensive to fix than a brief pause for clarification. Progress tracking uses simple checkbox counting from tasks.md, keeping the mechanism transparent and auditable.
 
@@ -49,6 +49,10 @@ If you run `/opsx:apply` on a partially completed task list, the system skips al
 ### Progress Reporting
 
 Progress is displayed at session start, after each task completion, and when pausing. When all tasks are complete, the system shows a final summary listing all tasks completed during the session and suggests archiving the change.
+
+## Future Enhancements
+
+- Trackable post-implementation steps in every task list (tracked in [#12](https://github.com/fritze-dev/opsx-enhanced-flow/issues/12))
 
 ## Edge Cases
 

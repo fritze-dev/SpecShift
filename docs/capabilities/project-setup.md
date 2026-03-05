@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:init` command handles one-time project initialization, installing the OpenSpec CLI, setting up the schema, creating configuration files, and validating the result.
 
-## Why This Exists
+## Purpose
 
 Without a single initialization command, you would need to manually install the OpenSpec CLI, register the schema, copy template files, and create configuration -- each step prone to mistakes and version mismatches. This capability ensures every project starts from a consistent, validated foundation so you can focus on spec-driven development instead of environment setup.
 
-## Design Rationale
+## Rationale
 
 The init command generates config.yaml from a built-in template rather than copying the plugin's own config file. This prevents project-specific rules from leaking into consumer projects. The command deliberately avoids running `openspec init --tools claude` because that would create duplicate skill files that conflict with the plugin's own commands. Schema initialization uses `openspec schema init` directly, which works independently.
 

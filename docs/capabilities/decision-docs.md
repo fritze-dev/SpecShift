@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:docs` command generates Architecture Decision Records (ADRs) from the Decisions tables found in archived design.md files. Each architectural decision becomes a formal, searchable record with context, rationale, alternatives, and consequences.
 
-## Why This Exists
+## Purpose
 
 Design decisions made during spec-driven development are captured in design.md files, but once a change is archived, that context becomes buried. Without ADRs, new team members and future contributors must excavate archived changes to understand why the system was built a certain way. ADRs preserve decision context in a standard, discoverable format.
 
-## Design Rationale
+## Rationale
 
 ADRs are fully regenerated on each run rather than incrementally updated. This avoids stale records and ensures consistency with the current archive state. Numbering is global and sequential across all archives (sorted by date), providing a stable chronological order. The Context section requires at least 4-6 sentences to prevent thin records that fail to capture the full reasoning behind a decision.
 
@@ -49,6 +49,11 @@ Each ADR includes links to the relevant spec file and related ADRs. For cross-cu
 ### Stale File Cleanup
 
 If `docs/decisions/README.md` exists from a previous run, the system deletes it. ADR discovery is handled by inline links in the `docs/README.md` Key Design Decisions table.
+
+## Known Limitations
+
+- ADRs are fully regenerated on each run — manual edits to ADR files will be overwritten
+- Context enrichment depends on the archive having a research.md with useful content
 
 ## Edge Cases
 

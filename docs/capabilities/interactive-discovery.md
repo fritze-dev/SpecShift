@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:discover` command runs a standalone interactive research session with targeted questions for complex features. It generates only the research.md artifact, then pauses for your answers before stopping.
 
-## Why This Exists
+## Purpose
 
 Complex features have ambiguities that generic research cannot resolve. Without an interactive discovery phase, these ambiguities surface late -- during specs, design, or even implementation -- when they are expensive to address. Discovery catches unknowns early by assessing coverage across key categories and asking targeted questions only where gaps exist.
 
-## Design Rationale
+## Rationale
 
 Questions are limited to a maximum of 5, prioritized by Impact multiplied by Uncertainty. This prevents question fatigue while ensuring the most important unknowns are addressed first. Discovery operates independently from the pipeline -- it only generates research.md and then stops, letting you decide when to continue with the rest of the pipeline.
 
@@ -44,6 +44,10 @@ For straightforward changes (e.g., fixing a typo), all categories may be rated C
 ### Stale-Spec Detection
 
 If the system finds that baseline specs reference code elements (like function names) that have changed in the codebase, it notes the stale-spec risk in the coverage assessment.
+
+## Future Enhancements
+
+- Discovery should reference existing ADRs to avoid re-investigating already-decided questions (tracked in [#17](https://github.com/fritze-dev/opsx-enhanced-flow/issues/17))
 
 ## Edge Cases
 

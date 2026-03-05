@@ -9,43 +9,39 @@ lastUpdated: "[YYYY-MM-DD]"
 
 [1-2 sentence overview derived from user stories or requirements.]
 
-## Why This Exists
+## Purpose
 
-[1-3 sentences from proposal.md "Why" section of the relevant archive.
- Rewrite in user-facing language.
- OMIT this section if no archive data or initial-spec-only with no useful Purpose.]
+[1-3 sentences describing what problem this capability solves.
+ ALWAYS frame as the capability's purpose, never as motivation for a specific change.
+ Derive from spec Purpose section using problem-framing.
+ Archive proposals may provide additional context but must not replace
+ the capability-level purpose with change-level motivation.]
 
-<!-- initial-spec fallback — how to write "Why This Exists" from spec Purpose:
+<!-- How to write Purpose:
 
-BAD (restating Purpose): "A consistent spec format is essential for both human
+BAD (restating what it is): "A consistent spec format is essential for both human
 readability and system automation."
 
-GOOD (problem-framing): "Without a consistent spec format, scenarios break
-automated parsing, normative language becomes ambiguous, and delta specs can't
-be reliably merged into baselines."
+BAD (change motivation): "The first workflow run revealed rules were scattered
+across three files."
 
-When deriving "Why This Exists" from spec Purpose for initial-spec-only capabilities:
-- Frame as what problem the capability solves, not what it is
-- Consider what would happen WITHOUT this capability
+GOOD (capability purpose via problem-framing): "Without a consistent spec format,
+scenarios break automated parsing, normative language becomes ambiguous, and delta
+specs can't be reliably merged into baselines."
+
+Guidelines:
+- Frame as what goes wrong WITHOUT this capability
 - Use the spec's User Stories ("so that...") for motivation
-- Keep the same narrative tone as enriched docs
+- Keep concise: max 3 sentences
 -->
 
-## Background
+## Rationale
 
-[3-5 sentences summarizing research context: what was investigated,
- key findings, alternatives explored. Derived from research.md.
- OMIT this section entirely if research.md is trivial or missing.]
-
-## Design Rationale
-
-[3-5 sentences for initial-spec-only capabilities ONLY.
- Derived from the initial-spec archive's research.md (approaches, decisions)
- or from the spec's Assumptions section.
- Explains why this specific design was chosen.
- OMIT for enriched capabilities — they get this context through Background
- and Known Limitations already.
- OMIT if initial-spec research.md lacks useful data for this capability.]
+[3-5 sentences of design context: key decisions, alternatives explored,
+ why this specific approach was chosen.
+ For enriched capabilities: derived from research.md and design.md.
+ For initial-spec-only: derived from initial-spec research.md or spec Assumptions.
+ OMIT this section if no useful design context available.]
 
 ## Features
 
@@ -71,6 +67,15 @@ When deriving "Why This Exists" from spec Purpose for initial-spec-only capabili
 - [design.md Risks rewritten as user-relevant limitations]
 - [preflight.md assumptions rated "Acceptable Risk" that affect users]
 [Max 5 bullets. OMIT this section entirely if empty.]
+
+## Future Enhancements
+
+- [Deferred Non-Goals: items explicitly marked "(deferred)" or "(separate feature)"]
+- [Sensible Non-Goals: out-of-scope items that are natural extensions of this capability]
+- [Link to GitHub Issue if one exists: "Tracked in #N"]
+[Max 5 bullets. OMIT this section entirely if no actionable future ideas.
+ Do NOT include items that are just scope boundaries for a specific change.
+ Only include items that would genuinely improve this capability.]
 
 ## Edge Cases
 

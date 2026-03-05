@@ -29,14 +29,20 @@ If a capability name argument was given, process only that one (error if not fou
 For each capability being documented, glob `openspec/changes/archive/*/specs/<capability>/` to find archived changes that touched it.
 
 For each archive found, read the following files from the archive root directory (skip any that don't exist):
-- `proposal.md` — extract the `## Why` section
+- `proposal.md` — extract the `## Why` section (for Rationale context, NOT for Purpose)
 - `research.md` — extract the `## 3. Approaches` section and key findings
-- `design.md` — extract `## Non-Goals`, `## Risks & Trade-offs`, and `## Decisions` table
+- `design.md` — extract `## Non-Goals` (for Known Limitations AND Future Enhancements), `## Risks & Trade-offs`, and `## Decisions` table
 - `preflight.md` — extract `## F. Assumption Audit` (assumptions rated "Acceptable Risk" that affect users)
 
-**Multiple archives for one capability:** When multiple archives exist, use the newest archive's proposal for "Why This Exists" (most current motivation). Aggregate limitations across all archives.
+**Multiple archives for one capability:** When multiple archives exist, aggregate research findings, limitations, and future enhancements across all archives.
 
-**initial-spec fallback:** If a capability's only relevant archive is `initial-spec` (a bootstrap change whose proposal "Why" describes spec creation, not the capability itself), derive "Why This Exists" from the spec's `## Purpose` section instead.
+**Non-Goals classification:** Non-Goals from `design.md` serve two sections:
+- **Known Limitations**: Non-Goals that describe current technical constraints or deliberate scope limits (rewrite as "Does not support X")
+- **Future Enhancements**: Non-Goals explicitly marked "(deferred)" or "(separate feature)", plus sensible out-of-scope items that are natural extensions of the capability. Do NOT include items that are merely change-level scope boundaries (e.g., "No changes to other skills"). Link to GitHub Issues where they exist.
+
+**CRITICAL — Purpose section source:** The Purpose section ALWAYS describes what the capability does and why it matters — never the motivation for a specific change. Derive Purpose from the spec's `## Purpose` section using problem-framing (what goes wrong without this capability). Archive proposals provide context for the Rationale section, NOT for Purpose. Do not use proposal "Why" sections as the Purpose — they describe why a change was made, not why the capability exists.
+
+**initial-spec fallback:** If a capability's only relevant archive is `initial-spec`, derive Purpose from the spec's `## Purpose` section. Derive Rationale from initial-spec research.md if it has useful design context.
 
 **No archives found:** Skip enrichment — generate a spec-only doc (current behavior).
 
@@ -56,10 +62,11 @@ For each capability, read its baseline spec's YAML frontmatter (if present) to g
 | `lastUpdated` | Date of last generation (`YYYY-MM-DD`) |
 
 **Conciseness guards:**
-- "Why This Exists": max 3 sentences
-- "Background": max 3-5 sentences
+- "Purpose": max 3 sentences
+- "Rationale": max 3-5 sentences
 - "Known Limitations": max 5 bullets
-- Priority when space-constrained: Features + Behavior (mandatory) > Why (preferred) > Background + Limitations (optional)
+- "Future Enhancements": max 5 bullets
+- Priority when space-constrained: Features + Behavior (mandatory) > Purpose (preferred) > Rationale + Limitations + Future Enhancements (optional)
 - Total: still 1-2 pages per capability
 
 #### Mapping Rules
@@ -174,8 +181,8 @@ No specs found in openspec/specs/. Run /opsx:archive first to merge specs.
 ## Guardrails
 
 - Always read the spec file before generating — do not generate from memory
+- **Read before write**: If a capability doc already exists, read it FIRST and update/enrich it rather than rewriting from scratch. This preserves established tone, phrasing, and structure. Only add or modify sections where enrichment data provides new information. If existing content is already good, keep it.
 - If a spec has no User Stories and no Requirements section, skip it and warn
-- If a doc file already exists, update it — don't overwrite manual additions
 - Preserve existing docs for specs not being regenerated (single-capability mode)
 - `docs/README.md` must always be regenerated — it contains the architecture overview and links all capabilities
 - Do NOT generate `docs/architecture-overview.md` or `docs/decisions/README.md` — these are replaced by the consolidated README

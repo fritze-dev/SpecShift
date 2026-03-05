@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability provides two quality checkpoints: `/opsx:preflight` for pre-implementation quality checks across six dimensions, and `/opsx:verify` for post-implementation verification of completeness, correctness, and coherence.
 
-## Why This Exists
+## Purpose
 
-Specifications and designs can contain gaps, contradictions, and untested assumptions that only surface during implementation -- when they are expensive to fix. Without pre-implementation checks, these issues propagate into code. Without post-implementation verification, divergence between specs and code goes undetected until it causes problems.
+Specifications and designs can contain gaps, contradictions, and untested assumptions that only surface during implementation — when they are expensive to fix. Without pre-implementation checks, these issues propagate into code. Without post-implementation verification, divergence between specs and code goes undetected until it causes problems.
 
-## Design Rationale
+## Rationale
 
 Preflight checks six specific dimensions rather than performing a generic review to ensure structured, repeatable coverage. Verification uses heuristic code search rather than exhaustive analysis, which means it may miss some things but runs quickly on large codebases. When uncertain about severity, verification errs on the side of lower severity (SUGGESTION over WARNING, WARNING over CRITICAL) to avoid false alarms.
 
@@ -58,6 +58,10 @@ Each issue includes a specific recommendation. The same command serves as both t
 - Verification uses heuristic keyword search, which may produce false positives on large codebases
 - Verification focuses on files referenced in design.md and recently modified files rather than exhaustive search
 - Preflight does not auto-fix issues; all findings require manual resolution
+
+## Future Enhancements
+
+- Interactive preflight warning handling instead of auto-accept (tracked in [#16](https://github.com/fritze-dev/opsx-enhanced-flow/issues/16))
 
 ## Edge Cases
 

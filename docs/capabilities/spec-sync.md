@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:sync` command merges delta specs from completed changes into their corresponding baseline specs. The merge is performed by the AI agent, which understands the semantic intent of each operation and produces coherent results.
 
-## Why This Exists
+## Purpose
 
 Delta specs capture what changed, but baseline specs need to reflect the current state of all requirements. Without a sync step, baselines would go stale after every change, and new team members or future changes would work from outdated references. Manual merging is tedious and error-prone, especially when multiple changes touch the same capability.
 
-## Design Rationale
+## Rationale
 
 Sync uses an agent-driven approach rather than programmatic string manipulation. This means the AI reads both the delta and the baseline, understands what the delta intends, and produces a coherent merged result. This is especially important for partial updates -- when a delta adds a single scenario to an existing requirement, a mechanical merge would not know where to place it, but the agent can locate the right requirement and append the scenario naturally.
 

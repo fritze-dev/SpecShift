@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 Planned improvements and future features are tracked as GitHub Issues with the `roadmap` label, providing a single always-current view via a filtered link in the project README.
 
-## Why This Exists
+## Purpose
 
 Without a clear place to capture future ideas, improvements get lost in conversation history, scattered across documents, or forgotten entirely. Using the existing issue tracker with a dedicated label means the roadmap is always current, requires no manual sync, and integrates with the tools your team already uses.
 
-## Design Rationale
+## Rationale
 
 The README links to a filtered GitHub Issues view rather than listing items inline. This means the roadmap is always in sync with the actual issue tracker -- when you create or close an issue, the roadmap updates automatically without requiring README edits.
 

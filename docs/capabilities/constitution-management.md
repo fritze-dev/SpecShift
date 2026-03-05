@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability manages the project constitution lifecycle: generating it from codebase observation during bootstrap, automatically updating it during design phases, and enforcing it as global context across all AI actions.
 
-## Why This Exists
+## Purpose
 
 Without a constitution, AI-generated code and specs default to generic best practices that may conflict with your project's actual conventions. Every time the AI produces output, you would need to manually correct style, architecture, and tooling choices. The constitution captures your project's real patterns once and enforces them automatically across every AI action.
 
-## Design Rationale
+## Rationale
 
 The constitution is generated from observed patterns rather than templates to ensure accuracy. Uncertain conventions are marked with `<!-- REVIEW -->` rather than guessed at, so you can confirm or correct them. Updates during design phases are additive by default -- existing entries are never removed without your explicit approval -- to prevent accidental loss of established conventions.
 

@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability provides two commands for generating pipeline artifacts: `/opsx:continue` for one stage at a time, and `/opsx:ff` for generating all remaining stages with a built-in review checkpoint.
 
-## Why This Exists
+## Purpose
 
 Different situations call for different levels of control. Sometimes you want to review each artifact individually before moving on; other times you trust the pipeline and want to reach implementation quickly. Without both options, you would either be forced to babysit every step or lose the ability to review at critical points.
 
-## Design Rationale
+## Rationale
 
 Both commands are delivered as thin SKILL.md wrappers around the OpenSpec CLI. This means updating the schema automatically updates generation behavior without changing skill files. The review checkpoint in `/opsx:ff` was placed after the design stage because that is the last point where the approach can be changed cheaply before quality checks and task creation commit to a direction.
 
@@ -49,6 +49,15 @@ Both commands handle partially completed pipelines gracefully. If research and p
 ### Multiple Capabilities
 
 If the proposal lists multiple capabilities, the specs stage generates one spec file per capability before marking the stage as complete.
+
+## Known Limitations
+
+- The review checkpoint relies on agent compliance with the constitution convention, not hard code enforcement
+- `/opsx:continue` does not support generating multiple stages in a single invocation
+
+## Future Enhancements
+
+- Hard enforcement of the review checkpoint (currently relies on agent compliance with constitution convention)
 
 ## Edge Cases
 

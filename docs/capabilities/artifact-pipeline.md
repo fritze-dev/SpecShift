@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The artifact pipeline defines a strict 6-stage progression from research through to implementation tasks. Each stage produces a verifiable artifact, and no stage can be skipped -- the system enforces dependency order so that every decision is documented before implementation begins.
 
-## Why This Exists
+## Purpose
 
 Without a structured pipeline, critical thinking steps get skipped -- developers jump straight to code without researching alternatives, writing specs, or checking for gaps. The pipeline enforces a deliberate progression that catches problems early, when they are cheapest to fix, rather than during implementation or after release.
 
-## Design Rationale
+## Rationale
 
 Artifact completion is determined by file existence and non-empty content rather than content quality assessment. This keeps the gating mechanism simple and predictable. The config.yaml is deliberately minimal (just a schema reference and constitution pointer) so that workflow rules live at their authoritative source: the schema for universal rules and the constitution for project-specific rules.
 

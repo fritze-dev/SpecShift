@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The `/opsx:docs` command generates a cross-cutting architecture overview as part of the consolidated `docs/README.md`, synthesized from the project constitution, the three-layer-architecture spec, and archived design decisions.
 
-## Why This Exists
+## Purpose
 
 Understanding a project's architecture typically requires reading the constitution, schema, multiple design documents, and scattered decision records. Without a synthesized overview, new contributors must piece together the architecture from fragments. This capability produces a single, coherent view of system architecture, tech stack, key decisions, and conventions.
 
-## Design Rationale
+## Rationale
 
 The architecture overview is embedded in `docs/README.md` rather than generated as a separate file to provide a single entry point for all documentation. Key Design Decisions include direct ADR links so readers can drill into the reasoning behind each decision without searching for the relevant record.
 
@@ -40,6 +40,11 @@ The system aggregates all decisions from archived design.md files into a dedupli
 ### Stale File Cleanup
 
 If `docs/architecture-overview.md` exists from a previous run, the system deletes it. The architecture overview now lives exclusively in `docs/README.md`.
+
+## Known Limitations
+
+- Does not generate a separate architecture document — all content is embedded in `docs/README.md`
+- External links to the old `docs/architecture-overview.md` will break after the first regeneration
 
 ## Edge Cases
 

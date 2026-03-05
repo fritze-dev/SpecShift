@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 The opsx-enhanced plugin is structured as three independently modifiable layers: the Constitution (project rules), the Schema (pipeline structure), and Skills (commands). Each layer has distinct responsibilities and interaction patterns.
 
-## Why This Exists
+## Purpose
 
 Without clear layer separation, changes to one part of the system cascade unpredictably into others. Updating a pipeline stage would require rewriting skill code, adding a project rule would mean editing the schema, and understanding the system would require reading everything at once. The three-layer architecture lets each concern be modified independently.
 
-## Design Rationale
+## Rationale
 
 Skills depend on the schema via the OpenSpec CLI rather than embedding schema logic directly. This indirection means a schema change (e.g., adding a new artifact stage) does not require updating any skill files. The constitution is loaded via config.yaml workflow rules so that it applies automatically without skills needing to explicitly reference it.
 

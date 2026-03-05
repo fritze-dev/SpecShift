@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability defines the QA loop that requires explicit human approval before a change can be archived. It includes success metric validation, fix-verify cycles, and bidirectional feedback between code and specs.
 
-## Why This Exists
+## Purpose
 
 Without a mandatory approval step, changes could be archived and finalized without anyone confirming they actually work correctly. Automated checks catch many issues, but only a human can verify that the implementation matches the intent. The approval gate ensures every change gets a deliberate sign-off from someone who understands the context.
 
-## Design Rationale
+## Rationale
 
 Approval requires the explicit word "Approved" rather than accepting ambiguous responses like "looks ok" to prevent accidental sign-offs. The fix loop supports bidirectional feedback -- you can fix the code to match the spec or update the spec to match the code -- because implementation sometimes reveals that the original spec was wrong. A final verification pass runs after the fix loop to ensure that fixes themselves did not introduce new inconsistencies.
 

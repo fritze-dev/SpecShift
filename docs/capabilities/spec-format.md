@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability defines the format rules for all specifications: normative descriptions with obligation keywords, Gherkin scenarios, delta spec operations, frontmatter metadata, and baseline spec structure.
 
-## Why This Exists
+## Purpose
 
-Without consistent format rules, specifications become a patchwork of styles -- some with formal requirements, others with vague descriptions, scenarios at wrong heading levels that break parsing. The spec format ensures every specification is structured identically, making them both human-readable and machine-parseable.
+Without consistent format rules, specifications become a patchwork of styles — some with formal requirements, others with vague descriptions, scenarios at wrong heading levels that break parsing. The spec format ensures every specification is structured identically, making them both human-readable and machine-parseable.
 
-## Design Rationale
+## Rationale
 
 Scenarios use exactly 4 hashtags (`####`) because 3 hashtags would render as a requirement-level heading, silently breaking the relationship between scenarios and their parent requirement. This is a common mistake that causes subtle downstream problems. Delta specs require full content for MODIFIED requirements (not partial diffs) because partial content loses detail when archived into the baseline.
 

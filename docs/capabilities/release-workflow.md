@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability defines the release workflow conventions: automatic patch version bumps on archive, version synchronization between plugin files, manual minor/major release processes, consumer update guidance, and changelog generation from archived changes.
 
-## Why This Exists
+## Purpose
 
 Without automated version management, patch versions would need to be bumped manually after every archive, leading to forgotten bumps and version confusion. Without a changelog, users would need to read spec files or commit logs to understand what changed. This capability ensures versions stay current automatically and changes are communicated clearly.
 
-## Design Rationale
+## Rationale
 
 Patch bumps are automatic on archive because every completed change warrants at least a patch version increment. Minor and major releases are manual because they represent intentional decisions about feature scope or breaking changes that require human judgment. The changelog follows the Keep a Changelog format because it is widely recognized and structures entries by change type.
 
@@ -53,6 +53,13 @@ After a successful archive, the system shows next steps: generate the changelog 
 
 - Patch bumps are automatic only -- minor and major releases require manual version setting
 - Changelog generation relies on archive artifacts; purely internal refactoring may result in minimal entries
+
+## Future Enhancements
+
+- Dedicated `/opsx:release` skill for managed minor/major releases (deferred)
+- `/opsx:status` skill showing current version, pending changes, and sync state (separate feature)
+- Git hooks or CI/CD automation for release validation
+- Automatic git tagging on minor/major releases
 
 ## Edge Cases
 

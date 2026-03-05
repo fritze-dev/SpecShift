@@ -7,13 +7,13 @@ lastUpdated: "2026-03-05"
 
 # User Documentation
 
-The `/opsx:docs` command generates user-facing documentation for every capability, transforming specifications into clear explanations with features, behavior descriptions, and edge cases. When archive data is available, docs are enriched with context about why the capability exists, its background, and known limitations.
+The `/opsx:docs` command generates user-facing documentation for every capability, transforming specifications into clear explanations with features, behavior descriptions, and edge cases. When archive data is available, docs are enriched with purpose context, design rationale, and known limitations.
 
-## Why This Exists
+## Purpose
 
 Specifications are written for precision, not readability. Without user documentation, end users would need to parse normative language, Gherkin scenarios, and spec format conventions to understand what each capability does. User docs bridge this gap by translating specs into natural language that explains what you can do and what to expect.
 
-## Design Rationale
+## Rationale
 
 Documentation is generated from baseline specs (the source of truth) rather than maintained manually, so it stays in sync with the actual system behavior. Archive data is used for enrichment because proposals and designs capture motivation and trade-offs that specifications do not. The docs template provides consistent structure while the agent handles the translation from spec language to user-facing language.
 
@@ -22,8 +22,7 @@ Documentation is generated from baseline specs (the source of truth) rather than
 - One documentation file per capability at `docs/capabilities/<capability>.md`
 - Specifications transformed into natural, user-facing language
 - Gherkin scenarios converted to readable usage examples
-- Enriched with "Why This Exists," "Background," and "Known Limitations" when archive data is available
-- "Design Rationale" section for initial-spec-only capabilities
+- Enriched with "Purpose," "Rationale," "Known Limitations," and "Future Enhancements" when archive data is available
 - Multi-command capabilities include workflow sequence notes
 - Edge Cases section contains only surprising states, not normal flow variants
 - Documentation table of contents in `docs/README.md` grouped by category
@@ -36,12 +35,13 @@ When you run `/opsx:docs`, the system reads each baseline spec and produces a do
 
 ### Enrichment from Archives
 
-For each capability, the system checks archived changes for proposal, research, design, and preflight artifacts. When found, it adds:
-- **Why This Exists**: Derived from the newest proposal's Why section (max 3 sentences)
-- **Background**: Research context and key findings (max 3-5 sentences)
-- **Known Limitations**: From design Non-Goals, design Risks, and preflight Assumption Audit (max 5 bullets)
+For each capability, the system checks archived changes for proposal, research, design, and preflight artifacts. When found, it enriches:
+- **Purpose**: Describes what the capability does and why it matters (always derived from the capability's purpose, never from change motivation) (max 3 sentences)
+- **Rationale**: Design context and key decisions from research and design artifacts (max 3-5 sentences)
+- **Known Limitations**: From design Non-Goals (current constraints), design Risks, and preflight Assumption Audit (max 5 bullets)
+- **Future Enhancements**: From design Non-Goals marked "(deferred)" or "(separate feature)", plus sensible out-of-scope items that are natural extensions (max 5 bullets)
 
-For initial-spec-only capabilities (no enrichment archives), "Why This Exists" is derived from the spec Purpose using problem-framing, and a "Design Rationale" section is generated when research data supports it.
+For initial-spec-only capabilities (no enrichment archives), Purpose is derived from the spec Purpose section using problem-framing, and Rationale is generated when research data supports it.
 
 ### Documentation Table of Contents
 
@@ -51,9 +51,21 @@ The system creates or updates `docs/README.md` as the single entry point for all
 
 Normal flow variants and expected UX behaviors go in the Behavior section. The Edge Cases section only includes surprising states, error conditions, or non-obvious interactions.
 
+## Known Limitations
+
+- Docs are fully regenerated each run — no incremental updates
+- Initial-spec research data may be too thin for some Rationale sections, in which case the section is omitted
+- Template extraction means format changes require template edits, not SKILL.md edits
+- External links to the old `docs/architecture-overview.md` or `docs/decisions/README.md` will break after regeneration
+
+## Future Enhancements
+
+- Incremental doc generation (only regenerate docs for changed capabilities)
+- Automated validation of generated docs against templates
+
 ## Edge Cases
 
-- If no baseline specs exist, the system informs you and suggests running `/opsx:sync` first.
-- If a spec has no scenarios, the system generates documentation from requirement descriptions and notes that usage examples are unavailable.
+- If no baseline specs exist, the system informs you and suggests running `/opsx:archive` first.
+- If a spec has no scenarios, the system generates documentation from requirement descriptions.
 - If archive artifacts are missing (e.g., no design.md), the system skips enrichment from that artifact without error.
-- If `docs/architecture-overview.md` or `docs/decisions/README.md` exist from a previous run, the system deletes them in favor of the consolidated README.
+- If the initial-spec research.md lacks useful data for a capability, the Rationale section is omitted rather than generating empty content.

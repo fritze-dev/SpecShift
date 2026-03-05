@@ -9,11 +9,11 @@ lastUpdated: "2026-03-05"
 
 This capability manages the change lifecycle: creating new workspaces with `/opsx:new`, maintaining schema-defined workspace structure, and archiving completed changes with `/opsx:archive`.
 
-## Why This Exists
+## Purpose
 
 Without structured change workspaces, spec-driven development becomes disorganized -- artifacts scatter across the project, changes lack clear boundaries, and completed work has no consistent archival pattern. This capability ensures every change has a dedicated workspace with a defined structure, and completed changes are preserved chronologically for future reference.
 
-## Design Rationale
+## Rationale
 
 Change names use kebab-case to ensure consistent, URL-safe, filesystem-safe identifiers. Archives use a date-prefixed directory naming scheme (YYYY-MM-DD-name) so they sort chronologically in the filesystem. The archive step prompts for spec sync before moving files to prevent baseline specs from going stale.
 
