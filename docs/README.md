@@ -66,6 +66,10 @@ The three layers are independently modifiable — the schema does not embed skil
 | Manual ADRs use `adr-MNNN-slug.md` naming | No extra directory needed; M prefix unambiguously distinguishes from generated ADRs | [ADR-038](decisions/adr-038-manual-adrs-use-adr-mnnn-slug-md-naming-in-docs-de.md) |
 | Deterministic slug: replace non-`[a-z0-9]` with hyphen | Handles all special chars uniformly; produces consistent results across runs | [ADR-039](decisions/adr-039-deterministic-slug-replace-non-a-z0-9-with-hyphen.md) |
 | Fix both specs AND SKILL.md/templates | Specs define requirements; SKILL.md defines execution; both must agree to prevent drift | [ADR-040](decisions/adr-040-fix-both-specs-and-skill-md-templates.md) |
+| Replace priority rule with section-completeness rule | Positive guidance ("include when data exists") prevents section dropping without removing conciseness guards | [ADR-041](decisions/adr-041-replace-priority-rule-with-section-comple.md) |
+| Add enrichment reads only to Step 4, not all steps | Only Step 4 has the implicit dependency problem; step independence guardrail covers the general case | [ADR-042](decisions/adr-042-add-enrichment-reads-only-to-step-4-not-al.md) |
+| Add step independence as a guardrail, not a structural change | Simpler than restructuring all steps; matches existing SKILL.md guardrails pattern | [ADR-043](decisions/adr-043-add-step-independence-as-a-guardrail-not-a.md) |
+| Reinforce specs with step independence language | Keeps specs and skill aligned; prevents future drift between spec and implementation | [ADR-044](decisions/adr-044-reinforce-specs-with-step-independence-lang.md) |
 | Init is model-invocable, not user-only | `disable-model-invocation: true` makes skills undiscoverable; bootstrap needs programmatic init | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
@@ -90,6 +94,9 @@ The three layers are independently modifiable — the schema does not embed skil
 - **Translation at generation time (ADR-037)**: Translation quality depends on LLM capability; less common languages may require manual review.
 - **Deterministic slug algorithm (ADR-039)**: Produces different filenames for some existing ADRs, causing file renames in git history.
 - **Fix both specs and templates (ADR-040)**: Template comments increase file size in the schema layer.
+- **Section-completeness rule (ADR-041)**: Agent may still drop sections despite rule change if instruction is not followed precisely.
+- **Step 4 enrichment only (ADR-042)**: Other steps are not restructured for full self-containment — if they develop similar subagent issues, a per-step restructure would be needed.
+- **Step independence guardrail (ADR-043)**: Advisory guardrail, not programmatically enforced — depends on agent instruction compliance.
 - **Init model-invocable (ADR-M001)**: The three-layer-architecture spec no longer distinguishes init from other skills in terms of invocability.
 
 ## Conventions
