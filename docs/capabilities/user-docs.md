@@ -26,6 +26,7 @@ Documentation is generated from baseline specs (the source of truth) rather than
 - Multi-command capabilities include workflow sequence notes
 - Edge Cases section contains only surprising states, not normal flow variants
 - Existing docs read before writing — preserves established tone and quality across regeneration runs
+- Documentation language configurable via `docs_language` in `openspec/config.yaml` — generates capability docs, ADRs, and README in the target language
 - Documentation table of contents in `docs/README.md` grouped by category
 
 ## Behavior
@@ -48,6 +49,10 @@ For initial-spec-only capabilities (no enrichment archives), Purpose is derived 
 
 The system creates or updates `docs/README.md` as the single entry point for all documentation. It includes architecture overview content and a capabilities section grouped by category (Setup, Change Workflow, Development, etc.) and ordered by the `order` frontmatter field from baseline specs.
 
+### Language-Aware Generation
+
+The system reads the `docs_language` field from `openspec/config.yaml`. If the field is missing or commented out, documentation is generated in English. When a language is configured, the system translates all headings and content to the target language. YAML keys, product names, CLI commands, and file paths remain in English regardless of the configured language. Changing the `docs_language` value triggers a full regeneration of all documentation in the new language.
+
 ### Edge Cases vs. Behavior
 
 Normal flow variants and expected UX behaviors go in the Behavior section. The Edge Cases section only includes surprising states, error conditions, or non-obvious interactions.
@@ -69,3 +74,4 @@ Normal flow variants and expected UX behaviors go in the Behavior section. The E
 - If a spec has no scenarios, the system generates documentation from requirement descriptions.
 - If archive artifacts are missing (e.g., no design.md), the system skips enrichment from that artifact without error.
 - If the initial-spec research.md lacks useful data for a capability, the Rationale section is omitted rather than generating empty content.
+- If `docs_language` is set to an unrecognizable value, the system falls back to English with a warning.

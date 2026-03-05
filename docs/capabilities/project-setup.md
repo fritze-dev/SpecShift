@@ -27,12 +27,13 @@ The init command generates config.yaml from a built-in template rather than copy
 - Validates the setup after all steps complete
 - Runs idempotently -- safe to re-run on already-initialized projects
 - Checks CLI version compatibility (requires ^1.2.0)
+- Includes commented-out `docs_language` field in config template for language discoverability
 
 ## Behavior
 
 ### First-Time Initialization
 
-When you run `/opsx:init` on a fresh project, the system installs the OpenSpec CLI (if needed), registers the schema, copies schema files, creates config.yaml, and creates a constitution placeholder. After all steps, it runs validation to confirm everything is working and reports the results.
+When you run `/opsx:init` on a fresh project, the system installs the OpenSpec CLI (if needed), registers the schema, copies schema files, creates config.yaml, and creates a constitution placeholder. The generated config.yaml includes a commented-out `docs_language` field so you can discover and enable language configuration later. The `context` field enforces English for workflow artifacts to ensure machine-readable consistency. After all steps, it runs validation to confirm everything is working and reports the results.
 
 ### Re-Running Init
 

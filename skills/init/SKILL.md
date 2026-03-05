@@ -66,9 +66,13 @@ Only if `openspec/config.yaml` does **not** already exist, create it with this m
 ```yaml
 schema: opsx-enhanced
 
+# docs_language: English
+
 context: |
   Always read and follow the project constitution at
   openspec/constitution.md before proceeding.
+  All workflow artifacts (research, proposal, specs, design, preflight, tasks)
+  must be written in English regardless of docs_language.
 ```
 
 If it already exists, report: "config.yaml already exists — preserved."

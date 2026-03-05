@@ -26,13 +26,14 @@ ADRs are fully regenerated on each run rather than incrementally updated. This a
 - Alternatives Considered expanded into bullets
 - Consequences split into Positive and Negative subsections
 - References linking to related spec files and other ADRs
+- ADR content generated in configured `docs_language` (file names stay English)
 - Fully regenerated on each `/opsx:docs` run
 
 ## Behavior
 
 ### ADR Generation
 
-When you run `/opsx:docs`, the system reads all archived design.md files and processes each Decisions table. Each row becomes one ADR file. Archives are processed in chronological order (by date prefix), and decisions within each archive follow table row order.
+When you run `/opsx:docs`, the system reads all archived design.md files and processes each Decisions table. Each row becomes one ADR file. Archives are processed in chronological order (by date prefix), and decisions within each archive follow table row order. If `docs_language` is configured, ADR headings and content are generated in the target language while file names (`adr-NNN-<slug>.md`) remain in English.
 
 ### Context Enrichment
 
@@ -61,3 +62,4 @@ If `docs/decisions/README.md` exists from a previous run, the system deletes it.
 - If a Decisions table is empty, that archive's design.md is skipped for ADR generation.
 - If the Decisions table uses a different column format (3-column or 4-column), the system handles both.
 - If a decision is cross-cutting and not tied to a specific capability spec, the References section links to the constitution or the most relevant architectural spec.
+- If `docs_language` is set to an unrecognizable value, ADRs fall back to English.

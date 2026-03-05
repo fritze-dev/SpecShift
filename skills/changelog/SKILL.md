@@ -16,6 +16,13 @@ disable-model-invocation: false
 
 Run `openspec schema which opsx-enhanced --json`. If it fails, tell the user to run `/opsx:init` first and stop.
 
+### Step 0: Determine Documentation Language
+
+Read `openspec/config.yaml` and extract the `docs_language` field.
+
+- **Missing or "English":** Proceed with English output (default behavior, no change).
+- **Non-English value (e.g., "German", "French"):** Generate all new changelog entry headings and descriptions in the target language in Step 6. Dates remain in ISO format. Product names (OpenSpec, Claude Code), commands (`/opsx:*`), and file paths remain in English.
+
 ### Step 1: Discover Archives
 
 Glob `openspec/changes/archive/*/` to find all archived change directories.
@@ -56,6 +63,8 @@ Derive a type from the proposal and spec content:
 | Implementation details (file paths, APIs) | Omitted entirely |
 
 ### Step 6: Generate Entry and Merge
+
+**Language reminder:** If Step 0 determined a non-English `docs_language`, translate section headers (e.g., `### Added` → `### Hinzugefügt` for German) and entry descriptions to the target language. Dates remain in ISO format. Product names and commands remain in English. Existing entries in previous languages are preserved unchanged.
 
 Generate entries following [Keep a Changelog](https://keepachangelog.com/) format. Insert new entries at the correct chronological position (newest first).
 

@@ -57,6 +57,10 @@ The layers interact through well-defined interfaces: skills depend on the schema
 | Separate "Future Enhancements" from "Known Limitations" | Limitations = current constraints; Enhancements = actionable future ideas with different audiences | [ADR-031](decisions/adr-031-separate-future-enhancements-from-known-limitation.md) |
 | "Read before write" guardrail in SKILL.md | Prevents quality regression by requiring agent to read existing doc before generating | [ADR-032](decisions/adr-032-read-before-write-guardrail-in-skillmd.md) |
 | Manual doc fixes + deferred regeneration | Safer: preserves established quality, validates guardrails separately | [ADR-033](decisions/adr-033-manual-doc-fixes-deferred-regeneration.md) |
+| Single `docs_language` field in config.yaml | Central, backward-compatible, read by all skills via existing config loading | [ADR-034](decisions/adr-034-single-docs-language-field-in-configyaml.md) |
+| Commented-out field in init template for discoverability | Users discover the feature without it being active by default; existing projects unaffected | [ADR-035](decisions/adr-035-commented-out-field-in-init-template-for-d.md) |
+| English enforcement via config `context` field | Context is passed to all skills automatically -- single enforcement point, no per-skill duplication | [ADR-036](decisions/adr-036-english-enforcement-via-config-context-fie.md) |
+| Translation at generation time, not in templates | Templates are structural guides; one set of templates for all languages | [ADR-037](decisions/adr-037-translation-at-generation-time-not-in-temp.md) |
 
 ### Notable Trade-offs
 
@@ -68,6 +72,7 @@ The layers interact through well-defined interfaces: skills depend on the schema
 - **"Why This Exists" uses newest archive's proposal**: Historical context from earlier proposals is not directly visible in capability docs, though it is preserved in the archives.
 - **"Read before write" guardrail**: Advisory only -- relies on agent compliance with SKILL.md guidance rather than hard enforcement. Mitigated by clear, explicit language in the Guardrails section.
 - **Manual doc fixes + deferred regeneration**: Docs are manually curated until the regeneration pass validates the guardrails. May diverge slightly from what `/opsx:docs` would produce.
+- **Translation at generation time**: LLM translation quality varies by language. Major languages (German, French, Spanish) produce high-quality results; exotic languages may need manual review. No runtime validation of `docs_language` value -- LLMs handle fuzzy names well but unrecognizable values fall back to English.
 
 ## Conventions
 

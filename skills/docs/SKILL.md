@@ -18,6 +18,17 @@ disable-model-invocation: false
 
 Run `openspec schema which opsx-enhanced --json`. If it fails, tell the user to run `/opsx:init` first and stop.
 
+### Step 0: Determine Documentation Language
+
+Read `openspec/config.yaml` and extract the `docs_language` field.
+
+- **Missing or "English":** Proceed with English output (default behavior, no change).
+- **Non-English value (e.g., "German", "French"):** Generate all headings and content in the target language for Steps 3, 4, and 5. Apply these translation rules throughout:
+  - YAML frontmatter **keys** remain in English (machine-readable identifiers)
+  - YAML frontmatter **values** (`title`, `description`) are translated to the target language
+  - Product names (OpenSpec, Claude Code), commands (`/opsx:*`), and file paths remain in English
+  - If an existing doc is in a different language than the configured `docs_language`, treat it as a full regeneration rather than an incremental update
+
 ### Step 1: Discover Specs
 
 Glob `openspec/specs/*/spec.md` to find all available capabilities. The directory name is the capability ID.
@@ -47,6 +58,8 @@ For each archive found, read the following files from the archive root directory
 **No archives found:** Skip enrichment — generate a spec-only doc (current behavior).
 
 ### Step 3: Generate Enriched Capability Documentation
+
+**Language reminder:** If Step 0 determined a non-English `docs_language`, generate all section headings and content in the target language. YAML frontmatter keys stay English; `title` and `description` values are translated.
 
 Read the capability doc template at `openspec/schemas/opsx-enhanced/templates/docs/capability.md` for the expected output format.
 
@@ -84,6 +97,8 @@ For each capability, read its baseline spec's YAML frontmatter (if present) to g
 
 ### Step 4: Generate Architecture Decision Records
 
+**Language reminder:** If Step 0 determined a non-English `docs_language`, generate all ADR section headings and content in the target language. ADR file names (`adr-NNN-<slug>.md`) remain in English — the slug is always derived from the English Decision column text.
+
 Read the ADR template at `openspec/schemas/opsx-enhanced/templates/docs/adr.md` for the expected output format.
 
 Generate formal ADRs from `## Decisions` tables across all archived `design.md` files.
@@ -107,6 +122,8 @@ Generate formal ADRs from `## Decisions` tables across all archived `design.md` 
 ADRs are fully regenerated on each run (not incremental). Create `docs/decisions/` directory if it does not exist.
 
 ### Step 5: Generate Consolidated README
+
+**Language reminder:** If Step 0 determined a non-English `docs_language`, generate all section headings, table headers, and content in the target language. Product names, commands, and file paths remain in English.
 
 Read the README template at `openspec/schemas/opsx-enhanced/templates/docs/readme.md` for the expected output format.
 

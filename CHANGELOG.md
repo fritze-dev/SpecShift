@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-05 — Configurable Docs Language
+
+### Added
+- Documentation language is now configurable via `docs_language` in `openspec/config.yaml` — set to any language name (e.g., "German", "French") and `/opsx:docs` generates all capability docs, ADRs, and the consolidated README in that language
+- `/opsx:changelog` generates new entries in the configured language, including translated section headers (e.g., "Hinzugefügt" instead of "Added" for German)
+- New projects created with `/opsx:init` include a commented-out `docs_language` field for discoverability
+- Workflow artifacts (research, proposal, specs, design, preflight, tasks) are now explicitly enforced to be English via the config context field, regardless of documentation language
+
+### Changed
+- Init skill config template expanded with `docs_language` field and English-enforcement rule for internal artifacts
+- `/opsx:docs` and `/opsx:changelog` now read the `docs_language` setting before generating output
+- Product names (OpenSpec, Claude Code), commands, file paths, and YAML frontmatter keys remain in English regardless of configured language
+
 ## 2026-03-05 — Improve Docs Sections
 
 ### Added

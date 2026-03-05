@@ -24,6 +24,7 @@ Patch bumps are automatic on archive because every completed change warrants at 
 - Manual minor/major release process with git tags and optional GitHub Releases
 - Consumer update guidance: marketplace refresh, plugin update, restart
 - `/opsx:changelog` generates release notes from archived changes in Keep a Changelog format
+- Changelog entries generated in configured `docs_language` with translated section headers
 - Post-archive next steps include changelog generation, push, and local plugin update
 - Skill immutability convention: project-specific behavior lives in the constitution, not in skills
 
@@ -44,6 +45,10 @@ To update the plugin, consumers run the marketplace update command to refresh th
 ### Changelog Generation
 
 When you run `/opsx:changelog`, the system reads archived changes from `openspec/changes/archive/`, examines each archive's proposal, delta specs, and design artifacts, and produces changelog entries in Keep a Changelog format (Added, Changed, Deprecated, Removed, Fixed, Security). Entries are ordered newest first. If CHANGELOG.md already exists, new entries are added at the top while preserving existing content.
+
+### Language-Aware Changelog
+
+The system reads the `docs_language` field from `openspec/config.yaml`. If the field is missing or commented out, changelog entries are generated in English. When a language is configured, section headers are translated to the target language (e.g., "Added" becomes "Hinzugefuegt" for German) and entry descriptions are written in the configured language. Dates remain in ISO format, product names stay in English, and existing entries in previous languages are preserved as-is.
 
 ### Post-Archive Flow
 
@@ -66,3 +71,4 @@ After a successful archive, the system shows next steps: generate the changelog 
 - If the archive directory is empty or does not exist when running `/opsx:changelog`, the system informs you that no archived changes were found.
 - If an archived change is purely internal refactoring with no user-visible changes, the changelog either omits the entry or includes a minimal "Internal improvements" note.
 - If CHANGELOG.md contains manually written entries, the system preserves them when adding new entries.
+- If `docs_language` is changed mid-project, existing changelog entries remain in their original language while new entries use the new language.

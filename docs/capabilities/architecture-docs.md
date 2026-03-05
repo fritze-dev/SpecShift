@@ -25,13 +25,14 @@ The architecture overview is embedded in `docs/README.md` rather than generated 
 - ADR column linking directly to corresponding Architecture Decision Records
 - Notable trade-offs surfaced from ADR Consequences sections
 - Conventions section from the constitution
+- Architecture overview generated in configured `docs_language`
 - Fully regenerated on each `/opsx:docs` run
 
 ## Behavior
 
 ### Architecture Overview Generation
 
-When you run `/opsx:docs`, the system reads the constitution, the three-layer-architecture spec, and all Decisions tables from archived design.md files. It synthesizes this into the architecture section of `docs/README.md`, covering system architecture, tech stack, key decisions with ADR links, and conventions.
+When you run `/opsx:docs`, the system reads the constitution, the three-layer-architecture spec, and all Decisions tables from archived design.md files. It synthesizes this into the architecture section of `docs/README.md`, covering system architecture, tech stack, key decisions with ADR links, and conventions. If `docs_language` is configured, the architecture overview is generated in the target language while product names, commands, and YAML keys remain in English.
 
 ### Key Design Decisions
 
@@ -50,3 +51,4 @@ If `docs/architecture-overview.md` exists from a previous run, the system delete
 - If the constitution is not found, the system warns you and skips architecture overview generation.
 - If the three-layer-architecture spec is missing, the system generates a minimal System Architecture section from constitution Architecture Rules only.
 - If no archived changes have design.md files, the Key Design Decisions section is omitted.
+- If `docs_language` is set to an unrecognizable value, the architecture overview falls back to English.
