@@ -117,7 +117,7 @@ For each capability marked for regeneration, read its baseline spec's YAML front
 
 ### Step 4: Generate Architecture Decision Records
 
-**Language reminder:** If Step 0 determined a non-English `docs_language`, generate all ADR section headings and content in the target language. ADR file names (`adr-NNN-<slug>.md`) remain in English — the slug is always derived from the English Decision column text.
+**Language reminder:** If Step 0 determined a non-English `docs_language`, generate all ADR section headings (Status, Context, Decision, Alternatives Considered, Consequences, References) and content in the target language. ADR file names (`adr-NNN-<slug>.md`) remain in English — the slug is always derived from the English Decision column text.
 
 Read the ADR template at `openspec/schemas/opsx-enhanced/templates/docs/adr.md` for the expected output format.
 
@@ -149,10 +149,15 @@ Generate formal ADRs from `## Decisions` tables across archived `design.md` file
 2. If decisions within the same archive clearly address different concerns (e.g., one about naming, another about data migration) → keep them as separate ADRs.
 3. For borderline cases (2 rows, or mixed topics) → keep separate (conservative default).
 
+**Inline rationale (all ADR types):** Every ADR — whether consolidated or single-decision — SHALL include rationale inline in the Decision section using the em-dash pattern. There is no separate `## Rationale` section. The Rationale column from the design.md Decisions table provides the inline rationale text.
+
+- **Consolidated ADRs**: Numbered list of sub-decisions, each with inline rationale: `1. **Sub-decision text** — rationale`
+- **Single-decision ADRs**: `**Decision text** — rationale`
+
 **Consolidated ADR format:** A consolidated ADR uses:
 - **Title**: Derived from the archive name or the most significant decision row (e.g., "Rename init skill to setup")
 - **Slug**: Derived from the consolidated title, not individual sub-decisions
-- **Decision section**: Numbered list of sub-decisions with individual rationale inline
+- **Decision section**: Numbered list of sub-decisions with individual rationale inline (em-dash pattern)
 - **Alternatives Considered**: Merged from all consolidated rows
 - **Consequences**: Combined across all consolidated decisions
 
@@ -211,16 +216,20 @@ Read the README template at `openspec/schemas/opsx-enhanced/templates/docs/readm
 Create or update `docs/README.md` as the **single entry point** for all generated documentation. This file merges the architecture overview and capabilities table into one document, synthesized from:
 - `openspec/constitution.md` — Tech Stack, Architecture Rules, Conventions sections
 - `openspec/specs/three-layer-architecture/spec.md` — the three-layer model description
-- All `openspec/changes/archive/*/design.md` — aggregate `## Decisions` tables for key design decisions
-- All generated ADR files (from Step 4) — for inline ADR links
+- All ADR files in `docs/decisions/` (both generated `adr-NNN-*.md` and manual `adr-M*.md`) — for key design decisions
 - All generated capability docs (from Step 3) — for the capabilities table
 
-**Key Design Decisions table:** Use an "ADR" column linking directly to the corresponding ADR file (e.g., `[ADR-001](decisions/adr-001-slug.md)`). Include ALL decisions from archived design.md files. Additionally, discover manual ADRs matching `docs/decisions/adr-M*.md` and include them in the table after all generated ADRs, with links like `[ADR-M001](decisions/adr-M001-init-model-invocable.md)`. Extract the Decision and Rationale from the manual ADR's `## Decision` and `## Rationale` sections. Surface notable trade-offs from ADR Negative Consequences — add a "Notable Trade-offs" subsection if any decisions have significant negative consequences. Include trade-offs that affect documentation consumers or represent meaningful constraints — every ADR with a substantive negative consequence should be represented.
+**Key Design Decisions table:** Build the table by reading all ADR files in `docs/decisions/`. For each ADR, extract:
+- **Decision**: A summary derived from the `## Decision` section content. For consolidated ADRs with numbered sub-decisions, summarize the overarching decision. For single-decision ADRs, use the decision text.
+- **Rationale**: For generated ADRs, extract the inline rationale (the text after the em-dash `—` in the Decision section). For manual ADRs, extract from the `## Rationale` section if present.
+- **ADR link**: Link directly to the ADR file (e.g., `[ADR-001](decisions/adr-001-slug.md)`).
+
+List generated ADRs first (ordered by number), followed by manual ADRs (ordered by M-number). Do NOT read `design.md` archives for this table — ADR files are the single canonical source. Surface notable trade-offs from ADR Negative Consequences — add a "Notable Trade-offs" subsection if any decisions have significant negative consequences. Include trade-offs that affect documentation consumers or represent meaningful constraints — every ADR with a substantive negative consequence should be represented.
 
 **Capabilities section:** Group capabilities by the `category` field from baseline spec YAML frontmatter. Render each category as a group header (title-case of the kebab-case value, e.g., `change-workflow` → "Change Workflow"). Within each group, order by `order` field (lower first). If a capability has no `category`, place in an "Other" group.
 
 **No constitution found:** Warn the user and skip architecture overview generation.
-**No archived design.md files:** Omit the Key Design Decisions section.
+**No ADR files found:** If no ADR files exist in `docs/decisions/`, omit the Key Design Decisions section.
 
 ### Step 6: Cleanup Stale Files + Confirm
 

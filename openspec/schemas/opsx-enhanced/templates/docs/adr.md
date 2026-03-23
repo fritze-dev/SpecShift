@@ -17,11 +17,17 @@ Accepted (YYYY-MM-DD)
 
 ## Decision
 
-[From the Decisions table "Decision" column.]
+<!-- For consolidated ADRs (multiple sub-decisions):
+     Use a numbered list with inline rationale via em-dash:
+     1. **Sub-decision text** — rationale explaining why
+     2. **Sub-decision text** — rationale explaining why
 
-## Rationale
+     For single-decision ADRs:
+     **Decision text** — rationale explaining why
 
-[From the Decisions table "Rationale" column.]
+     Rationale is always inline. There is no separate Rationale section. -->
+
+[From the Decisions table. Each decision includes its rationale inline via em-dash.]
 
 ## Alternatives Considered
 

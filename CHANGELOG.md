@@ -3,6 +3,14 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-23 — Streamline ADR Format
+
+### Changed
+- ADR Decision section now includes rationale inline using the em-dash pattern — the separate Rationale section has been removed from the template (closes #24)
+- ADR template formalized: both consolidated and single-decision ADRs use the same inline-rationale format
+- Key Design Decisions table in the documentation README now sources all data directly from ADR files instead of archived design artifacts — ADRs are the single canonical source
+- Language-aware ADR generation updated to 6 section headings (Rationale heading removed)
+
 ## 2026-03-23 — Smart Workflow Checkpoints
 
 ### Changed
