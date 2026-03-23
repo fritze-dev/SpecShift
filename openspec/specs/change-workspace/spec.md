@@ -12,7 +12,7 @@ Manages the change lifecycle including workspace creation (`/opsx:new`), schema-
 
 The system SHALL create a scaffolded change workspace when the user invokes `/opsx:new <change-name>`. The workspace SHALL be created by delegating to the OpenSpec CLI command `openspec new change "<name>"`. The change name MUST be in kebab-case format. If the user provides a description instead of a name, the system SHALL derive a kebab-case name from the description. The system SHALL NOT proceed without a valid change name.
 
-<!-- ASSUMPTION: The OpenSpec CLI is installed and accessible on the PATH, as ensured by /opsx:init -->
+<!-- ASSUMPTION: The OpenSpec CLI is installed and accessible on the PATH, as ensured by /opsx:setup -->
 
 **User Story:** As a developer I want to create a new change workspace with a single command, so that I can immediately begin the spec-driven workflow without manual directory setup.
 

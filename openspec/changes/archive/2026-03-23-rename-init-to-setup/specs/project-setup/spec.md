@@ -1,12 +1,14 @@
----
-order: 1
-category: setup
----
-## Purpose
+## RENAMED Requirements
 
-Handles one-time project initialization via `/opsx:setup`, including OpenSpec CLI installation, schema setup, config creation, and post-setup validation.
+### Requirement: Install OpenSpec and Schema
+**FROM:** All references to `/opsx:init` in this requirement
+**TO:** `/opsx:setup`
 
-## Requirements
+### Requirement: OpenSpec CLI Prerequisite Check
+**FROM:** All references to `/opsx:init` in this requirement
+**TO:** `/opsx:setup`
+
+## MODIFIED Requirements
 
 ### Requirement: Install OpenSpec and Schema
 The system SHALL provide `/opsx:setup` as the single entry point for project setup. The setup command SHALL install the OpenSpec CLI globally via npm, register the `opsx-enhanced` schema via `openspec schema init`, copy the plugin's custom schema files and templates into the project's `openspec/schemas/` directory, create a minimal `openspec/config.yaml` bootstrap (schema reference + constitution pointer + commented-out `docs_language` field + English-enforcement rule for workflow artifacts), and create a constitution placeholder if none exists. The setup command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps and report what was already in place.
@@ -56,7 +58,7 @@ The generated config.yaml SHALL include a commented-out `docs_language: English`
 - **AND** SHALL include a context rule enforcing English for all workflow artifacts
 
 ### Requirement: OpenSpec CLI Prerequisite Check
-The setup command SHALL check whether the OpenSpec CLI (`@fission-ai/openspec`) is installed globally. If the CLI is not found, the setup command SHALL auto-install it via `npm install -g @fission-ai/openspec`. The installed version SHALL be compatible with `^1.2.0`. If npm is not available, the init command SHALL report a clear error instructing the user to install Node.js and npm first.
+The setup command SHALL check whether the OpenSpec CLI (`@fission-ai/openspec`) is installed globally. If the CLI is not found, the setup command SHALL auto-install it via `npm install -g @fission-ai/openspec`. The installed version SHALL be compatible with `^1.2.0`. If npm is not available, the setup command SHALL report a clear error instructing the user to install Node.js and npm first.
 
 **User Story:** As a user I want the setup command to handle CLI installation automatically, so that I do not need to know which npm package to install or which version is required.
 
@@ -79,21 +81,6 @@ The setup command SHALL check whether the OpenSpec CLI (`@fission-ai/openspec`) 
 - **GIVEN** the OpenSpec CLI is installed at version 0.9.0 (below ^1.2.0)
 - **WHEN** the user runs `/opsx:setup`
 - **THEN** the system SHALL upgrade the CLI to a compatible version via npm and report the version change
-
-### Requirement: Schema Validation
-The setup command SHALL validate the project setup after all installation steps complete. Validation SHALL confirm that the OpenSpec CLI is accessible and at a compatible version, the schema directory exists and contains a valid `schema.yaml`, and the `config.yaml` is present. The setup command SHALL report a summary of validation results to the user.
-
-**User Story:** As a user I want setup to verify everything works after setup, so that I can trust the environment is ready for spec-driven development.
-
-#### Scenario: Successful validation after fresh setup
-- **GIVEN** the setup command has completed all installation steps
-- **WHEN** the validation phase runs
-- **THEN** the system SHALL verify CLI accessibility, schema validity, and config presence, and report all checks as passing
-
-#### Scenario: Validation detects partial setup failure
-- **GIVEN** the setup command completed but the schema copy failed silently
-- **WHEN** the validation phase runs
-- **THEN** the system SHALL detect the missing schema and report which specific validation check failed
 
 ## Edge Cases
 

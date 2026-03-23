@@ -2,7 +2,7 @@
 title: "Release Workflow"
 capability: "release-workflow"
 description: "Version management, changelog generation, and consumer update process."
-lastUpdated: "2026-03-05"
+lastUpdated: "2026-03-23"
 ---
 # Release Workflow
 
@@ -62,11 +62,11 @@ When project-specific post-archive behavior is needed (such as version bumps), i
 
 ### End-to-End Install Flow
 
-The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `/opsx:init` followed by `/opsx:bootstrap`.
+The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `/opsx:setup` followed by `/opsx:bootstrap`.
 
 ### End-to-End Update Flow
 
-The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `/opsx:init` again is safe (idempotent) and ensures schema updates are picked up.
+The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `/opsx:setup` again is safe (idempotent) and ensures schema updates are picked up.
 
 ### Post-Push Developer Plugin Update
 

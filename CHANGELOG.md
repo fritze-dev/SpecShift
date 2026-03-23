@@ -3,6 +3,12 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-23 — Rename Init Skill to Setup
+
+### Changed
+- **BREAKING**: Project setup command renamed from `/opsx:init` to `/opsx:setup` — the previous name conflicted with Claude Code's built-in `/init` command and was unavailable to users (closes #31)
+- All skill error messages, specs, and documentation now reference `/opsx:setup` instead of `/opsx:init`
+
 ## 2026-03-05 — Fix Docs Regeneration Quality
 
 ### Fixed

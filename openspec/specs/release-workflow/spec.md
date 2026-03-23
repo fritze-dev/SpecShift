@@ -106,7 +106,7 @@ The project spec SHALL document the complete happy path for plugin installation 
 - **WHEN** the maintainer tests the install flow
 - **THEN** `claude plugin marketplace add fritze-dev/opsx-enhanced-flow` SHALL succeed
 - **AND** `claude plugin install opsx@opsx-enhanced-flow` SHALL succeed
-- **AND** `/opsx:init` SHALL install the schema and create config files
+- **AND** `/opsx:setup` SHALL install the schema and create config files
 - **AND** `/opsx:bootstrap` SHALL generate constitution and initial specs
 
 #### Scenario: Update flow after new version
@@ -116,7 +116,7 @@ The project spec SHALL document the complete happy path for plugin installation 
 - **WHEN** the maintainer tests the update flow
 - **THEN** `claude plugin marketplace update opsx-enhanced-flow` SHALL refresh the listing
 - **AND** `claude plugin update opsx@opsx-enhanced-flow` SHALL detect and install version N+1
-- **AND** `/opsx:init` SHALL run idempotently without errors
+- **AND** `/opsx:setup` SHALL run idempotently without errors
 
 ### Requirement: Post-Push Developer Plugin Update
 

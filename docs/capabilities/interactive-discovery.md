@@ -2,7 +2,7 @@
 title: "Interactive Discovery"
 capability: "interactive-discovery"
 description: "Provides standalone interactive research with targeted Q&A for complex features, generating research.md with coverage assessment and clarification questions."
-lastUpdated: "2026-03-05"
+lastUpdated: "2026-03-23"
 ---
 
 # Interactive Discovery
@@ -43,7 +43,7 @@ If baseline specs reference functions, modules, or patterns that no longer match
 
 ### Prerequisite Checks
 
-The system verifies that a change workspace exists before starting discovery. If no active change is found, it suggests running `/opsx:new` first. If the OpenSpec CLI or schema is not available, it directs you to run `/opsx:init`.
+The system verifies that a change workspace exists before starting discovery. If no active change is found, it suggests running `/opsx:new` first. If the OpenSpec CLI or schema is not available, it directs you to run `/opsx:setup`.
 
 ## Known Limitations
 

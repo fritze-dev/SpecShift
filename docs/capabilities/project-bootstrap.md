@@ -2,7 +2,7 @@
 title: "Project Bootstrap"
 capability: "project-bootstrap"
 description: "Provides initial codebase scanning, constitution generation, initial change creation, and recovery mode for detecting drift between code and specs."
-lastUpdated: "2026-03-05"
+lastUpdated: "2026-03-23"
 ---
 
 # Project Bootstrap
@@ -52,4 +52,4 @@ If baseline specs already exist in `openspec/specs/`, running `/opsx:bootstrap` 
 - If the project has no source code files (empty repository), bootstrap generates a minimal constitution with placeholder sections and asks you to update it manually.
 - If the codebase uses multiple languages or conflicting conventions, the constitution documents the primary patterns and notes variations as exceptions.
 - If a constitution exists but `openspec/specs/` is empty, bootstrap treats this as a partial first-run: it skips constitution generation and proceeds to initial change creation.
-- If the OpenSpec CLI is not installed, bootstrap directs you to run `/opsx:init` first.
+- If the OpenSpec CLI is not installed, bootstrap directs you to run `/opsx:setup` first.

@@ -17,7 +17,7 @@ Run:
 openspec schema which opsx-enhanced --json
 ```
 
-If the command fails or `source` is not `"project"`, tell the user to run `/opsx:init` first and stop.
+If the command fails or `source` is not `"project"`, tell the user to run `/opsx:setup` first and stop.
 
 ### Step 0b: Detect Mode
 

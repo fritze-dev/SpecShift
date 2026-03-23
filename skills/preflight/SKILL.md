@@ -14,7 +14,7 @@ disable-model-invocation: false
 
 ### Prerequisite: Verify Setup
 
-Run `openspec schema which opsx-enhanced --json`. If it fails, tell the user to run `/opsx:init` first and stop.
+Run `openspec schema which opsx-enhanced --json`. If it fails, tell the user to run `/opsx:setup` first and stop.
 
 ### Step 1: Select Change
 

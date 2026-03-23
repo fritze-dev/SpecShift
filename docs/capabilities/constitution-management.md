@@ -2,7 +2,7 @@
 title: "Constitution Management"
 capability: "constitution-management"
 description: "Manages the project constitution lifecycle including generation from codebase observation, automatic updates during design, and global context enforcement."
-lastUpdated: "2026-03-05"
+lastUpdated: "2026-03-23"
 ---
 
 # Constitution Management
@@ -50,7 +50,7 @@ The constitution's Conventions section includes a "Workflow friction" entry requ
 ## Known Limitations
 
 - Constitution updates during design are immediately visible to subsequent skill invocations only if the agent re-reads context files. This is assumed to be standard file system behavior.
-- The `config.yaml` workflow rules must be configured correctly during `/opsx:init` to reference the constitution.
+- The `config.yaml` workflow rules must be configured correctly during `/opsx:setup` to reference the constitution.
 
 ## Edge Cases
 

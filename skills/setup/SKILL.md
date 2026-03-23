@@ -1,10 +1,10 @@
 ---
-name: init
+name: setup
 description: Install OpenSpec and the opsx-enhanced schema into the current project. Run once per project before using any other /opsx commands.
 disable-model-invocation: false
 ---
 
-# /opsx:init — Project Setup
+# /opsx:setup — Project Setup
 
 > Install OpenSpec and the opsx-enhanced schema into the current project.
 
@@ -29,7 +29,7 @@ openspec --version
    npm --version
    ```
    If `npm` is not found either, **stop** and tell the user:
-   > OpenSpec CLI requires Node.js. Install Node.js (which includes npm) from https://nodejs.org, then run `/opsx:init` again.
+   > OpenSpec CLI requires Node.js. Install Node.js (which includes npm) from https://nodejs.org, then run `/opsx:setup` again.
 
 2. Install OpenSpec CLI with a pinned compatible version:
    ```bash

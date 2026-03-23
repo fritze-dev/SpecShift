@@ -8,7 +8,7 @@ The opsx-enhanced plugin uses a **three-layer architecture** where each layer ha
 
 2. **Schema** (`openspec/schemas/opsx-enhanced/`) — Defines the 6-stage artifact pipeline (research, proposal, specs, design, preflight, tasks) with templates, instructions, and dependency ordering. Single source of truth for pipeline structure.
 
-3. **Skills** (`skills/*/SKILL.md`) — 13 commands delivered as SKILL.md files within the Claude Code plugin system. Categorized as workflow (6: new, continue, ff, apply, verify, archive), governance (5: init, bootstrap, discover, preflight, sync), and documentation (2: changelog, docs). All skills are model-invocable.
+3. **Skills** (`skills/*/SKILL.md`) — 13 commands delivered as SKILL.md files within the Claude Code plugin system. Categorized as workflow (6: new, continue, ff, apply, verify, archive), governance (5: setup, bootstrap, discover, preflight, sync), and documentation (2: changelog, docs). All skills are model-invocable.
 
 Layers are independently modifiable — the schema does not embed skill logic, skills depend on the schema via the OpenSpec CLI, and the constitution does not contain schema-specific artifact definitions.
 
@@ -70,7 +70,8 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 | Add enrichment reads only to Step 4 | Only Step 4 has the implicit dependency problem | [ADR-042](decisions/adr-042-add-enrichment-reads-only-to-step-4-not-all-steps.md) |
 | Step independence as guardrail, not structural change | Simpler; matches existing SKILL.md structure | [ADR-043](decisions/adr-043-add-step-independence-as-a-guardrail-not-a-structu.md) |
 | Reinforce specs with step independence language | Prevents future drift between spec and skill | [ADR-044](decisions/adr-044-reinforce-specs-with-step-independence-language.md) |
-| All skills are model-invocable, including init | `disable-model-invocation: true` makes skills undiscoverable; bootstrap needs init | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
+| Rename init skill to setup | Avoids built-in `/init` conflict; `git mv` preserves history; archives left unchanged | [ADR-045](decisions/adr-045-rename-init-skill-to-setup.md) |
+| All skills are model-invocable, including setup | `disable-model-invocation: true` makes skills undiscoverable; bootstrap needs setup | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
 
@@ -85,7 +86,8 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 - **Section-completeness rule (ADR-041)**: Agent may still drop sections despite rule change; mitigated by imperative language and per-section max limits.
 - **Step independence is advisory (ADR-042, ADR-043)**: Guardrail is not structurally enforced; backed by explicit read instructions in affected steps.
 - **"Read before write" is advisory (ADR-032)**: Agent compliance depends on well-written guidance; not hard-enforced.
-- **Init model-invocable (ADR-M001)**: Spec no longer distinguishes init from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
+- **Rename to setup (ADR-045)**: Breaking change for existing users who memorized `/opsx:init`; low impact since the old command wasn't working anyway.
+- **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 
 ## Conventions
 
@@ -102,7 +104,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 
 | Capability | Description |
 |---|---|
-| [Project Setup](capabilities/project-setup.md) | One-time project initialization via /opsx:init with CLI install and schema setup. |
+| [Project Setup](capabilities/project-setup.md) | One-time project initialization via /opsx:setup with CLI install and schema setup. |
 | [Project Bootstrap](capabilities/project-bootstrap.md) | Initial codebase scanning, constitution generation, and drift detection. |
 
 ### Change Workflow

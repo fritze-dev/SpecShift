@@ -19,7 +19,7 @@ research → proposal → specs → design → preflight → tasks → [apply]
 
 ## Installation
 
-Use `/opsx:init` — it handles OpenSpec initialization, schema installation, and config setup automatically.
+Use `/opsx:setup` — it handles OpenSpec initialization, schema installation, and config setup automatically.
 
 ## Requirements
 

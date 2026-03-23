@@ -44,7 +44,7 @@ The system SHALL use the `opsx-enhanced` schema located at `openspec/schemas/ops
 - **THEN** it SHALL require the `tasks` artifact to be complete before implementation begins
 
 ### Requirement: Skills Layer
-The system SHALL deliver all 13 commands as `skills/*/SKILL.md` files within the Claude Code plugin system. Skills SHALL be categorized as workflow (6: new, continue, ff, apply, verify, archive), governance (5: init, bootstrap, discover, preflight, sync), or documentation (2: changelog, docs). All skills SHALL be model-invocable (disable-model-invocation: false or absent).
+The system SHALL deliver all 13 commands as `skills/*/SKILL.md` files within the Claude Code plugin system. Skills SHALL be categorized as workflow (6: new, continue, ff, apply, verify, archive), governance (5: setup, bootstrap, discover, preflight, sync), or documentation (2: changelog, docs). All skills SHALL be model-invocable (disable-model-invocation: false or absent).
 
 **User Story:** As a developer I want every command delivered as a SKILL.md file, so that Claude Code can discover and invoke them through its plugin system.
 
@@ -53,8 +53,8 @@ The system SHALL deliver all 13 commands as `skills/*/SKILL.md` files within the
 - **WHEN** the `skills/` directory is listed
 - **THEN** it SHALL contain exactly 13 subdirectories, each with a `SKILL.md` file
 
-#### Scenario: Init is model-invocable
-- **GIVEN** the `skills/init/SKILL.md` file
+#### Scenario: Setup is model-invocable
+- **GIVEN** the `skills/setup/SKILL.md` file
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** the `disable-model-invocation` field SHALL be set to `false` so that bootstrap workflows can invoke it programmatically
 

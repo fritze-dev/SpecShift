@@ -85,7 +85,7 @@ The system SHALL run an interactive discovery session when the user invokes `/op
 - **WHEN** the user invokes `/opsx:discover`
 - **THEN** the system runs `openspec schema which opsx-enhanced --json`
 - **AND** the command fails
-- **AND** the system tells the user to run `/opsx:init` first and stops
+- **AND** the system tells the user to run `/opsx:setup` first and stops
 
 ## Edge Cases
 
