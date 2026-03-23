@@ -46,4 +46,3 @@ The `/opsx:ff` command generated all 6 pipeline artifacts (research, proposal, s
 - [Archive: design-review-checkpoint](../../openspec/changes/archive/2026-03-05-design-review-checkpoint/)
 - [Spec: artifact-generation](../../openspec/specs/artifact-generation/spec.md)
 - [Spec: three-layer-architecture](../../openspec/specs/three-layer-architecture/spec.md)
-- [GitHub Issue #9](https://github.com/fritze-dev/opsx-enhanced-flow/issues/9)

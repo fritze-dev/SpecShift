@@ -47,7 +47,5 @@ A full QA cycle (delete all docs, regenerate via `/opsx:docs`, diff) revealed tw
 - [Archive: fix-docs-regeneration-quality](../../openspec/changes/archive/2026-03-05-fix-docs-regeneration-quality/)
 - [Spec: user-docs](../../openspec/specs/user-docs/spec.md)
 - [Spec: decision-docs](../../openspec/specs/decision-docs/spec.md)
-- [GitHub Issue #28](https://github.com/fritze-dev/opsx-enhanced-flow/issues/28)
-- [GitHub Issue #29](https://github.com/fritze-dev/opsx-enhanced-flow/issues/29)
 - [ADR-003: Documentation Ecosystem](adr-003-documentation-ecosystem.md)
 - [ADR-008: Fix Docs Skill Regressions](adr-008-fix-docs-skill-regressions.md)

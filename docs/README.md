@@ -38,6 +38,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 | Unified "Purpose" and "Rationale" headings; "read before write" guardrail; separate Future Enhancements | Standard terminology across all docs; prevents quality regression; distinct audiences for limitations vs. enhancements | [ADR-010](decisions/adr-010-improve-docs-sections.md) |
 | Rename init skill to setup; use git mv for history preservation | Avoids built-in /init conflict; preserves git history; historical records left unchanged | [ADR-011](decisions/adr-011-rename-init-to-setup.md) |
 | Stateless date comparison for incremental generation; agent-side ADR consolidation heuristics | No state file to maintain; reduces excessive ADR granularity while preserving detail | [ADR-012](decisions/adr-012-incremental-docs-generation.md) |
+| Internal-only ADR references; post-generation link validation via glob; heuristic cross-referencing | Eliminates external URL maintenance; catches broken spec links automatically; connects related ADRs | [ADR-013](decisions/adr-013-fix-adr-reference-quality.md) |
 | All skills are model-invocable, including setup | disable-model-invocation: true makes skills undiscoverable; bootstrap needs setup | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
@@ -56,6 +57,8 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 - **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 - **Incremental generation date comparison (ADR-012)**: Agent may misinterpret date comparison logic; worst case is unnecessary regeneration, which is a safe failure mode.
 - **ADR consolidation heuristics (ADR-012)**: May misjudge grouping in edge cases; conservative rules minimize false consolidation.
+- **Internal-only ADR references (ADR-013)**: Less direct traceability to GitHub issues; readers must follow archive backlink then read proposal.md to find issue references.
+- **Cross-reference heuristic (ADR-013)**: May miss some relationships when connections are not explicit in archive content; manual review can supplement.
 
 ## Conventions
 

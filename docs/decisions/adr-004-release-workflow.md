@@ -50,7 +50,4 @@ The plugin's update mechanism requires a version bump in `plugin.json` for the `
 
 - [Archive: release-workflow](../../openspec/changes/archive/2026-03-04-release-workflow/)
 - [Spec: release-workflow](../../openspec/specs/release-workflow/spec.md)
-- [GitHub Issue #5](https://github.com/fritze-dev/opsx-enhanced-flow/issues/5)
-- [GitHub Issue #7](https://github.com/fritze-dev/opsx-enhanced-flow/issues/7)
-- [GitHub Issue #10](https://github.com/fritze-dev/opsx-enhanced-flow/issues/10)
 - [ADR-002: Workflow Rule Ownership](adr-002-workflow-rule-ownership.md)

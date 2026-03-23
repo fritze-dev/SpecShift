@@ -48,6 +48,4 @@ The first dogfooding run of the opsx-enhanced-flow plugin revealed significant f
 - [Spec: constitution-management](../../openspec/specs/constitution-management/spec.md)
 - [Spec: artifact-pipeline](../../openspec/specs/artifact-pipeline/spec.md)
 - [Spec: project-setup](../../openspec/specs/project-setup/spec.md)
-- [GitHub Issue #1](https://github.com/fritze-dev/opsx-enhanced-flow/issues/1)
-- [GitHub Issue #6](https://github.com/fritze-dev/opsx-enhanced-flow/issues/6)
 - [ADR-001: Initial Spec Organization](adr-001-initial-spec-organization.md)

@@ -14,7 +14,7 @@ Without formal decision records, understanding why architectural choices were ma
 
 ## Rationale
 
-ADRs are generated from design.md Decisions tables because these tables already capture the essential elements of each decision (decision text, rationale, alternatives). Numbering is global and sequential across all archives sorted chronologically, providing a stable ordering. ADR Context sections are enriched with data from research.md and proposal.md to provide sufficient depth about what motivated the decision and what was investigated. Related decisions from single-topic archives are consolidated into one ADR with numbered sub-decisions, reducing noise while preserving detail. Generation is incremental by default — only new archives produce new ADR files, and existing ADRs are not regenerated or modified.
+ADRs are generated from design.md Decisions tables because these tables already capture the essential elements of each decision (decision text, rationale, alternatives). Numbering is global and sequential across all archives sorted chronologically, providing a stable ordering. ADR Context sections are enriched with data from research.md and proposal.md to provide sufficient depth about what motivated the decision and what was investigated. Related decisions from single-topic archives are consolidated into one ADR with numbered sub-decisions, reducing noise while preserving detail. Generation is incremental by default — only new archives produce new ADR files, and existing ADRs are not regenerated or modified. References contain only internal relative links (archive backlinks, spec links, related ADR links), with post-generation validation ensuring all links point to existing paths.
 
 ## Features
 
@@ -22,7 +22,9 @@ ADRs are generated from design.md Decisions tables because these tables already 
 - **Sequential numbering** — ADRs are numbered globally across all archives in chronological order
 - **Rich context** — ADR Context sections include the problem motivation, investigation findings, and key constraints (at least 4-6 sentences)
 - **Split consequences** — each ADR has Positive and Negative consequence subsections
-- **Semantic references** — References sections link to source archives, related specs, other ADRs, and GitHub Issues using descriptive text
+- **Internal-only references** — References sections link to source archives, related specs, and other ADRs using descriptive text, with no external URLs
+- **Reference validation** — spec and archive links are verified to exist after generation, with broken links replaced or flagged
+- **Cross-reference heuristic** — ADRs that modify a system established by an earlier ADR include a back-reference to that earlier record
 - **Archive backlinks** — each ADR links back to its source archive directory as the first reference
 - **ADR consolidation** — related decisions from the same archive are merged into a single ADR with numbered sub-decisions
 - **Incremental generation** — only new archives produce new ADR files; existing ADRs are preserved
@@ -54,9 +56,13 @@ For each archive, the agent reads the full design.md (Context, Architecture & Co
 
 Each ADR includes a Consequences section with a Positive subsection listing benefits and a Negative subsection listing drawbacks or trade-offs derived from the design.md Risks & Trade-offs section.
 
-### ADR References with Semantic Link Text and Archive Backlinks
+### Internal-Only References with Validation
 
-The References section includes the source archive directory link as the first reference, using the format `[Archive: <name>]` with the archive name without the date prefix. Additional references include links to related specs (determined by checking the archive's `specs/` subdirectory) and related ADRs, all using descriptive text rather than raw file paths.
+The References section contains only internal relative links — no external URLs (GitHub issues, external docs). The source archive directory link appears as the first reference, using the format `[Archive: <name>]` with the archive name without the date prefix. Additional references include links to related specs (determined by checking the archive's `specs/` subdirectory) and related ADRs, all using descriptive text rather than raw file paths. After generating each ADR, every spec link is verified by globbing for the spec file, and every archive link is verified to point to an existing directory. Broken spec links are replaced with successor specs or flagged for review.
+
+### Cross-Referencing Related ADRs
+
+When an ADR's archive modifies a system established by an earlier ADR, a cross-reference to that earlier record is included. The agent checks for explicit references to other changes in proposal.md or design.md, and looks for overlapping specs between archives. Cross-references are only added when a clear thematic relationship is evident — not speculatively.
 
 ### Incremental ADR Generation
 
@@ -100,6 +106,7 @@ When `docs_language` is set to a non-English language, ADR section headings (Con
 - Does not detect spec-only changes without a new archive — the capability doc and ADRs for a capability are only regenerated when a new archive touches that capability.
 - Consolidation heuristics may occasionally misjudge grouping for borderline cases with mixed-concern decisions.
 - Incremental detection falls back to full ADR regeneration if existing ADR files lack archive backlinks (transition from older format).
+- Cross-reference heuristics may miss some relationships between ADRs when the connection is not explicit in archive content.
 
 ## Future Enhancements
 
@@ -117,3 +124,6 @@ When `docs_language` is set to a non-English language, ADR section headings (Con
 - When consolidation logic is first applied, existing ADR numbers change. A full ADR regeneration is performed on the first run that applies consolidation.
 - The slug for consolidated ADRs is derived from the overarching title, not individual sub-decisions. If the title exceeds 50 characters after slug conversion, it is truncated per the standard algorithm.
 - The slug is always derived from the original English Decision column text, never from translated content, ensuring stable file names across language changes.
+- If a referenced spec was renamed or split, the agent replaces the broken link with the correct successor spec(s). If the successor is unknown, the link is omitted and flagged for review.
+- If no earlier ADR exists for the system being modified, the cross-reference is skipped.
+- When regenerating ADRs that previously contained external URLs, those links are omitted. The archive backlink provides traceability to issues via the archive's proposal.md.
