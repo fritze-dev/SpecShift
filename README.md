@@ -379,16 +379,7 @@ For testing in a separate consumer project, use the [Updating the Plugin](#updat
 
 ### Roadmap
 
-Concrete improvements are tracked as [GitHub Issues](https://github.com/fritze-dev/opsx-enhanced-flow/issues?q=is:issue+label:roadmap).
-
-Ideas for future versions:
-
-- [ ] **Auto-Test Generation** — Automatically generate test cases (unit, integration, E2E) from Gherkin scenarios during the planning phase, before implementation begins.
-- [ ] **Schema-bundled Skills** — Propose upstream feature to OpenSpec: allow `schema.yaml` to declare custom skills that get auto-installed during schema setup.
-- [ ] **Checklist Gem (Definition of Done)** — A consolidated, machine-readable DoD checklist auto-generated from existing artifacts: Gherkin scenarios (functional criteria), success metrics (quality targets), and preflight findings (risk items). Includes per-artifact acceptance criteria — explicit rules for when each artifact (research, spec, design, etc.) is considered complete.
-- [ ] **Autonomous Agent Flow** — Fully automated pipeline run via specialized sub-agents: a Reviewer agent reviews artifacts, a Q&A agent answers discovery questions, a Test agent validates implementation, and an Approval agent gates quality checks — replacing all manual user steps with domain-specific agents orchestrated by a single `/opsx:auto` command.
-- [ ] **Agent Handoff Protocol** — Explicit handoff criteria between agents in the Autonomous Agent Flow. Each agent validates its output against the Checklist Gem's per-artifact acceptance criteria before passing to the next agent. Includes rollback rules.
-- [ ] **Auto GitHub Releases** — Automatically create GitHub Releases from changelog entries after `/opsx:changelog`.
+Planned improvements are tracked as [GitHub Issues](https://github.com/fritze-dev/opsx-enhanced-flow/issues?q=is:issue+label:roadmap).
 
 ---
 
