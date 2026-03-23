@@ -20,6 +20,7 @@ ADRs are generated from design.md Decisions tables because these tables already 
 
 - **ADR generation from Decisions tables** — each row in a design.md Decisions table becomes one ADR file (or part of a consolidated ADR)
 - **Sequential numbering** — ADRs are numbered globally across all archives in chronological order
+- **Inline rationale** — each decision includes its rationale inline using the em-dash pattern, with no separate Rationale section
 - **Rich context** — ADR Context sections include the problem motivation, investigation findings, and key constraints (at least 4-6 sentences)
 - **Split consequences** — each ADR has Positive and Negative consequence subsections
 - **Internal-only references** — References sections link to source archives, related specs, and other ADRs using descriptive text, with no external URLs
@@ -96,9 +97,13 @@ If `docs/decisions/README.md` exists from a previous run, it is deleted. ADR dis
 
 ADR generation reads its own source materials independently. The agent does not assume that data loaded during an earlier step is still available. Each archive's design.md, research.md, and proposal.md are read fresh during ADR generation.
 
+### Inline Rationale in Decision Section
+
+Every ADR — whether consolidated or single-decision — includes rationale inline in the Decision section using the em-dash pattern. For consolidated ADRs, this is a numbered list where each sub-decision has its own rationale (for example, `1. **Sub-decision** — rationale`). For single-decision ADRs, this is a single statement with inline rationale (for example, `**Decision text** — rationale`). There is no separate Rationale section.
+
 ### ADRs in Configured Language
 
-When `docs_language` is set to a non-English language, ADR section headings (Context, Decision, Rationale, Alternatives Considered, Consequences) and content are translated. File names remain in English, and the slug is always derived from the English Decision column text. Consequence subsection headings are also translated (for example, "Positivas" and "Negativas" in Spanish).
+When `docs_language` is set to a non-English language, ADR section headings (Status, Context, Decision, Alternatives Considered, Consequences, References) and content are translated. File names remain in English, and the slug is always derived from the English Decision column text. Consequence subsection headings are also translated (for example, "Positivas" and "Negativas" in Spanish).
 
 ## Known Limitations
 

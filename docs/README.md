@@ -41,6 +41,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 | Internal-only ADR references; post-generation link validation via glob | Eliminates external URL maintenance; catches broken spec links automatically | [ADR-013](decisions/adr-013-fix-adr-reference-quality.md) |
 | Exclude baseline specs from implementation scope; defense in depth | Single authoritative path for spec updates via delta spec and sync pipeline | [ADR-014](decisions/adr-014-fix-apply-baseline-edits.md) |
 | Smart workflow checkpoints; auto-continue default with mandatory pauses | Reduces friction at routine transitions; increases rigor at critical decision points | [ADR-015](decisions/adr-015-smart-workflow-checkpoints.md) |
+| Inline rationale in Decision section; ADR-sourced README table | Separate Rationale was always redundant; ADRs are the canonical source for decisions | [ADR-016](decisions/adr-016-streamline-adr-format.md) |
 | All skills are model-invocable, including setup | disable-model-invocation: true makes skills undiscoverable; bootstrap needs setup | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
@@ -64,6 +65,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 - **Three files for one rule (ADR-014)**: Schema instruction, apply guardrail, and spec all express the same rule; small additive text edits.
 - **Auto-continue surprises (ADR-015)**: Users accustomed to per-artifact pauses may be surprised by auto-continue behavior.
 - **Checkpoint enforcement is advisory (ADR-015)**: Text-based instructions in skills have no hard runtime enforcement; agents may still deviate.
+- **Inline rationale extraction (ADR-016)**: README table requires agent to parse the em-dash pattern from ADR Decision sections; for consolidated ADRs, agent summarizes the overarching decision.
 - **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 
 ## Conventions

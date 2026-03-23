@@ -21,7 +21,7 @@ The architecture overview is embedded in `docs/README.md` rather than generated 
 - **Consolidated README** — architecture overview, design decisions, and capabilities index in a single `docs/README.md`
 - **System Architecture section** — describes the three-layer model (Constitution, Schema, Skills) from the constitution and specs
 - **Tech Stack section** — extracted from the project constitution
-- **Key Design Decisions table** — aggregates decisions from all archived design.md files with direct ADR links
+- **Key Design Decisions table** — sourced directly from ADR files with decision text, inline rationale, and direct ADR links
 - **Manual ADR support** — includes manually created ADRs (matching `adr-M*.md`) in the decisions table
 - **Notable Trade-offs** — surfaces significant negative consequences from ADR Consequences sections
 - **Conventions section** — project conventions from the constitution
@@ -41,13 +41,13 @@ When you run `/opsx:docs`, the architecture overview content (System Architectur
 
 If no archived changes have design.md files, the architecture overview still includes System Architecture, Tech Stack, and Conventions sections, omitting Key Design Decisions.
 
-### Design Decisions Table with ADR Links
+### Design Decisions Table Sourced from ADR Files
 
-Each row in the Key Design Decisions table includes an ADR column linking directly to the corresponding ADR file (for example, `[ADR-001](decisions/adr-001-slug.md)`).
+The Key Design Decisions table is built by reading all ADR files in `docs/decisions/` (both generated and manual). For each ADR, the decision summary and rationale are extracted from the `## Decision` section content — for generated ADRs, the inline rationale after the em-dash; for manual ADRs, from the `## Rationale` section. Each row includes a direct ADR link (for example, `[ADR-001](decisions/adr-001-slug.md)`).
 
 ### Manual ADRs in Design Decisions Table
 
-Manual ADRs matching `docs/decisions/adr-M*.md` appear in the Key Design Decisions table after all generated ADRs. The agent extracts the Decision and Rationale from the manual ADR's `## Decision` and `## Rationale` sections.
+Manual ADRs matching `docs/decisions/adr-M*.md` appear in the Key Design Decisions table after all generated ADRs. The agent extracts the Decision from the `## Decision` section and the Rationale from the `## Rationale` section of the manual ADR file.
 
 ### Notable Trade-offs
 
@@ -98,4 +98,5 @@ When a non-English language is configured, column headers in the Key Design Deci
 - If an ADR has not yet been generated for a decision, the SKILL.md step ordering ensures ADRs are generated first, then referenced in the overview.
 - If a manual ADR lacks `## Decision` or `## Rationale`, the agent uses the ADR title as the decision text and leaves the rationale column empty.
 - Constitution content is always in English. The agent translates when generating the overview, not the constitution itself.
+- For generated ADRs using the inline-rationale em-dash pattern, the rationale is extracted by parsing the text after `—` in each decision item. For consolidated ADRs with multiple sub-decisions, the rationale from the most significant or first sub-decision is used.
 - Stale file cleanup runs even when README regeneration is skipped — the cleanup is independent of the conditional regeneration logic.
