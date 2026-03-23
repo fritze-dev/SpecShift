@@ -26,19 +26,21 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 
 | Decision | Rationale | ADR |
 |----------|-----------|-----|
-| Organize 15 capabilities (not one per skill) | Groups related behavior logically; comprehensive coverage without maintenance burden of 1:1 skill mapping | [ADR-001](decisions/adr-001-initial-spec-organization.md) |
-| Schema owns workflow rules; config reduced to bootstrap-only; remove constitution redundancies | Clear separation of concerns: schema for universal rules, constitution for project-specific rules, config for bootstrap pointers | [ADR-002](decisions/adr-002-workflow-rule-ownership.md) |
-| Split docs-generation into user-docs, architecture-docs, decision-docs; all doc types in /opsx:docs | Each concern independently specifiable and testable; single entry point avoids skill proliferation | [ADR-003](decisions/adr-003-documentation-ecosystem.md) |
-| Convention in constitution for release workflow; patch-only auto-bump on archive | Skills remain generic shared code; 95%+ of changes are patches; prevents forgotten version bumps | [ADR-004](decisions/adr-004-release-workflow.md) |
-| Single docs_language field in config.yaml; translation at generation time | Central, backward-compatible; one set of templates for all languages; no template proliferation | [ADR-005](decisions/adr-005-configurable-documentation-language.md) |
-| Design review checkpoint as constitution convention; checkpoint after design specifically | Respects skill immutability; design finalizes approach — last cheap feedback point before quality gates | [ADR-006](decisions/adr-006-design-review-checkpoint.md) |
-| Replace priority rule with section-completeness rule; add enrichment reads to Step 4 | Positive guidance prevents section dropping; only Step 4 has the implicit dependency problem | [ADR-007](decisions/adr-007-fix-docs-regeneration-quality.md) |
-| Manual ADRs use adr-MNNN naming; deterministic slug algorithm; fix specs AND SKILL.md together | M prefix distinguishes from generated ADRs; consistent filenames across runs; prevents drift between layers | [ADR-008](decisions/adr-008-fix-docs-skill-regressions.md) |
-| SKILL.md references templates via Read at runtime; consolidated README replaces 3 separate files | Consistent with pipeline templates; eliminates navigation hops between index documents | [ADR-009](decisions/adr-009-improve-docs-output-quality.md) |
-| Unified "Purpose" and "Rationale" headings; "read before write" guardrail; separate Future Enhancements | Standard terminology across all docs; prevents quality regression; distinct audiences for limitations vs. enhancements | [ADR-010](decisions/adr-010-improve-docs-sections.md) |
-| Rename init skill to setup; use git mv for history preservation | Avoids built-in /init conflict; preserves git history; historical records left unchanged | [ADR-011](decisions/adr-011-rename-init-to-setup.md) |
-| Stateless date comparison for incremental generation; agent-side ADR consolidation heuristics | No state file to maintain; reduces excessive ADR granularity while preserving detail | [ADR-012](decisions/adr-012-incremental-docs-generation.md) |
-| Internal-only ADR references; post-generation link validation via glob; heuristic cross-referencing | Eliminates external URL maintenance; catches broken spec links automatically; connects related ADRs | [ADR-013](decisions/adr-013-fix-adr-reference-quality.md) |
+| Organize 15 capabilities (not one per skill) | Groups related behavior logically; comprehensive coverage without 1:1 skill mapping burden | [ADR-001](decisions/adr-001-initial-spec-organization.md) |
+| Schema owns workflow rules; config reduced to bootstrap-only | Clear separation: schema for universal rules, constitution for project-specific rules | [ADR-002](decisions/adr-002-workflow-rule-ownership.md) |
+| Split docs-generation into user-docs, architecture-docs, decision-docs | Each concern independently specifiable and testable; single entry point via /opsx:docs | [ADR-003](decisions/adr-003-documentation-ecosystem.md) |
+| Convention in constitution for release workflow; patch-only auto-bump | Skills remain generic shared code; 95%+ of changes are patches; prevents forgotten bumps | [ADR-004](decisions/adr-004-release-workflow.md) |
+| Single docs_language field in config.yaml; translation at generation time | Central, backward-compatible; one set of templates for all languages | [ADR-005](decisions/adr-005-configurable-documentation-language.md) |
+| Design review checkpoint as constitution convention | Respects skill immutability; design is the last cheap feedback point before quality gates | [ADR-006](decisions/adr-006-design-review-checkpoint.md) |
+| Replace priority rule with section-completeness rule; add enrichment reads | Positive guidance prevents section dropping; only Step 4 has the implicit dependency problem | [ADR-007](decisions/adr-007-fix-docs-regeneration-quality.md) |
+| Manual ADRs use adr-MNNN naming; deterministic slug algorithm | M prefix distinguishes from generated ADRs; consistent filenames across runs | [ADR-008](decisions/adr-008-fix-docs-skill-regressions.md) |
+| SKILL.md references templates via Read at runtime; consolidated README | Consistent with pipeline templates; eliminates navigation hops between index documents | [ADR-009](decisions/adr-009-improve-docs-output-quality.md) |
+| Unified "Purpose" and "Rationale" headings; "read before write" guardrail | Standard terminology across all docs; prevents quality regression | [ADR-010](decisions/adr-010-improve-docs-sections.md) |
+| Rename init skill to setup; use git mv for history preservation | Avoids built-in /init conflict; preserves git history | [ADR-011](decisions/adr-011-rename-init-to-setup.md) |
+| Stateless date comparison for incremental generation; ADR consolidation heuristics | No state file to maintain; reduces excessive ADR granularity while preserving detail | [ADR-012](decisions/adr-012-incremental-docs-generation.md) |
+| Internal-only ADR references; post-generation link validation via glob | Eliminates external URL maintenance; catches broken spec links automatically | [ADR-013](decisions/adr-013-fix-adr-reference-quality.md) |
+| Exclude baseline specs from implementation scope; defense in depth | Single authoritative path for spec updates via delta spec and sync pipeline | [ADR-014](decisions/adr-014-fix-apply-baseline-edits.md) |
+| Smart workflow checkpoints; auto-continue default with mandatory pauses | Reduces friction at routine transitions; increases rigor at critical decision points | [ADR-015](decisions/adr-015-smart-workflow-checkpoints.md) |
 | All skills are model-invocable, including setup | disable-model-invocation: true makes skills undiscoverable; bootstrap needs setup | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
@@ -48,17 +50,21 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 - **Patch-only auto-bump (ADR-004)**: Version inflation with many small patches; no rollback mechanism for bad versions.
 - **Convention-based enforcement (ADR-004, ADR-006)**: Soft enforcement relying on agent compliance, not hard code enforcement; mitigated by constitution being injected into every prompt.
 - **Docs language translation quality (ADR-005)**: LLM translation quality varies by language; major languages work well, exotic languages may need review.
-- **Consolidated README (ADR-009)**: Breaking external links to previous file locations; low impact since docs are internal.
 - **Section-completeness rule (ADR-007)**: Agent may still drop sections despite rule change; mitigated by imperative language and per-section max limits.
 - **Step independence is advisory (ADR-007)**: Guardrail is not structurally enforced; backed by explicit read instructions in affected steps.
-- **"Read before write" is advisory (ADR-010)**: Agent compliance depends on well-written guidance; not hard-enforced.
 - **Deterministic slug renames (ADR-008)**: Slug change causes ADR file renames for existing ADRs; all links regenerate to match.
+- **Consolidated README (ADR-009)**: Breaking external links to previous file locations; low impact since docs are internal.
+- **"Read before write" is advisory (ADR-010)**: Agent compliance depends on well-written guidance; not hard-enforced.
 - **Rename to setup (ADR-011)**: Breaking change for existing users who memorized /opsx:init; low impact since the old command was not working anyway.
-- **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 - **Incremental generation date comparison (ADR-012)**: Agent may misinterpret date comparison logic; worst case is unnecessary regeneration, which is a safe failure mode.
 - **ADR consolidation heuristics (ADR-012)**: May misjudge grouping in edge cases; conservative rules minimize false consolidation.
 - **Internal-only ADR references (ADR-013)**: Less direct traceability to GitHub issues; readers must follow archive backlink then read proposal.md to find issue references.
 - **Cross-reference heuristic (ADR-013)**: May miss some relationships when connections are not explicit in archive content; manual review can supplement.
+- **Baseline spec exclusion is text-based (ADR-014)**: AI agents may still ignore text-based instructions; no hard runtime enforcement exists.
+- **Three files for one rule (ADR-014)**: Schema instruction, apply guardrail, and spec all express the same rule; small additive text edits.
+- **Auto-continue surprises (ADR-015)**: Users accustomed to per-artifact pauses may be surprised by auto-continue behavior.
+- **Checkpoint enforcement is advisory (ADR-015)**: Text-based instructions in skills have no hard runtime enforcement; agents may still deviate.
+- **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 
 ## Conventions
 
@@ -83,8 +89,8 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 | Capability | Description |
 |---|---|
 | [Change Workspace](capabilities/change-workspace.md) | Create, manage, and archive change workspaces with date-prefixed naming |
-| [Artifact Pipeline](capabilities/artifact-pipeline.md) | Schema-driven 6-stage pipeline with dependency gating |
-| [Artifact Generation](capabilities/artifact-generation.md) | Step-by-step and fast-forward artifact generation commands |
+| [Artifact Pipeline](capabilities/artifact-pipeline.md) | Schema-driven 6-stage pipeline with strict dependency gating |
+| [Artifact Generation](capabilities/artifact-generation.md) | Step-by-step and fast-forward generation with smart checkpoints |
 | [Interactive Discovery](capabilities/interactive-discovery.md) | Standalone interactive research with targeted Q&A for complex features |
 
 ### Development

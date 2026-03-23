@@ -10,7 +10,7 @@ Provides `/opsx:preflight` for pre-implementation quality checks across six dime
 
 ### Requirement: Preflight Quality Check
 
-The system SHALL run a mandatory quality review before task creation when the user invokes `/opsx:preflight`. The preflight check SHALL cover six dimensions: (A) Traceability Matrix -- mapping every requirement to scenarios and components, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, and (F) Assumption Audit -- rating every `<!-- ASSUMPTION -->` marker as Acceptable Risk, Needs Clarification, or Blocking. The system SHALL produce a `preflight.md` artifact containing findings and a verdict of PASS, PASS WITH WARNINGS, or BLOCKED. The system SHALL NOT auto-fix issues; it SHALL report findings for the user to resolve. The system SHALL NOT proceed to task creation if blockers are found.
+The system SHALL run a mandatory quality review before task creation when the user invokes `/opsx:preflight`. The preflight check SHALL cover six dimensions: (A) Traceability Matrix -- mapping every requirement to scenarios and components, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, and (F) Assumption Audit -- rating every `<!-- ASSUMPTION -->` marker as Acceptable Risk, Needs Clarification, or Blocking. The system SHALL produce a `preflight.md` artifact containing findings and a verdict of PASS, PASS WITH WARNINGS, or BLOCKED. The system SHALL NOT auto-fix issues; it SHALL report findings for the user to resolve. The system SHALL NOT proceed to task creation if blockers are found. If the verdict is PASS WITH WARNINGS, the system SHALL pause and require explicit user acknowledgment of the warnings before proceeding to task creation. The system SHALL NOT auto-accept warnings or continue without the user reviewing each warning.
 
 <!-- ASSUMPTION: All change artifacts (specs, design) are available and up to date when preflight is invoked -->
 
@@ -45,14 +45,15 @@ The system SHALL run a mandatory quality review before task creation when the us
 - **AND** classifies it as a blocker
 - **AND** recommends either updating the design to comply or updating the constitution if the rule should change
 
-#### Scenario: Preflight with warnings only
+#### Scenario: Preflight with warnings requires user acknowledgment
 
 - **GIVEN** a change where all requirements have scenarios and no assumptions are blocking
 - **BUT** a minor gap is detected (missing error handling for an unlikely edge case)
 - **WHEN** the user invokes `/opsx:preflight`
 - **THEN** the verdict is "PASS WITH WARNINGS"
-- **AND** the warning is listed with a recommendation
-- **AND** the user may proceed to task creation at their discretion
+- **AND** each warning is listed with a recommendation
+- **AND** the system SHALL pause and ask the user to acknowledge each warning
+- **AND** the system SHALL NOT proceed to task creation until the user explicitly confirms
 
 #### Scenario: Required artifacts missing
 

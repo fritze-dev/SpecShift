@@ -107,8 +107,18 @@ Common artifact patterns:
 
 For other schemas, follow the `instruction` field from the CLI output.
 
+**Checkpoint Model**
+
+After creating an artifact, check the transition type before stopping:
+- **Auto-continue** (proceed immediately to next artifact without pausing): research→proposal, proposal→specs, specs→design, preflight(PASS)→tasks
+- **Mandatory-pause** (stop and wait for user input):
+  - After **design** — pause for user review before proceeding to preflight
+  - After **preflight with PASS WITH WARNINGS** — pause, present each warning, require explicit user acknowledgment before proceeding to tasks
+  - After **preflight with BLOCKED** — stop, user must resolve issues
+- At auto-continue transitions, generate the next artifact immediately rather than stopping after one.
+
 **Guardrails**
-- Create ONE artifact per invocation
+- Create artifacts until a mandatory-pause checkpoint or pipeline end is reached
 - Always read dependency artifacts before creating a new one
 - Never skip artifacts or create out of order
 - If context is unclear, ask the user before creating

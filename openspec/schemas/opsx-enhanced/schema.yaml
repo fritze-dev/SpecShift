@@ -180,6 +180,9 @@ artifacts:
       IMPORTANT: Do NOT include sync or archive as tasks. Sync (`/opsx:sync`)
       and archive (`/opsx:archive`) are separate workflow steps invoked AFTER
       apply completes. The apply phase covers only implementation and QA.
+      Do NOT include tasks that edit baseline specs under `openspec/specs/`.
+      Baseline spec changes flow exclusively through delta specs and
+      `/opsx:sync` — never via direct edits during apply.
       For documentation-only changes (no code), implementation sections may
       be empty — the QA loop alone is sufficient.
     requires: [preflight]
@@ -193,3 +196,5 @@ apply:
 
     Post-apply workflow: /opsx:verify → /opsx:archive →
     /opsx:changelog → /opsx:docs → commit. Never skip steps.
+    IMPORTANT: /opsx:verify MUST run before /opsx:sync or /opsx:archive.
+    Never sync baseline specs before implementation is verified.

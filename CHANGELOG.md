@@ -3,6 +3,27 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-23 — Smart Workflow Checkpoints
+
+### Changed
+- `/opsx:continue` now auto-continues through routine transitions (research→proposal→specs→design) without pausing — only stops at mandatory review checkpoints
+- `/opsx:ff` now pauses on preflight PASS WITH WARNINGS and requires explicit user acknowledgment before generating tasks — warnings are no longer auto-accepted
+- Post-apply workflow enforces verify-before-sync ordering — `/opsx:verify` must run before `/opsx:archive` to prevent baseline spec modification before validation
+
+### Added
+- Checkpoint model for workflow transitions classifying each step as auto-continue or mandatory-pause
+- Mandatory-pause checkpoints: design review, preflight warnings, discovery Q&A
+- Verify-before-sync guard in apply instruction
+
+## 2026-03-23 — Fix Apply Baseline Edits
+
+### Fixed
+- Task generation no longer includes tasks that edit baseline specs (`openspec/specs/`) — spec changes now flow exclusively through delta specs and `/opsx:sync`
+- Apply skill no longer modifies baseline spec files during implementation — a new guardrail prevents direct edits
+
+### Added
+- Baseline spec exclusion requirement in the task-implementation spec with formal Gherkin scenarios
+
 ## 2026-03-23 — Fix ADR Reference Quality
 
 ### Changed

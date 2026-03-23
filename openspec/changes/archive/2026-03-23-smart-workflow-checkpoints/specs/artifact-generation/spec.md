@@ -1,12 +1,4 @@
----
-order: 5
-category: change-workflow
----
-## Purpose
-
-Provides the step-by-step (`/opsx:continue`) and fast-forward (`/opsx:ff`) commands for generating pipeline artifacts, both delivered as thin SKILL.md wrappers around the OpenSpec CLI.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Step-by-Step Generation
 The system SHALL provide `/opsx:continue` as the command for generating one artifact at a time. When invoked, continue SHALL determine which artifact is next in the pipeline by querying the OpenSpec CLI for the current change status, then generate exactly that one artifact using the schema's instruction and template. After generation, continue SHALL report what was generated and what the next step is. If all artifacts are already complete, continue SHALL inform the user that the pipeline is finished and suggest proceeding to `/opsx:apply`. At routine transitions (research to proposal, proposal to specs, specs to design, preflight to tasks), continue SHALL auto-continue to the next artifact without pausing for confirmation. At mandatory-pause checkpoints (after design for user review, after preflight with warnings for acknowledgment), continue SHALL pause and wait for explicit user input before proceeding.
@@ -112,9 +104,3 @@ Both `/opsx:continue` and `/opsx:ff` SHALL be delivered as plugin SKILL.md files
 - If the user modifies an artifact file manually after generation, subsequent `/opsx:continue` calls SHALL treat that artifact as complete and move to the next stage, respecting the user's edits.
 - If multiple capabilities are listed in the proposal, the specs stage SHALL generate one spec file per capability before marking the stage as complete.
 - If preflight returns PASS WITH WARNINGS during ff, and the user rejects or wants to address a warning, the agent SHALL pause ff and allow the user to fix the issue before regenerating preflight and continuing.
-
-## Assumptions
-
-<!-- ASSUMPTION: The OpenSpec CLI provides commands to query change status (`openspec status`) and retrieve artifact instructions (`openspec instructions`) that the skills can invoke. -->
-<!-- ASSUMPTION: The OpenSpec CLI determines artifact completion by checking file existence in the change workspace directory. -->
-No further assumptions beyond those marked above.
