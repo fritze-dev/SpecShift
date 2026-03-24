@@ -18,6 +18,13 @@
      Use existing spec names from openspec/specs/. Leave empty if no requirement changes. -->
 - `<existing-name>`: <what requirement is changing>
 
+### Consolidation Check
+<!-- MANDATORY: Show your work before finalizing the Capabilities lists above.
+     1. Existing specs reviewed: [list spec names from openspec/specs/ that you checked]
+     2. Overlap assessment: [for each new capability, state which existing spec was closest and why this is distinct OR why you chose Modified instead]
+     3. Merge assessment: [for any pair of new capabilities, state whether they share actor/trigger/data and whether they were merged]
+     If no new capabilities: write "N/A — no new specs proposed." -->
+
 ## Impact
 
 <!-- Affected code, APIs, dependencies, systems -->

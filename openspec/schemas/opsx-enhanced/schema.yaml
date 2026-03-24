@@ -43,9 +43,31 @@ artifacts:
       - **Impact**: Affected code, APIs, dependencies, or systems.
       - **Scope & Boundaries**: Explicitly state what is and isn't part of this change.
 
+      Capability Granularity Rules:
+      - A "capability" is a cohesive domain of behavior that a user or system
+        exercises independently (e.g., "data-export", "user-auth"). It typically
+        has 3-8 requirements and maps to one testable surface area.
+      - A "feature detail" is a single behavior, option, or edge case WITHIN a
+        capability. Feature details belong as requirements inside an existing
+        spec — NOT as separate specs.
+      - Rule of thumb: if two proposed capabilities share the same actor, trigger,
+        or data model, they are likely one capability. Merge them.
+      - Target: ~250-350 lines per spec. If a proposed capability would produce
+        fewer than ~100 lines (1-2 requirements), it should be folded into a
+        related existing capability.
+
       IMPORTANT: The Capabilities section is critical. It creates the contract between
-      proposal and specs phases. Research existing specs before filling this in.
-      Each capability listed here will need a corresponding spec file.
+      proposal and specs phases. Each capability listed here will need a corresponding
+      spec file.
+
+      Consolidation Check (MANDATORY before finalizing Capabilities):
+      1. List all existing specs in openspec/specs/ and read their ## Purpose sections.
+      2. For each proposed new capability, check: does an existing spec already cover
+         this domain? If yes → use Modified Capabilities instead of creating a new spec.
+      3. For each pair of proposed new capabilities, check: do they share an actor,
+         trigger, or data model? If yes → merge them into one capability.
+      4. Verify each proposed capability will have 3+ distinct requirements.
+         Single-requirement "capabilities" should be folded into a related spec.
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how" —
       implementation details belong in design.md.
@@ -57,6 +79,14 @@ artifacts:
     template: specs/spec.md
     instruction: |
       Create specification files that define WHAT the system should do.
+
+      Overlap Verification (before creating any spec files):
+      1. Read the proposal's Consolidation Check section.
+      2. For each new capability, scan existing specs in openspec/specs/ for overlapping
+         requirements (same actor, same trigger, same data model).
+      3. If overlap is found: STOP and note it. The capability should be reclassified as
+         a Modified Capability on the existing spec, not a new spec. Update the proposal's
+         Capabilities section to reflect this before proceeding.
 
       Create one spec file per capability listed in the proposal's Capabilities section.
       - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).

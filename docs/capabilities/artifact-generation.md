@@ -2,7 +2,7 @@
 title: "Artifact Generation"
 capability: "artifact-generation"
 description: "Step-by-step and fast-forward commands for generating pipeline artifacts, with smart checkpoints at critical transitions."
-lastUpdated: "2026-03-23"
+lastUpdated: "2026-03-24"
 ---
 
 # Artifact Generation
@@ -24,6 +24,7 @@ Two commands serve complementary use cases: `/opsx:continue` generates artifacts
 - **Dependency gating** -- always respects the pipeline order (research, proposal, specs, design, preflight, tasks)
 - **Design review checkpoint** -- both commands pause after the design artifact for user alignment before continuing
 - **Preflight warnings checkpoint** -- `/opsx:ff` pauses when preflight returns warnings, requiring your explicit acknowledgment before generating tasks
+- **Consolidation verification** -- when creating specs, verifies the proposal's Consolidation Check confirms no overlap with existing specs before creating files
 - **Thin CLI wrappers** -- both skills query the OpenSpec CLI for status and instructions rather than duplicating logic
 
 ## Behavior
@@ -66,6 +67,10 @@ If you resume `/opsx:ff` on a workspace where preflight already exists, the desi
 
 If all artifacts are done, `/opsx:ff` reports that nothing remains and suggests `/opsx:apply`.
 
+### Consolidation Verification (/opsx:continue)
+
+When the specs artifact is next, `/opsx:continue` verifies the proposal's Consolidation Check section before creating spec files. If the proposal lists a new capability that overlaps with an existing spec, the system flags the unresolved overlap before proceeding. If the proposal has no Consolidation Check section (for example, it was created before this feature existed), the system proceeds without the verification step and relies on the specs instruction's built-in overlap verification instead.
+
 ### Skill Delivery
 
 Both `/opsx:continue` and `/opsx:ff` are delivered as skill files that wrap the OpenSpec CLI. They query the CLI for current status and next artifact instructions rather than hardcoding artifact names or pipeline logic. Both are model-invocable.
@@ -79,3 +84,4 @@ Both `/opsx:continue` and `/opsx:ff` are delivered as skill files that wrap the 
 - If multiple capabilities are listed in the proposal, the specs stage generates one spec file per capability before marking the stage as complete.
 - If you provide feedback at the design review checkpoint indicating misalignment, the agent incorporates the feedback by regenerating affected artifacts before proceeding.
 - If preflight returns PASS WITH WARNINGS during a fast-forward and you reject or want to address a warning, the system pauses and allows you to fix the issue before regenerating preflight and continuing.
+- If the proposal has no Consolidation Check section (created before the consolidation guidance feature), the continue skill proceeds without the consolidation verification step and relies on the specs instruction's overlap verification instead.

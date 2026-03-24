@@ -101,7 +101,7 @@ Common artifact patterns:
 **spec-driven schema** (proposal → specs → design → tasks):
 - **proposal.md**: Ask user about the change if not clear. Fill in Why, What Changes, Capabilities, Impact.
   - The Capabilities section is critical - each capability listed will need a spec file.
-- **specs/<capability>/spec.md**: Create one spec per capability listed in the proposal's Capabilities section (use the capability name, not the change name).
+- **specs/<capability>/spec.md**: Create one spec per capability listed in the proposal's Capabilities section (use the capability name, not the change name). Before creating, verify the proposal's Consolidation Check confirms no overlap with existing specs.
 - **design.md**: Document technical decisions, architecture, and implementation approach.
 - **tasks.md**: Break down implementation into checkboxed tasks.
 

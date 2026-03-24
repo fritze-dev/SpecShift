@@ -2,7 +2,7 @@
 title: "Artifact Pipeline"
 capability: "artifact-pipeline"
 description: "Defines the schema-driven 6-stage artifact pipeline with strict dependency gating and implementation controls."
-lastUpdated: "2026-03-05"
+lastUpdated: "2026-03-24"
 ---
 
 # Artifact Pipeline
@@ -24,6 +24,9 @@ The pipeline uses a declarative schema rather than hardcoded skill logic so that
 - **Apply Gate**: Implementation is gated by the tasks artifact. The apply phase cannot begin until `tasks.md` exists and is non-empty. During apply, progress is tracked against the task checklist.
 - **Minimal Config Bootstrap**: The `openspec/config.yaml` file contains only the schema reference and a constitution pointer -- no workflow rules or per-artifact rules entries.
 - **Schema-Owned Workflow Rules**: The schema's `tasks.instruction` field contains the Definition of Done rule. The `apply.instruction` field contains the post-apply workflow sequence (`/opsx:verify` then `/opsx:archive` then `/opsx:changelog` then `/opsx:docs` then commit).
+- **Capability Granularity Guidance**: The proposal instruction defines what constitutes a capability (a cohesive behavior domain with 3-8 requirements) versus a feature detail (a single behavior within an existing capability). Heuristics guide merging: shared actor, trigger, or data model suggests one capability, and proposed capabilities producing fewer than ~100 lines should be folded into existing specs.
+- **Mandatory Consolidation Check**: Before finalizing proposal capabilities, you must verify overlap with existing specs, check pair-wise overlap between new capabilities, and confirm each has 3+ distinct requirements. The proposal template includes a Consolidation Check section to make this reasoning visible and reviewable.
+- **Specs Overlap Verification**: Before creating spec files, the system verifies there is no overlap between proposed new capabilities and existing baseline specs. If overlap is found, the capability is reclassified as a modification to the existing spec.
 
 ## Behavior
 
@@ -47,6 +50,18 @@ The `config.yaml` file contains a `schema` field referencing the active schema a
 
 The `tasks.instruction` field in the schema contains the rule that Definition of Done is emergent from artifacts, referencing Gherkin scenarios, success metrics, preflight findings, and user approval. The `apply.instruction` field contains the post-apply workflow sequence.
 
+### Capability Granularity Guidance
+
+The proposal instruction provides explicit rules for what qualifies as a new capability versus a feature detail. A capability represents a cohesive domain of behavior exercised independently, typically containing 3-8 requirements. A feature detail is a single behavior or edge case that belongs as a requirement within an existing spec. If two proposed capabilities share the same actor, trigger, or data model, they should be merged. If a proposed capability would produce fewer than ~100 lines (1-2 requirements), it should be folded into a related existing capability.
+
+### Mandatory Consolidation Check
+
+Before finalizing the Capabilities section in a proposal, you must perform a consolidation check: list all existing specs and read their Purpose sections, check each proposed new capability for domain overlap with existing specs, check pairs of new capabilities for shared actor/trigger/data model, and verify each proposed capability will have 3+ distinct requirements. The proposal template includes a Consolidation Check section where this reasoning is documented, making it visible for review.
+
+### Specs Overlap Verification
+
+Before creating any spec files, the specs phase verifies there is no overlap between proposed new capabilities and existing baseline specs. If overlap is found, the capability is reclassified as a Modified Capability on the existing spec, and the proposal is updated accordingly before proceeding.
+
 ## Edge Cases
 
 - If an artifact file exists but is empty (0 bytes), the system treats it as incomplete and does not satisfy dependency checks.
@@ -55,3 +70,6 @@ The `tasks.instruction` field in the schema contains the rule that Definition of
 - If `tasks.md` contains no checkbox items (e.g., a documentation-only change), the apply phase is still gated by `tasks.md` existence but reports that there are no implementation tasks to execute.
 - If multiple spec files are required (one per capability), the specs stage is not considered complete until all capability specs listed in the proposal have been generated.
 - If a project has no constitution file, the `config.yaml` context pointer is harmless -- the AI notes the missing file and proceeds.
+- If a project has zero existing specs (greenfield), the consolidation check applies between proposed new capabilities but skips the existing-spec overlap scan.
+- If an existing spec exceeds ~500 lines or 10+ requirements, proposing to split it rather than adding more is allowed -- but the decision must be documented in the Consolidation Check section.
+- If you explicitly request separate specs for capabilities that the consolidation check identifies as overlapping (e.g., for team ownership reasons), the Consolidation Check documents this decision with rationale.

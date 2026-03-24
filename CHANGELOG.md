@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-24 — Consolidation Guidance
+
+### Added
+- Capability granularity rules in proposal instructions — defines what constitutes a "capability" (cohesive behavior domain) vs. a "feature detail" (single behavior within an existing spec), with merge and minimum-scope heuristics (closes #45)
+- Mandatory consolidation check before finalizing proposal capabilities — agents must verify overlap with existing specs, check pair-wise overlap between new capabilities, and confirm each capability has 3+ distinct requirements
+- Consolidation Check section in the proposal template — makes the agent's consolidation reasoning visible and reviewable
+- Overlap verification step in the specs creation instructions — catches any remaining overlap before spec files are created
+
+### Changed
+- `/opsx:continue` specs creation guideline now includes consolidation-awareness — verifies the proposal's Consolidation Check before creating spec files
+
 ## 2026-03-23 — Streamline ADR Format
 
 ### Changed

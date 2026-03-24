@@ -9,7 +9,7 @@ Provides the step-by-step (`/opsx:continue`) and fast-forward (`/opsx:ff`) comma
 ## Requirements
 
 ### Requirement: Step-by-Step Generation
-The system SHALL provide `/opsx:continue` as the command for generating one artifact at a time. When invoked, continue SHALL determine which artifact is next in the pipeline by querying the OpenSpec CLI for the current change status, then generate exactly that one artifact using the schema's instruction and template. After generation, continue SHALL report what was generated and what the next step is. If all artifacts are already complete, continue SHALL inform the user that the pipeline is finished and suggest proceeding to `/opsx:apply`. At routine transitions (research to proposal, proposal to specs, specs to design, preflight to tasks), continue SHALL auto-continue to the next artifact without pausing for confirmation. At mandatory-pause checkpoints (after design for user review, after preflight with warnings for acknowledgment), continue SHALL pause and wait for explicit user input before proceeding.
+The system SHALL provide `/opsx:continue` as the command for generating one artifact at a time. When invoked, continue SHALL determine which artifact is next in the pipeline by querying the OpenSpec CLI for the current change status, then generate exactly that one artifact using the schema's instruction and template. After generation, continue SHALL report what was generated and what the next step is. If all artifacts are already complete, continue SHALL inform the user that the pipeline is finished and suggest proceeding to `/opsx:apply`. At routine transitions (research to proposal, proposal to specs, specs to design, preflight to tasks), continue SHALL auto-continue to the next artifact without pausing for confirmation. At mandatory-pause checkpoints (after design for user review, after preflight with warnings for acknowledgment), continue SHALL pause and wait for explicit user input before proceeding. When creating specs artifacts, continue SHALL verify the proposal's Consolidation Check confirms no overlap with existing specs before creating spec files.
 
 **User Story:** As a developer I want to advance the pipeline one step at a time, so that I can review each artifact and provide feedback before moving to the next stage.
 
@@ -40,6 +40,12 @@ The system SHALL provide `/opsx:continue` as the command for generating one arti
 - **THEN** the system SHALL generate design.md
 - **AND** SHALL pause for user review before proceeding to preflight
 - **AND** SHALL display the design for the user to evaluate
+
+#### Scenario: Continue verifies consolidation before creating specs
+- **GIVEN** a change workspace where the proposal lists a new capability that overlaps with an existing spec
+- **WHEN** the user runs `/opsx:continue` and the specs artifact is next
+- **THEN** the system SHALL verify the proposal's Consolidation Check section before creating spec files
+- **AND** SHALL flag any unresolved overlap before proceeding
 
 ### Requirement: Fast-Forward Generation
 The system SHALL provide `/opsx:ff` as the command for generating all remaining artifacts in dependency order. Fast-forward SHALL query the current pipeline status, identify all pending artifacts, and generate them sequentially following the schema's dependency chain. After completion, ff SHALL report a summary of all generated artifacts. If all artifacts are already complete, ff SHALL inform the user and suggest `/opsx:apply`. The design review checkpoint is governed by the project constitution convention, not by ff skill logic. If the preflight verdict is PASS WITH WARNINGS, ff SHALL pause and require explicit user acknowledgment of the warnings before generating the tasks artifact.
@@ -112,9 +118,11 @@ Both `/opsx:continue` and `/opsx:ff` SHALL be delivered as plugin SKILL.md files
 - If the user modifies an artifact file manually after generation, subsequent `/opsx:continue` calls SHALL treat that artifact as complete and move to the next stage, respecting the user's edits.
 - If multiple capabilities are listed in the proposal, the specs stage SHALL generate one spec file per capability before marking the stage as complete.
 - If preflight returns PASS WITH WARNINGS during ff, and the user rejects or wants to address a warning, the agent SHALL pause ff and allow the user to fix the issue before regenerating preflight and continuing.
+- If the proposal has no Consolidation Check section (e.g., created before this change), the continue skill SHALL proceed without the consolidation verification step and rely on the specs instruction's overlap verification instead.
 
 ## Assumptions
 
 <!-- ASSUMPTION: The OpenSpec CLI provides commands to query change status (`openspec status`) and retrieve artifact instructions (`openspec instructions`) that the skills can invoke. -->
 <!-- ASSUMPTION: The OpenSpec CLI determines artifact completion by checking file existence in the change workspace directory. -->
+<!-- ASSUMPTION: The continue skill's Artifact Creation Guidelines are supplementary to the schema instructions. Both are read by the agent when creating artifacts. -->
 No further assumptions beyond those marked above.
