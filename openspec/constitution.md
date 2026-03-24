@@ -33,8 +33,15 @@
 ## Conventions
 
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
-- **Post-archive version bump:** After `/opsx:archive` completes successfully, automatically increment the patch version in `.claude-plugin/plugin.json` (e.g., `1.0.3` → `1.0.4`) and sync the `version` field in `.claude-plugin/marketplace.json` to match. If versions are out of sync, use `plugin.json` as source of truth. Display the new version in the archive summary and show next steps: `/opsx:changelog` → push → update plugin (`claude plugin marketplace update opsx-enhanced-flow && claude plugin update opsx@opsx-enhanced-flow`). For intentional minor/major releases, manually set the version in both files, create a git tag (`v<version>`), push the tag, and optionally create a GitHub Release via `gh release create`.
+- **Post-archive version bump:** After `/opsx:archive` completes successfully, automatically increment the patch version in `.claude-plugin/plugin.json` (e.g., `1.0.3` → `1.0.4`) and sync the `version` field in `.claude-plugin/marketplace.json` to match. If versions are out of sync, use `plugin.json` as source of truth. Display the new version in the archive summary. For intentional minor/major releases, manually set the version in both files, create a git tag (`v<version>`), push the tag, and optionally create a GitHub Release via `gh release create`.
 - **README accuracy:** When plugin behavior changes (skills, schema, config, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
 - **Design review checkpoint:** After creating specs + design artifacts, always pause for user alignment before proceeding to preflight/tasks. The design phase is the mandatory review checkpoint in every OpenSpec workflow.
 - **No ADR references in specs:** Specs MUST NOT reference ADRs (e.g., "see ADR-019"). ADRs are generated after archiving — specs exist before ADRs do. Specs describe requirements; ADRs document the decisions that shaped them.
+
+## Standard Tasks
+
+<!-- Project-specific extras appended to the universal standard tasks in the schema template.
+     These items are added after the universal steps (archive, changelog, docs, push) in every tasks.md. -->
+
+- [ ] Update plugin locally (`claude plugin marketplace update opsx-enhanced-flow && claude plugin update opsx@opsx-enhanced-flow`)

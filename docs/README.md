@@ -43,6 +43,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 | Smart workflow checkpoints; auto-continue default with mandatory pauses | Reduces friction at routine transitions; increases rigor at critical decision points | [ADR-015](decisions/adr-015-smart-workflow-checkpoints.md) |
 | Inline rationale in Decision section; ADR-sourced README table | Separate Rationale was always redundant; ADRs are the canonical source for decisions | [ADR-016](decisions/adr-016-streamline-adr-format.md) |
 | Consolidation guidance via instruction + template + skill layers | Shift-left consolidation pressure prevents spec fragmentation; template section makes reasoning reviewable | [ADR-017](decisions/adr-017-consolidation-guidance.md) |
+| Two-layer standard tasks: schema (universal) + constitution (extras) | Universal steps available to all projects; project-specific extras stay flexible; no CLI changes | [ADR-018](decisions/adr-018-standard-tasks-two-layer-design.md) |
 | All skills are model-invocable, including setup | disable-model-invocation: true makes skills undiscoverable; bootstrap needs setup | [ADR-M001](decisions/adr-M001-init-model-invocable.md) |
 
 ### Notable Trade-offs
@@ -68,6 +69,7 @@ Layers are independently modifiable — the schema does not embed skill logic, s
 - **Checkpoint enforcement is advisory (ADR-015)**: Text-based instructions in skills have no hard runtime enforcement; agents may still deviate.
 - **Inline rationale extraction (ADR-016)**: README table requires agent to parse the em-dash pattern from ADR Decision sections; for consolidated ADRs, agent summarizes the overarching decision.
 - **Consolidation guidance is instruction-based (ADR-017)**: Agent compliance not programmatically enforced; mitigated by Consolidation Check template section creating a visible, reviewable artifact. Over-consolidation possible with heuristics; mitigated by upper-bound guidance.
+- **Standard tasks soft enforcement (ADR-018)**: Apply instruction tells agent to skip standard tasks, but no hard gate. Consistent with all other enforcement in the system. Progress counts include standard tasks, showing e.g. "5/9 complete" after apply.
 - **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 
 ## Conventions

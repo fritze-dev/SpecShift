@@ -1,13 +1,13 @@
 ---
 title: "Task Implementation"
 capability: "task-implementation"
-description: "Handles working through task checklists in tasks.md, with sequential implementation, progress tracking, pause-on-blocker behavior, baseline spec exclusion, and session-level progress reporting."
-lastUpdated: "2026-03-23"
+description: "Handles working through task checklists in tasks.md, with sequential implementation, progress tracking, pause-on-blocker behavior, baseline spec exclusion, standard tasks separation, and session-level progress reporting."
+lastUpdated: "2026-03-24"
 ---
 
 # Task Implementation
 
-Works through your task checklist systematically, implementing each item, tracking progress with clear counts, and pausing whenever a blocker or ambiguity is encountered. Baseline spec changes are never made during implementation -- they flow through the sync pipeline instead.
+Works through your task checklist systematically, implementing each item, tracking progress with clear counts, and pausing whenever a blocker or ambiguity is encountered. Baseline spec changes are never made during implementation, and post-implementation standard tasks are tracked separately from apply execution.
 
 ## Purpose
 
@@ -24,6 +24,7 @@ Tasks are implemented sequentially in the order listed because the task list rep
 - **Resume from where you left off** -- skips already-completed tasks and starts from the first pending one.
 - **Pause on blockers** -- stops and asks for clarification when a task is ambiguous, a design issue is discovered, or a technical constraint prevents progress.
 - **Baseline spec exclusion** -- never generates or implements tasks that edit baseline specs; spec changes flow exclusively through delta specs and `/opsx:sync`.
+- **Standard tasks separation** -- post-implementation steps (archive, changelog, docs, push) are tracked as checkboxes in the task list but not executed by apply. They provide a visible, auditable checklist for the post-apply workflow.
 
 ## Behavior
 
@@ -51,11 +52,15 @@ Progress is displayed as "N/M tasks complete" at every key moment: when a sessio
 
 ### Baseline Spec Exclusion
 
-Task generation excludes any edits to baseline specs. If a change involves spec modifications, those are captured in delta specs and applied later via `/opsx:sync`. During implementation, if a manually edited task list references baseline spec edits, the system skips those edits, logs that spec changes are deferred to sync, and continues with the next task. Delta spec files within the change workspace remain in scope and can be edited normally.
+Task generation excludes any edits to baseline specs and excludes post-apply workflow steps (sync, archive, changelog, docs, push) from implementation sections. If a change involves spec modifications, those are captured in delta specs and applied later via `/opsx:sync`. During implementation, if a manually edited task list references baseline spec edits, the system skips those edits, logs that spec changes are deferred to sync, and continues with the next task. Delta spec files within the change workspace remain in scope and can be edited normally.
+
+### Standard Tasks (Post-Implementation)
+
+Every task list includes a final section with post-implementation workflow steps (archive, changelog, docs, commit and push). These standard tasks are checkboxes like any other task, but `/opsx:apply` does not execute them. They remain unchecked after apply completes, serving as an auditable checklist for the post-apply workflow. Standard tasks are included in progress counts — after apply, you might see "5/9 tasks complete" reflecting that 4 standard tasks still need to be done manually. If you run `/opsx:archive` while standard tasks are unchecked, the system warns you that tasks remain incomplete. Projects can add project-specific extras to the standard tasks via the constitution's `## Standard Tasks` section.
 
 ### All Tasks Already Complete
 
-If every checkbox is already marked done, the system reports that all tasks are complete and suggests archiving the change.
+If every checkbox is already marked done (including standard tasks), the system reports that all tasks are complete and suggests archiving the change.
 
 ## Known Limitations
 

@@ -3,6 +3,16 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-24 — Standard Tasks
+
+### Added
+- Universal post-implementation steps (archive, changelog, docs, commit and push) are now included as trackable checkboxes in every generated task list — no more forgetting post-apply workflow steps (closes #12)
+- Project-specific extras can be defined in the constitution's `## Standard Tasks` section and are appended after the universal steps
+- Apply skill explicitly excludes standard tasks from implementation scope — they are tracked for auditability but executed separately after apply completes
+
+### Changed
+- Post-archive convention prose trimmed — "next steps" workflow replaced by the standard tasks section; auto-bump mechanism description preserved
+
 ## 2026-03-24 — Optimize Docs Regeneration
 
 ### Added
