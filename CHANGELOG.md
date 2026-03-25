@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-25 — Add PR Step
+
+### Added
+- Draft pull request is automatically created during the proposal step — a feature branch is pushed and a draft PR opened via `gh` for early team visibility and review
+- Proposal template now includes a Pull Request section recording the branch name, PR URL, and status
+- Constitution standard tasks are split into pre-merge (executed automatically) and post-merge (manual reminders) categories
+
+### Changed
+- Post-apply workflow now executes constitution-defined pre-merge standard tasks after commit and push — post-merge tasks remain as unchecked reminders
+- Graceful degradation when `gh` CLI is unavailable — branch is created but PR creation is skipped without blocking the pipeline
+
 ## 2026-03-25 — Constitution Template
 
 ### Changed

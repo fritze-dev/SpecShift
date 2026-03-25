@@ -1,13 +1,13 @@
 ---
 title: "Artifact Pipeline"
 capability: "artifact-pipeline"
-description: "Defines the schema-driven 6-stage artifact pipeline with strict dependency gating and implementation controls."
-lastUpdated: "2026-03-24"
+description: "Defines the schema-driven 6-stage artifact pipeline with strict dependency gating, PR integration, and implementation controls."
+lastUpdated: "2026-03-25"
 ---
 
 # Artifact Pipeline
 
-The artifact pipeline guides every change through six mandatory stages -- research, proposal, specs, design, preflight, and tasks -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning.
+The artifact pipeline guides every change through six mandatory stages -- research, proposal, specs, design, preflight, and tasks -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning. A draft pull request is created automatically at the proposal stage for early team visibility.
 
 ## Purpose
 
@@ -15,7 +15,7 @@ Development teams working with AI assistants need a structured process that prev
 
 ## Rationale
 
-The pipeline uses a declarative schema rather than hardcoded skill logic so that the workflow structure is transparent and modifiable without touching command code. Each artifact declares its dependencies explicitly, and the OpenSpec CLI enforces these dependencies by checking completion status before allowing generation. The 6-stage design captures the full lifecycle from initial research through implementation-ready tasks, with each stage producing a verifiable file. Config.yaml serves as a minimal bootstrap containing only the schema reference and a constitution pointer, while workflow rules live at their authoritative source -- the schema for universal rules, the constitution for project-specific rules.
+The pipeline uses a declarative schema rather than hardcoded skill logic so that the workflow structure is transparent and modifiable without touching command code. Each artifact declares its dependencies explicitly, and the OpenSpec CLI enforces these dependencies by checking completion status before allowing generation. The 6-stage design captures the full lifecycle from initial research through implementation-ready tasks, with each stage producing a verifiable file. Config.yaml serves as a minimal bootstrap containing only the schema reference and a constitution pointer, while workflow rules live at their authoritative source -- the schema for universal rules, the constitution for project-specific rules. PR creation is inlined in the proposal instruction rather than added as a separate artifact, preserving the 6-stage pipeline structure while providing early team visibility through draft PRs.
 
 ## Features
 
@@ -23,7 +23,8 @@ The pipeline uses a declarative schema rather than hardcoded skill logic so that
 - **Explicit Dependency Declarations**: Each artifact in the schema declares its dependencies via a `requires` field. The OpenSpec CLI enforces these checks automatically.
 - **Apply Gate**: Implementation is gated by the tasks artifact. The apply phase cannot begin until `tasks.md` exists and is non-empty. During apply, progress is tracked against the task checklist.
 - **Minimal Config Bootstrap**: The `openspec/config.yaml` file contains only the schema reference and a constitution pointer -- no workflow rules or per-artifact rules entries.
-- **Schema-Owned Workflow Rules**: The schema's `tasks.instruction` field contains the Definition of Done rule and the standard tasks directive. The `apply.instruction` field contains the post-apply workflow sequence (`/opsx:verify` then `/opsx:archive` then `/opsx:changelog` then `/opsx:docs` then commit) and clarifies that standard tasks are not part of apply.
+- **Schema-Owned Workflow Rules**: The `tasks.instruction` field in the schema contains the Definition of Done rule and the standard tasks directive. The `apply.instruction` field contains the post-apply workflow sequence (`/opsx:verify` then `/opsx:archive` then `/opsx:changelog` then `/opsx:docs` then commit, then execute constitution pre-merge standard tasks) and clarifies that standard tasks are not part of apply.
+- **Draft PR at Proposal**: After writing `proposal.md`, the system creates a feature branch, commits change artifacts, pushes to the remote, and creates a draft PR via `gh pr create --draft` with the proposal content as the PR body. The PR URL is recorded in a `## Pull Request` section in `proposal.md`.
 - **Standard Tasks in Every Task List**: The tasks template includes universal post-implementation steps (archive, changelog, docs, commit and push) as a final section. Projects can add extras via the constitution's `## Standard Tasks` section, which are appended after the universal steps.
 - **Capability Granularity Guidance**: The proposal instruction defines what constitutes a capability (a cohesive behavior domain with 3-8 requirements) versus a feature detail (a single behavior within an existing capability). Heuristics guide merging: shared actor, trigger, or data model suggests one capability, and proposed capabilities producing fewer than ~100 lines should be folded into existing specs.
 - **Mandatory Consolidation Check**: Before finalizing proposal capabilities, you must verify overlap with existing specs, check pair-wise overlap between new capabilities, and confirm each has 3+ distinct requirements. The proposal template includes a Consolidation Check section to make this reasoning visible and reviewable.
@@ -43,13 +44,17 @@ Before generating any artifact, the system checks that all required predecessor 
 
 Invoking `/opsx:apply` before `tasks.md` exists is rejected with a message to generate tasks first. Once all 6 artifacts are complete, apply begins by reading the task checklist from `tasks.md` and working through items sequentially. As each task item is completed, the corresponding checkbox is marked from `- [ ]` to `- [x]`.
 
+### Draft PR Created After Proposal
+
+After writing `proposal.md`, the system creates a feature branch named after the change, commits the change artifacts (research.md, proposal.md), pushes the branch to the remote, and creates a draft PR with the proposal content as the PR body. A `## Pull Request` section is appended to `proposal.md` recording the PR URL, branch name, and status. If the `gh` CLI is not installed or not authenticated, the system creates the feature branch and pushes it but skips PR creation, noting "PR not created -- gh CLI unavailable" in the Pull Request section. The pipeline is never blocked by PR creation failures.
+
 ### Config Contains Only Bootstrap Content
 
 The `config.yaml` file contains a `schema` field referencing the active schema and a `context` field pointing to the project constitution. It contains no other workflow rules or per-artifact rules entries. All workflow logic resides in the schema's instruction fields or in the constitution.
 
 ### Schema Owns Universal Workflow Rules
 
-The `tasks.instruction` field in the schema contains the rule that Definition of Done is emergent from artifacts, referencing Gherkin scenarios, success metrics, preflight findings, and user approval. It also contains the standard tasks directive for including universal post-implementation steps and appending constitution-defined extras. The `apply.instruction` field contains the post-apply workflow sequence and clarifies that standard tasks are not part of the apply phase.
+The `tasks.instruction` field in the schema contains the rule that Definition of Done is emergent from artifacts, referencing Gherkin scenarios, success metrics, preflight findings, and user approval. It also contains the standard tasks directive for including universal post-implementation steps and appending constitution-defined extras. The `apply.instruction` field contains the post-apply workflow sequence and directs the agent to execute constitution-defined pre-merge standard tasks after the universal post-apply steps (commit and push), marking each as complete in tasks.md. Post-merge standard tasks remain unchecked as reminders for manual execution after the PR is merged.
 
 ### Standard Tasks in Task Generation
 
@@ -67,6 +72,12 @@ Before finalizing the Capabilities section in a proposal, you must perform a con
 
 Before creating any spec files, the specs phase verifies there is no overlap between proposed new capabilities and existing baseline specs. If overlap is found, the capability is reclassified as a Modified Capability on the existing spec, and the proposal is updated accordingly before proceeding.
 
+## Known Limitations
+
+- PR reviewer assignment, label management, and merge automation are not supported.
+- Multi-PR or stacked-PR workflows are not supported.
+- Branch protection rules and CI configuration are outside the pipeline's scope.
+
 ## Edge Cases
 
 - If an artifact file exists but is empty (0 bytes), the system treats it as incomplete and does not satisfy dependency checks.
@@ -78,3 +89,6 @@ Before creating any spec files, the specs phase verifies there is no overlap bet
 - If a project has zero existing specs (greenfield), the consolidation check applies between proposed new capabilities but skips the existing-spec overlap scan.
 - If an existing spec exceeds ~500 lines or 10+ requirements, proposing to split it rather than adding more is allowed -- but the decision must be documented in the Consolidation Check section.
 - If you explicitly request separate specs for capabilities that the consolidation check identifies as overlapping (e.g., for team ownership reasons), the Consolidation Check documents this decision with rationale.
+- If the feature branch already exists (e.g., from a prior attempt), the system reuses the existing branch rather than failing.
+- If the push succeeds but `gh pr create` fails due to a network issue, the branch info is recorded and PR creation failure is noted. The pipeline is not blocked.
+- If no git remote is configured, push and PR creation are skipped and noted in the Pull Request section.

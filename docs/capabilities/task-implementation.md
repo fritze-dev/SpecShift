@@ -24,7 +24,8 @@ Tasks are implemented sequentially in the order listed because the task list rep
 - **Resume from where you left off** -- skips already-completed tasks and starts from the first pending one.
 - **Pause on blockers** -- stops and asks for clarification when a task is ambiguous, a design issue is discovered, or a technical constraint prevents progress.
 - **Baseline spec exclusion** -- never generates or implements tasks that edit baseline specs; spec changes flow exclusively through delta specs and `/opsx:sync`.
-- **Standard tasks separation** -- post-implementation steps (archive, changelog, docs, push) are tracked as checkboxes in the task list but not executed by apply. They provide a visible, auditable checklist for the post-apply workflow.
+- **Standard tasks separation** -- post-implementation steps (archive, changelog, docs, push) are tracked as checkboxes in the task list but not executed by apply. Constitution-defined pre-merge extras are executed during the post-apply workflow; post-merge tasks remain unchecked as reminders.
+- **Parallelizable task markers** -- tasks marked with `[P]` indicate they can be done in parallel. The marker is informational only and does not change progress counting logic.
 
 ## Behavior
 
@@ -56,9 +57,9 @@ Task generation excludes any edits to baseline specs and excludes post-apply wor
 
 ### Standard Tasks (Post-Implementation)
 
-Every task list includes a final section with post-implementation workflow steps (archive, changelog, docs, commit and push). These standard tasks are checkboxes like any other task, but `/opsx:apply` does not execute them. They remain unchecked after apply completes, serving as an auditable checklist for the post-apply workflow. Standard tasks are included in progress counts — after apply, you might see "5/9 tasks complete" reflecting that 4 standard tasks still need to be done manually. If you run `/opsx:archive` while standard tasks are unchecked, the system warns you that tasks remain incomplete. Projects can add project-specific extras to the standard tasks via the constitution's `## Standard Tasks` section.
+Every task list includes a final section with post-implementation workflow steps (archive, changelog, docs, commit and push). These standard tasks are checkboxes like any other task, but `/opsx:apply` does not execute them. They remain unchecked after apply completes, serving as an auditable checklist for the post-apply workflow. Standard tasks are included in progress counts -- after apply, you might see "5/9 tasks complete" reflecting that 4 standard tasks still need to be done manually. If you run `/opsx:archive` while standard tasks are unchecked, the system warns you that tasks remain incomplete. Projects can add project-specific extras to the standard tasks via the constitution's `## Standard Tasks` section.
 
-During the post-apply workflow, all standard task checkboxes — including the commit step itself — are marked complete before creating the final commit. This ensures the committed tasks.md reflects the fully-checked state, eliminating the need for an extra follow-up commit just for checkboxes.
+During the post-apply workflow, universal standard task checkboxes and constitution-defined pre-merge extras (e.g., updating a PR to ready-for-review) are marked complete before creating the final commit. This ensures the committed tasks.md reflects the fully-checked state, eliminating the need for an extra follow-up commit just for checkboxes. Post-merge standard tasks (e.g., updating a plugin locally) remain unchecked as reminders for manual execution after the PR is merged.
 
 ### All Tasks Already Complete
 
@@ -75,5 +76,5 @@ If every checkbox is already marked done (including standard tasks), the system 
 - If you manually edit the task file between sessions (adding, removing, or reordering tasks), the system re-reads the file and computes progress from the current state.
 - If the tasks artifact does not exist at all, the system reports the missing file and suggests running the artifact pipeline to generate it.
 - If completed tasks appear after pending tasks (out of order), the system still counts correctly and works on pending tasks regardless of their position.
-- If the constitution defines extra standard tasks (e.g., a plugin update step), those remain unchecked unless you mark them manually. Only the universal standard tasks (archive, changelog, docs, commit) are marked by the post-apply workflow.
+- If a constitution extra fails during the post-apply workflow (e.g., `gh pr ready` fails due to network), the agent notes the failure, skips marking that task as complete, and continues with remaining extras. The failed task remains as `- [ ]` for manual resolution.
 - If the post-apply workflow is interrupted (e.g., changelog fails), only the steps that actually completed are marked. The commit step is not marked if the commit does not happen.

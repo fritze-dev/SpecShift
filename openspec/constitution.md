@@ -42,6 +42,12 @@
 ## Standard Tasks
 
 <!-- Project-specific extras appended to the universal standard tasks in the schema template.
-     These items are added after the universal steps (archive, changelog, docs, push) in every tasks.md. -->
+     These items are added after the universal steps (archive, changelog, docs, push) in every tasks.md.
+     Pre-merge tasks are executed during post-apply workflow.
+     Post-merge tasks are reminders — executed manually after the PR is merged. -->
 
+### Pre-Merge
+- [ ] Update PR: mark ready for review, update body with change summary (`gh pr ready && gh pr edit --body "..."`)
+
+### Post-Merge
 - [ ] Update plugin locally (`claude plugin marketplace update opsx-enhanced-flow && claude plugin update opsx@opsx-enhanced-flow`)
