@@ -2,11 +2,7 @@
 order: 1
 category: setup
 ---
-## Purpose
-
-Handles one-time project initialization via `/opsx:setup`, including WORKFLOW.md generation, Smart Template installation, constitution creation, legacy migration, and post-setup validation.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Install OpenSpec Workflow
 The system SHALL provide `/opsx:setup` as the single entry point for project setup. The setup command SHALL: (1) copy Smart Templates from the plugin's `openspec/templates/` directory into the project's `openspec/templates/` directory, (2) generate `openspec/WORKFLOW.md` with pipeline configuration in YAML frontmatter (templates_dir, pipeline, apply, post_artifact, context, docs_language), and (3) create `openspec/CONSTITUTION.md` placeholder if none exists. The setup command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.

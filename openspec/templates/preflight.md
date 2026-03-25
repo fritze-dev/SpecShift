@@ -1,3 +1,14 @@
+---
+id: preflight
+description: "Quality gate: traceability, gaps, side effects, assumption audit"
+generates: preflight.md
+requires: [design]
+instruction: |
+  Mandatory quality review BEFORE task creation.
+  Map every story to scenarios and components (traceability).
+  Identify gaps, side effects, duplication across stories, and inconsistencies with existing specs or constitution.
+  Audit all assumption markers from spec.md and design.md — rate each as Acceptable Risk, Needs Clarification, or Blocking.
+---
 # Pre-Flight Check: [Feature Name]
 
 ## A. Traceability Matrix

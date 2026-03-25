@@ -2,11 +2,7 @@
 order: 13
 category: reference
 ---
-## Purpose
-
-Defines the three-layer architecture (Constitution, WORKFLOW.md + Smart Templates, Skills) that structures the opsx-enhanced plugin. Each layer has distinct responsibilities, separation rules, and interaction patterns that allow independent modification.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Constitution Layer
 The system SHALL have a `CONSTITUTION.md` file at `openspec/CONSTITUTION.md` that defines global project rules. The constitution SHALL include sections for Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. All AI actions SHALL read the constitution before performing any work, enforced via WORKFLOW.md's `context` field. The constitution SHALL serve as the single authoritative source for project-wide rules that apply across all skills and artifacts.

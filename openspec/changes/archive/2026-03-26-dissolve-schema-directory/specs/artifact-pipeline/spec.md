@@ -2,11 +2,7 @@
 order: 4
 category: change-workflow
 ---
-## Purpose
-
-Defines the 6-stage artifact pipeline (research, proposal, specs, design, preflight, tasks) driven by WORKFLOW.md and Smart Templates, with strict dependency gating that ensures no stage is skipped and implementation is gated by task completion.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Six-Stage Pipeline
 The system SHALL define a 6-stage artifact pipeline with the following stages in order: research, proposal, specs, design, preflight, and tasks. Each stage SHALL produce a verifiable artifact file. The pipeline stages SHALL execute in strict dependency order: research has no dependencies, proposal requires research, specs requires proposal, design requires specs, preflight requires design, and tasks requires preflight. No stage SHALL be skippable; each MUST complete before the next can begin. The pipeline order SHALL be declared in the `pipeline` array of `openspec/WORKFLOW.md` frontmatter. Each stage's metadata (generates, requires, instruction) SHALL be defined in the corresponding Smart Template's YAML frontmatter.
@@ -122,41 +118,6 @@ Each Smart Template's `instruction` field SHALL contain workflow rules that appl
 - **WHEN** the `apply.instruction` field is inspected
 - **THEN** it SHALL contain the post-apply sequence: `/opsx:verify` → `/opsx:archive` → `/opsx:changelog` → `/opsx:docs`
 
-### Requirement: Standard Tasks Directive in Task Generation
-
-The tasks Smart Template's `instruction` field SHALL include a standard tasks directive. The tasks template SHALL include a section 4 with universal post-implementation steps (archive, changelog, docs, commit and push) that apply to all opsx-enhanced projects. The `instruction` SHALL additionally instruct the agent to check the project constitution for a `## Standard Tasks` section. If the constitution defines extra standard tasks, the agent SHALL append them to the template's universal steps in the generated `tasks.md`. If no `## Standard Tasks` section exists in the constitution, the agent SHALL include only the universal steps from the template.
-
-**User Story:** As a project maintainer I want universal post-implementation steps automatically in every task list, with the option to add project-specific extras in my constitution, so that all projects get a consistent baseline and each project can extend it.
-
-#### Scenario: Universal standard tasks always included
-
-- **GIVEN** a change progressing through the artifact pipeline
-- **AND** the tasks template contains section 4 with universal standard tasks
-- **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` SHALL contain a final section titled `## 4. Standard Tasks (Post-Implementation)` (or the next available number)
-- **AND** the section SHALL contain the universal steps: archive, changelog, docs, commit and push
-
-#### Scenario: Constitution extras appended to universal steps
-
-- **GIVEN** a project constitution containing a `## Standard Tasks` section with 1 extra checkbox item
-- **AND** a change progressing through the artifact pipeline
-- **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` section 4 SHALL contain the universal steps from the template
-- **AND** SHALL append the 1 extra item from the constitution after the universal steps
-
-#### Scenario: No constitution extras
-
-- **GIVEN** a project constitution that does not contain a `## Standard Tasks` section
-- **AND** a change progressing through the artifact pipeline
-- **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` SHALL contain section 4 with only the universal steps from the template
-
-#### Scenario: Template includes universal standard tasks
-
-- **GIVEN** the tasks template at `openspec/templates/tasks.md`
-- **WHEN** the template is inspected
-- **THEN** it SHALL contain a section 4 with universal post-implementation steps as checkbox items
-
 ### Requirement: Capability Granularity Guidance
 The proposal Smart Template's `instruction` field SHALL include explicit rules defining what constitutes a capability versus a feature detail, including heuristics for merging (shared actor/trigger/data model) and minimum scope (3+ requirements).
 
@@ -164,11 +125,6 @@ The proposal Smart Template's `instruction` field SHALL include explicit rules d
 - **GIVEN** the proposal Smart Template at `openspec/templates/proposal.md`
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain a definition distinguishing capabilities from feature details and merging heuristics
-
-#### Scenario: Agent consolidates related feature details into one capability
-- **GIVEN** a user requesting three related UX changes (pagination, clickable rows, status labels) for a table view
-- **WHEN** the agent creates the proposal's Capabilities section
-- **THEN** the agent SHALL list one capability (e.g., `table-view`) with the individual changes as requirements, not three separate capabilities
 
 ### Requirement: Mandatory Consolidation Check
 The proposal Smart Template's `instruction` field SHALL include a mandatory consolidation check requiring the agent to review existing specs, check domain overlap, check pair-wise overlap between new capabilities, and verify minimum requirement counts.
@@ -178,36 +134,6 @@ The proposal Smart Template's `instruction` field SHALL include a mandatory cons
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain a mandatory consolidation check with steps for existing spec review, domain overlap, pair-wise overlap, and minimum requirements
 
-#### Scenario: Agent identifies overlap with existing spec
-- **GIVEN** a proposal for a feature that overlaps with the existing `quality-gates` spec
-- **WHEN** the agent performs the consolidation check
-- **THEN** the agent SHALL classify the feature as a Modified Capability on `quality-gates` rather than a New Capability
-
-#### Scenario: Agent merges overlapping new capabilities
-- **GIVEN** a proposal listing `admin-pagination` and `admin-clickable-rows` as separate new capabilities
-- **WHEN** the agent performs the consolidation check
-- **THEN** the agent SHALL merge them into a single capability (e.g., `admin-table-view`) because they share the same actor and data context
-
-### Requirement: Proposal Template Consolidation Check Section
-The proposal template SHALL include a `### Consolidation Check` section between the Modified Capabilities subsection and the `## Impact` section. This section SHALL require the agent to document: which existing specs were reviewed, the overlap assessment for each new capability (closest existing spec and why this is distinct or why Modified was chosen), and the merge assessment for pairs of new capabilities. If no new capabilities are proposed, the section SHALL contain "N/A — no new specs proposed."
-
-**User Story:** As a reviewer reading a proposal I want to see the agent's consolidation reasoning documented, so that I can verify the capability boundaries are well-considered before specs are created.
-
-#### Scenario: Proposal template includes Consolidation Check section
-- **GIVEN** the proposal template at `openspec/templates/proposal.md`
-- **WHEN** the template is inspected
-- **THEN** it SHALL contain a `### Consolidation Check` section with instructions for documenting existing specs reviewed, overlap assessment, and merge assessment
-
-#### Scenario: Agent fills Consolidation Check for new capabilities
-- **GIVEN** a proposal introducing two new capabilities
-- **WHEN** the agent creates the proposal
-- **THEN** the Consolidation Check section SHALL list which existing specs were reviewed, state the closest existing spec for each new capability, and document whether any pair of new capabilities was merged
-
-#### Scenario: Consolidation Check for modification-only proposals
-- **GIVEN** a proposal that only modifies existing capabilities with no new capabilities
-- **WHEN** the agent creates the proposal
-- **THEN** the Consolidation Check section SHALL contain "N/A — no new specs proposed."
-
 ### Requirement: Specs Overlap Verification
 The specs Smart Template's `instruction` field SHALL include an overlap verification step before creating spec files, requiring the agent to read the proposal's Consolidation Check and scan existing specs for overlap.
 
@@ -216,10 +142,11 @@ The specs Smart Template's `instruction` field SHALL include an overlap verifica
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain an overlap verification step
 
-#### Scenario: Agent catches overlap during specs creation
-- **GIVEN** a proposal that listed `admin-filters` as a new capability, but the baseline `admin-table-view` spec already covers filter behavior
-- **WHEN** the agent begins the specs artifact phase and performs overlap verification
-- **THEN** the agent SHALL reclassify `admin-filters` as a Modified Capability on `admin-table-view` and update the proposal before creating the spec file
+## REMOVED Requirements
+
+### Requirement: Config Bootstrap
+**Reason**: `openspec/config.yaml` is replaced by `openspec/WORKFLOW.md`. The bootstrap configuration (schema reference, context pointer, docs_language) is now in WORKFLOW.md frontmatter.
+**Migration**: Run `/opsx:setup` to generate WORKFLOW.md from existing config.yaml content.
 
 ## Edge Cases
 
@@ -227,14 +154,6 @@ The specs Smart Template's `instruction` field SHALL include an overlap verifica
 - If a user manually deletes an artifact file mid-pipeline, the system SHALL detect the gap and require regeneration.
 - If tasks.md contains no checkbox items (documentation-only change), the apply phase SHALL still be gated by tasks.md existence.
 - If multiple spec files are required, the specs stage SHALL not be considered complete until all capability specs listed in the proposal have been generated.
-- If a project has zero existing specs (greenfield), the consolidation check still applies between proposed new capabilities but skip the existing-spec overlap scan.
-- If an agent determines that an existing spec is too large (exceeding ~500 lines / 10+ requirements), it MAY propose splitting it rather than adding more requirements — but this should be documented as a conscious decision in the Consolidation Check section.
-- If a proposed capability genuinely represents a new domain that shares no actor, trigger, or data model with existing specs, the consolidation check SHALL confirm this rather than force-merging.
-- If the agent identifies overlap but the user explicitly requests separate specs (e.g., for team ownership reasons), the Consolidation Check SHALL document this decision with rationale.
-- **Constitution changes between task generation and apply:** If the constitution's standard tasks are updated after tasks.md was generated, the already-generated tasks.md retains its original content. The user can regenerate tasks if needed.
-- **Empty standard tasks section in constitution:** If the constitution contains `## Standard Tasks` but no checkbox items, only the universal template steps appear (no extras appended).
-- **Custom section numbering:** If the QA Loop is not section 3 (e.g., due to merged sections), the standard tasks section SHALL use the next available number.
-- **Project without constitution:** Universal template steps still appear; constitution extras are simply absent.
 - **Branch already exists:** The agent SHALL reuse the existing branch rather than failing.
 - **Network failure during PR creation:** The pipeline SHALL NOT be blocked.
 - **Auto-continue transitions:** The `post_artifact` hook runs after each artifact individually.

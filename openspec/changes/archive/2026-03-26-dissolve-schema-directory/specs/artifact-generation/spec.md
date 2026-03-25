@@ -2,11 +2,7 @@
 order: 5
 category: change-workflow
 ---
-## Purpose
-
-Provides the fast-forward (`/opsx:ff`) command for generating pipeline artifacts, delivered as a SKILL.md file that reads WORKFLOW.md and Smart Templates directly.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Fast-Forward Generation
 The system SHALL provide `/opsx:ff` as the sole command for generating pipeline artifacts. Fast-forward SHALL determine the current pipeline status by reading WORKFLOW.md and Smart Templates and checking file existence, identify all pending artifacts, and generate them sequentially following dependency order. After completion, ff SHALL report a summary of all generated artifacts. If all artifacts are already complete, ff SHALL inform the user and suggest `/opsx:apply`. The design review checkpoint is governed by the project constitution convention, not by ff skill logic. If the preflight verdict is PASS WITH WARNINGS, ff SHALL pause and require explicit user acknowledgment before generating tasks.
@@ -76,6 +72,16 @@ When invoked without a change name and existing changes are present, ff SHALL li
 - **GIVEN** the `skills/ff/SKILL.md` file
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** it SHALL have `disable-model-invocation` set to `false` or absent
+
+## REMOVED Requirements
+
+### Requirement: Step-by-Step Generation
+**Reason**: `/opsx:continue` is merged into `/opsx:ff`. FF already has the same checkpoint model (auto-continue at routine transitions, mandatory pause at design review and preflight warnings). The step-by-step mode provided no additional value over FF's checkpoint pauses.
+**Migration**: Use `/opsx:ff` instead. FF pauses at the same critical checkpoints (design review, preflight warnings).
+
+### Requirement: Unified Skill Delivery for Generation Commands
+**Reason**: With continue removed, there is only one generation skill (ff). The "unified delivery" requirement for two skills is no longer applicable.
+**Migration**: The ff skill delivery requirement above covers the single remaining skill.
 
 ## Edge Cases
 
