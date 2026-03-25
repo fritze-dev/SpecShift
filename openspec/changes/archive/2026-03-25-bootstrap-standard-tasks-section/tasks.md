@@ -25,5 +25,5 @@
 - [x] 4.1. Archive change (`/opsx:archive`)
 - [x] 4.2. Generate changelog (`/opsx:changelog`)
 - [x] 4.3. Generate/update docs (`/opsx:docs`)
-- [ ] 4.4. Commit and push to remote
+- [x] 4.4. Commit and push to remote
 - [ ] 4.5. Update plugin locally (`claude plugin marketplace update opsx-enhanced-flow && claude plugin update opsx@opsx-enhanced-flow`)
