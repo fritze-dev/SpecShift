@@ -240,3 +240,8 @@ apply:
     /opsx:changelog → /opsx:docs → commit. Never skip steps.
     IMPORTANT: /opsx:verify MUST run before /opsx:sync or /opsx:archive.
     Never sync baseline specs before implementation is verified.
+
+    Before committing, mark all standard task checkboxes in tasks.md
+    as complete — including the commit step itself — so the committed
+    file reflects the fully-checked state. No extra follow-up commit
+    should be needed for standard task checkboxes.

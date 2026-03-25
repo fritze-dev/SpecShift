@@ -2,7 +2,7 @@
 title: "Task Implementation"
 capability: "task-implementation"
 description: "Handles working through task checklists in tasks.md, with sequential implementation, progress tracking, pause-on-blocker behavior, baseline spec exclusion, standard tasks separation, and session-level progress reporting."
-lastUpdated: "2026-03-24"
+lastUpdated: "2026-03-25"
 ---
 
 # Task Implementation
@@ -58,6 +58,8 @@ Task generation excludes any edits to baseline specs and excludes post-apply wor
 
 Every task list includes a final section with post-implementation workflow steps (archive, changelog, docs, commit and push). These standard tasks are checkboxes like any other task, but `/opsx:apply` does not execute them. They remain unchecked after apply completes, serving as an auditable checklist for the post-apply workflow. Standard tasks are included in progress counts — after apply, you might see "5/9 tasks complete" reflecting that 4 standard tasks still need to be done manually. If you run `/opsx:archive` while standard tasks are unchecked, the system warns you that tasks remain incomplete. Projects can add project-specific extras to the standard tasks via the constitution's `## Standard Tasks` section.
 
+During the post-apply workflow, all standard task checkboxes — including the commit step itself — are marked complete before creating the final commit. This ensures the committed tasks.md reflects the fully-checked state, eliminating the need for an extra follow-up commit just for checkboxes.
+
 ### All Tasks Already Complete
 
 If every checkbox is already marked done (including standard tasks), the system reports that all tasks are complete and suggests archiving the change.
@@ -73,3 +75,5 @@ If every checkbox is already marked done (including standard tasks), the system 
 - If you manually edit the task file between sessions (adding, removing, or reordering tasks), the system re-reads the file and computes progress from the current state.
 - If the tasks artifact does not exist at all, the system reports the missing file and suggests running the artifact pipeline to generate it.
 - If completed tasks appear after pending tasks (out of order), the system still counts correctly and works on pending tasks regardless of their position.
+- If the constitution defines extra standard tasks (e.g., a plugin update step), those remain unchecked unless you mark them manually. Only the universal standard tasks (archive, changelog, docs, commit) are marked by the post-apply workflow.
+- If the post-apply workflow is interrupted (e.g., changelog fails), only the steps that actually completed are marked. The commit step is not marked if the commit does not happen.

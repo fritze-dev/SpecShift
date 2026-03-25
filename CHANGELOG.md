@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-25 — Fix Standard Tasks Commit Order
+
+### Fixed
+- Standard task checkboxes (archive, changelog, docs, commit) are now marked complete before the final commit — the committed tasks.md reflects the fully-checked state, eliminating the extra follow-up commit (closes #49)
+
 ## 2026-03-25 — Bootstrap Standard Tasks Section
 
 ### Changed
