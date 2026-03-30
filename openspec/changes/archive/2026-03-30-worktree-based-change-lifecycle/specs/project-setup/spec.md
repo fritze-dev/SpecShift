@@ -1,14 +1,7 @@
----
-order: 1
-category: setup
----
-## Purpose
-
-Handles one-time project initialization via `/opsx:setup`, including WORKFLOW.md generation, Smart Template installation, constitution creation, legacy migration, and post-setup validation.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Install OpenSpec Workflow
+
 The system SHALL provide `/opsx:setup` as the single entry point for project setup. The setup command SHALL: (1) copy Smart Templates from the plugin's `templates/` directory (at `${CLAUDE_PLUGIN_ROOT}/templates/`) into the project's `openspec/templates/` directory, (2) copy `openspec/WORKFLOW.md` from the plugin's workflow template at `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` (skip if WORKFLOW.md already exists), and (3) create `openspec/CONSTITUTION.md` placeholder if none exists. The setup command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
 
 The setup command SHALL check for `gh` CLI availability and authentication. If `gh` is available and authenticated, the setup command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the setup command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The setup command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge via `gh api`.
@@ -20,22 +13,26 @@ The setup command SHALL ensure target directories exist (via `mkdir -p`) before 
 **User Story:** As a new user I want a single `/opsx:setup` command that sets up everything including optional worktree mode, so that I do not have to manually configure the project.
 
 #### Scenario: First-time project initialization
+
 - **GIVEN** a project directory without the opsx-enhanced workflow installed
 - **WHEN** the user runs `/opsx:setup`
 - **THEN** the system SHALL copy Smart Templates from `${CLAUDE_PLUGIN_ROOT}/templates/` to `openspec/templates/`, copy WORKFLOW.md from `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md`, create `openspec/CONSTITUTION.md` placeholder, and verify the setup
 
 #### Scenario: Idempotent re-initialization
+
 - **GIVEN** a project that has already been initialized
 - **WHEN** the user runs `/opsx:setup` again
 - **THEN** the system SHALL skip already-completed steps, preserve existing CONSTITUTION.md and WORKFLOW.md, and report what was already in place
 
 #### Scenario: WORKFLOW.md copied from template
+
 - **GIVEN** a project directory without `openspec/WORKFLOW.md`
 - **AND** the plugin has `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md`
 - **WHEN** the user runs `/opsx:setup`
 - **THEN** the system SHALL copy workflow.md to `openspec/WORKFLOW.md`
 
 #### Scenario: Worktree opt-in during setup
+
 - **GIVEN** the `gh` CLI is installed and authenticated
 - **WHEN** the user runs `/opsx:setup`
 - **THEN** the system SHALL ask whether to enable worktree-based change isolation
@@ -43,45 +40,13 @@ The setup command SHALL ensure target directories exist (via `mkdir -p`) before 
 - **AND** SHALL offer to configure the GitHub repo for rebase-merge
 
 #### Scenario: No gh CLI available
+
 - **GIVEN** the `gh` CLI is not installed or not authenticated
 - **WHEN** the user runs `/opsx:setup`
 - **THEN** the system SHALL skip the worktree opt-in question
 - **AND** SHALL leave the `worktree:` section commented out in WORKFLOW.md
 
-### Requirement: Legacy Migration
-The setup command SHALL detect legacy project layouts (presence of `openspec/schemas/opsx-enhanced/schema.yaml` without `openspec/WORKFLOW.md`) and perform migration: (1) generate WORKFLOW.md from schema.yaml content and config.yaml settings, (2) move templates from `openspec/schemas/opsx-enhanced/templates/` to `openspec/templates/` converting them to Smart Template format, (3) rename `openspec/constitution.md` to `openspec/CONSTITUTION.md`, (4) remove the `openspec/schemas/` directory and `openspec/config.yaml` after successful migration.
-
-**User Story:** As an existing user I want `/opsx:setup` to automatically migrate my project from the old schema layout, so that I don't have to manually restructure files.
-
-#### Scenario: Legacy layout detected and migrated
-- **GIVEN** a project with `openspec/schemas/opsx-enhanced/schema.yaml` but no `openspec/WORKFLOW.md`
-- **WHEN** the user runs `/opsx:setup`
-- **THEN** the system SHALL generate WORKFLOW.md, move and convert templates, rename constitution, and remove legacy files
-
-#### Scenario: Migration preserves existing content
-- **GIVEN** a legacy project with custom constitution content
-- **WHEN** migration runs
-- **THEN** the CONSTITUTION.md SHALL contain the original constitution content (renamed, not regenerated)
-
-#### Scenario: Already migrated project is not re-migrated
-- **GIVEN** a project with `openspec/WORKFLOW.md` already present
-- **WHEN** the user runs `/opsx:setup`
-- **THEN** the system SHALL skip migration and report that WORKFLOW.md already exists
-
-### Requirement: Setup Validation
-The setup command SHALL validate after all steps complete. Validation SHALL confirm that `openspec/WORKFLOW.md` is readable, `openspec/templates/` contains Smart Templates, and `openspec/CONSTITUTION.md` is present. The setup command SHALL report a summary.
-
-**User Story:** As a user I want setup to verify everything works, so that I can trust the environment is ready.
-
-#### Scenario: Successful validation after fresh setup
-- **GIVEN** the setup command has completed all steps
-- **WHEN** validation runs
-- **THEN** the system SHALL verify WORKFLOW.md is readable, templates directory exists with files, and CONSTITUTION.md is present
-
-#### Scenario: Validation detects partial setup failure
-- **GIVEN** the setup completed but template copy failed
-- **WHEN** validation runs
-- **THEN** the system SHALL detect the missing templates and report the failure
+## ADDED Requirements
 
 ### Requirement: WORKFLOW.md Template File
 
@@ -172,9 +137,6 @@ When the user opts in during setup and `gh` CLI is available, the system SHALL c
 
 ## Edge Cases
 
-- If the user does not have write permissions, setup SHALL fail before making changes.
-- If migration encounters both WORKFLOW.md and legacy schema.yaml (manual partial migration), setup SHALL preserve WORKFLOW.md and skip migration.
-- If `openspec/constitution.md` (lowercase) and `openspec/CONSTITUTION.md` (caps) both exist during migration, setup SHALL use the lowercase content and rename to caps.
 - **Workflow template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` does not exist, report an error and suggest reinstalling the plugin.
 - **gh CLI installed but not authenticated**: Report "gh CLI: installed but not authenticated" and skip worktree opt-in.
 - **User declines worktree mode**: Leave WORKFLOW.md with commented-out `worktree:` section — no changes needed.
