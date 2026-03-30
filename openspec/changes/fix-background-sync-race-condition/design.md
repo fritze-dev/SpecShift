@@ -18,21 +18,21 @@ Two changes within step 4:
 
 1. **Subagent prompt** (line 59): Rewrite to convey blocking intent. The prompt must explain that sync writes to `openspec/specs/` and that these changes must be committed as part of the archive — therefore sync must complete and return its result before the workflow continues.
 
-2. **Result validation** (new, between current lines 60-61): After the agent returns, inspect the result. The sync skill's output format is documented — it reports "Specs Synced: <name>" with a list of applied changes on success. Validate that the result contains a success indicator before proceeding to step 5.
+2. **State-based validation** (new, between current lines 60-61): After the sync agent returns, validate sync completion by checking file system state — the same pattern used by step 2 (artifact checklist) and step 3 (task checklist). For each delta spec at `openspec/changes/<name>/specs/<capability>/`, verify that a corresponding baseline spec exists at `openspec/specs/<capability>/spec.md`. This decouples validation from the sync skill's output format entirely.
 
 **No other files change.** The sync skill itself, the spec-sync spec, and the workflow config remain untouched.
 
 ## Goals & Success Metrics
 
 * **Prompt clarity**: The subagent prompt explicitly states that sync is a blocking prerequisite and must return its result before archive proceeds — PASS/FAIL by inspection of the prompt text.
-* **Validation gate**: The archive skill contains an explicit validation step that checks the sync agent result for success before proceeding to step 5 — PASS/FAIL by inspection of the skill text.
-* **Failure path**: If the sync result does not confirm success (failure or ambiguous), the archive skill stops and reports the issue — PASS/FAIL by inspection.
+* **Validation gate**: The archive skill contains a state-based validation step that checks baseline spec existence for each delta spec before proceeding to step 5 — PASS/FAIL by inspection of the skill text.
+* **Failure path**: If any delta spec lacks a corresponding baseline spec after sync, the archive skill stops and reports which capabilities are missing — PASS/FAIL by inspection.
 
 ## Non-Goals
 
 - Changing the sync skill's behavior or output format
 - Switching from Agent/Task tool to Skill tool
-- Adding programmatic validation (file diffing, git status checks) — the validation is on the agent result text
+- Deep content diffing (verifying specific requirements were merged) — existence check is sufficient
 - Auditing other subagent invocations across skills
 
 ## Decisions
@@ -40,12 +40,11 @@ Two changes within step 4:
 | Decision | Rationale | Alternatives |
 |----------|-----------|--------------|
 | Rewrite subagent prompt to include blocking context | The LLM needs to understand *why* sync must complete first — not just *what* to do. Explaining that sync writes files needed for the archive commit gives the LLM enough context to prioritize sequential execution. | Add "do NOT use run_in_background" (treats symptom, not cause — LLM could still parallelize tool calls) |
-| Validate agent result text for success indicator | The sync skill already has a documented output format ("Specs Synced: <name>"). Checking for this in the result is lightweight and doesn't require file system inspection. | Check git status for uncommitted changes (heavier, couples archive to git state); trust the agent (current behavior, caused the bug) |
+| State-based validation (baseline spec existence) | Follows the same pattern as step 2/3 (check state, not output). Decoupled from sync skill's output format — no assumption on format stability. Simple: for each delta spec capability, check that `openspec/specs/<capability>/spec.md` exists. | Parse sync agent output text (couples to output format, fragile); trust the agent (current behavior, caused the bug) |
 
 ## Risks & Trade-offs
 
-- **[LLM may still ignore prompt context]** → Mitigation: The validation gate is the safety net. Even if the LLM mishandles scheduling, the archive cannot proceed without a validated success result. The two fixes are defense-in-depth.
-- **[Sync output format may change]** → Mitigation: The validation should check for a reasonable success signal, not an exact string match. If the result is ambiguous, fail safe by blocking archive.
+- **[LLM may still ignore prompt context]** → Mitigation: The state-based validation gate is the safety net. Even if the LLM mishandles scheduling, the archive cannot proceed without baseline specs existing for all delta specs. The two fixes are defense-in-depth.
 
 ## Open Questions
 
@@ -53,4 +52,4 @@ No open questions.
 
 ## Assumptions
 
-- The sync skill's output format ("Specs Synced: <name>" on success) is stable and can be used as a validation signal. <!-- ASSUMPTION: Sync output format stability -->
+No assumptions made.

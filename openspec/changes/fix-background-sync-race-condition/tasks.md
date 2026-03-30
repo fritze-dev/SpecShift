@@ -7,13 +7,13 @@ No foundation tasks — single-file change with no dependencies.
 ## 2. Implementation
 
 - [ ] 2.1. Rewrite the subagent prompt in `src/skills/archive/SKILL.md` step 4 (line 59) to convey that sync is a blocking prerequisite for archive. The prompt must explain that sync writes to `openspec/specs/` and these changes must be included in the archive commit.
-- [ ] 2.2. Add a result validation gate in `src/skills/archive/SKILL.md` step 4 (between current lines 60-61). After the sync agent returns, validate the result contains a success indicator ("Specs Synced") before proceeding to step 5. If the result is ambiguous or indicates failure, stop and report.
+- [ ] 2.2. Add a state-based validation gate in `src/skills/archive/SKILL.md` step 4 (between current lines 60-61). After the sync agent returns, check that for each delta spec capability at `openspec/changes/<name>/specs/<capability>/`, a corresponding baseline spec exists at `openspec/specs/<capability>/spec.md`. If any are missing, stop and report which capabilities lack baseline specs.
 
 ## 3. QA Loop & Human Approval
 
 - [ ] 3.1. Metric Check: Prompt clarity — subagent prompt explicitly states sync is a blocking prerequisite — PASS / FAIL
-- [ ] 3.2. Metric Check: Validation gate — archive skill contains explicit validation step checking sync agent result before step 5 — PASS / FAIL
-- [ ] 3.3. Metric Check: Failure path — ambiguous or failed sync result blocks archive and reports issue — PASS / FAIL
+- [ ] 3.2. Metric Check: Validation gate — archive skill contains state-based validation (baseline spec existence check) before step 5 — PASS / FAIL
+- [ ] 3.3. Metric Check: Failure path — missing baseline spec after sync blocks archive and reports which capabilities are missing — PASS / FAIL
 - [ ] 3.4. Auto-Verify: Run `/opsx:verify`
 - [ ] 3.5. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.6. Fix Loop: On verify issues or bug reports → fix code OR update specs/design → re-verify.
