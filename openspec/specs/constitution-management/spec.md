@@ -115,7 +115,7 @@ The constitution SHALL be updated when the design phase introduces new technolog
 - **THEN** the design document includes a section or note listing the specific constitution changes made
 
 ### Requirement: Constitution Contains Only Project-Specific Rules
-The constitution SHALL contain only rules that are specific to the project and not already defined by the schema or its templates. Rules that duplicate schema instructions, templates, or artifact `requires` chains SHALL be removed. The constitution retains: Tech Stack, Architecture Rules (structure and paths), Code Style (project conventions not in schema), Constraints (principles not enforced by schema mechanics), Conventions, and Standard Tasks (project-specific post-implementation steps appended to the universal standard tasks in the schema template).
+The constitution SHALL contain only rules that are specific to the project and not already defined by the schema or its templates. Rules that duplicate schema instructions, templates, or artifact `requires` chains SHALL be removed. The constitution retains: Tech Stack, Architecture Rules (structure and paths), Code Style (project conventions not in schema), Constraints (principles not enforced by schema mechanics), Conventions, and Standard Tasks (project-specific post-implementation steps appended to the universal standard tasks in the schema template). Standard Tasks that update the PR body SHALL include GitHub issue-closing keywords (e.g., `Closes #X`) when the change originated from a GitHub issue, to ensure issues are auto-closed on merge regardless of merge strategy.
 
 **User Story:** As a workflow maintainer I want the constitution free of redundancy, so that each rule lives in exactly one authoritative place and the constitution stays focused on project-specific knowledge.
 
@@ -134,6 +134,20 @@ The constitution SHALL contain only rules that are specific to the project and n
 - **AND** Architecture Rules SHALL include directory paths and structural decisions
 - **AND** Conventions SHALL include commit style, version bump, README accuracy, and friction tracking
 - **AND** Standard Tasks SHALL contain project-specific post-implementation steps (or be empty with an explanatory comment)
+
+#### Scenario: PR body update includes issue-closing keywords
+
+- **GIVEN** a change that originated from GitHub issue #42
+- **AND** the constitution defines a pre-merge standard task to update the PR body
+- **WHEN** the agent executes the PR body update task
+- **THEN** the updated PR body SHALL include `Closes #42`
+- **AND** the issue SHALL be auto-closed when the PR is merged (regardless of merge strategy)
+
+#### Scenario: No issue linked — keywords omitted
+
+- **GIVEN** a change that did not originate from a GitHub issue
+- **WHEN** the agent executes the PR body update task
+- **THEN** the updated PR body SHALL NOT include issue-closing keywords
 
 ### Requirement: Friction Tracking Convention
 
