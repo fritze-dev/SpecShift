@@ -69,4 +69,4 @@ None — all categories are Clear.
 
 | # | Decision | Rationale | Alternatives Considered |
 |---|----------|-----------|------------------------|
-| 1 | Use Skill tool instead of Agent/Task tool for sync invocation | Structural fix — Skill tool is synchronous by design, eliminating the race condition entirely | Keep Agent tool with explicit foreground constraint (weaker guarantee); restructure commit ordering (doesn't fix root cause) |
+| 1 | Keep Agent/Task tool but fix via subagent prompt and result validation | Preserves context isolation (sync in subagent). Fix at the instruction level: explicit "do NOT use run_in_background" in the prompt, and/or validate that sync actually completed before proceeding to archive. Side effects should be fixed where they originate, not by switching invocation mechanism. | Switch to Skill tool (structural but loses context isolation); restructure commit ordering (doesn't fix root cause) |
