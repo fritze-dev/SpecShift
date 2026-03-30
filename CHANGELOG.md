@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-03-30 — Fix Issue Reference in PR Body
+
+### Fixed
+- PR body update during pre-merge standard task now explicitly requires including GitHub issue-closing keywords (`Closes #X`) when the change originated from a GitHub issue — previously, updating the PR body overwrote the initial `Closes #X` reference, leaving issues open after squash merge
+
 ## 2026-03-30 — Fix Squash Merge Cleanup
 
 ### Fixed
