@@ -8,7 +8,7 @@ The opsx-enhanced plugin uses a **three-layer architecture** where each layer ha
 
 2. **WORKFLOW.md + Smart Templates** (`openspec/WORKFLOW.md` + `openspec/templates/`) — WORKFLOW.md declares the 6-stage artifact pipeline order, apply gate, post-artifact hook, optional worktree configuration, and project context in YAML frontmatter. Smart Templates in `openspec/templates/` carry per-artifact instructions, output paths, and dependencies in YAML frontmatter alongside the output structure. Together they are the single source of truth for pipeline structure and artifact generation.
 
-3. **Skills** (`skills/*/SKILL.md`) — 13 commands delivered as SKILL.md files within the Claude Code plugin system. Categorized as workflow (5: new, ff, apply, verify, archive), governance (6: setup, bootstrap, discover, preflight, sync, docs-verify), and documentation (2: changelog, docs). All skills are model-invocable.
+3. **Skills** (`skills/*/SKILL.md`) — 11 commands delivered as SKILL.md files within the Claude Code plugin system. Categorized as workflow (4: new, ff, apply, verify), governance (5: setup, bootstrap, discover, preflight, docs-verify), and documentation (2: changelog, docs). All skills are model-invocable.
 
 Layers are independently modifiable — WORKFLOW.md and Smart Templates do not embed skill logic, skills depend on them by reading WORKFLOW.md and templates directly at runtime, and the constitution does not contain pipeline-specific artifact definitions.
 
@@ -37,7 +37,7 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 | Rename init skill to setup; use git mv for history preservation | Avoids built-in /init conflict; preserves git history | [ADR-011](decisions/adr-011-rename-init-to-setup.md) |
 | Stateless date comparison for incremental generation; ADR consolidation heuristics | No state file to maintain; reduces excessive ADR granularity while preserving detail | [ADR-012](decisions/adr-012-incremental-docs-generation.md) |
 | Internal-only ADR references; post-generation link validation via glob | Eliminates external URL maintenance; catches broken spec links automatically | [ADR-013](decisions/adr-013-fix-adr-reference-quality.md) |
-| Exclude baseline specs from implementation scope; defense in depth | Single authoritative path for spec updates via delta spec and sync pipeline | [ADR-014](decisions/adr-014-fix-apply-baseline-edits.md) |
+| ~~Exclude baseline specs from implementation scope~~ | ~~Superseded by ADR-037 — specs are now edited directly during implementation~~ | [ADR-014](decisions/adr-014-fix-apply-baseline-edits.md) |
 | Smart workflow checkpoints; auto-continue default with mandatory pauses | Reduces friction at routine transitions; increases rigor at critical decision points | [ADR-015](decisions/adr-015-smart-workflow-checkpoints.md) |
 | Inline rationale in Decision section; ADR-sourced README table | Separate Rationale was always redundant; ADRs are the canonical source for decisions | [ADR-016](decisions/adr-016-streamline-adr-format.md) |
 | Consolidation guidance via instruction + template + skill layers | Shift-left consolidation pressure prevents spec fragmentation; template section makes reasoning reviewable | [ADR-017](decisions/adr-017-consolidation-guidance.md) |
@@ -58,9 +58,10 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 | Plugin source in `src/`, auto GitHub Releases via CI, local marketplace for dev | Clean consumer cache; automated releases; VS Code-compatible dev workflow | [ADR-031](decisions/adr-031-auto-github-releases-and-plugin-source-restr.md) |
 | Documentation drift verification via semantic checks with CLEAN/DRIFTED/OUT OF SYNC verdicts | Structural element comparison is cheaper and more actionable than diff-based regeneration; three-tier severity matches existing quality gate patterns | [ADR-032](decisions/adr-032-documentation-drift-verification.md) |
 | Worktree-based change lifecycle with opt-in isolation, context detection, and template extraction | Full filesystem isolation eliminates merge conflicts for parallel changes; auto-detection reduces manual input; template pattern ensures consistency | [ADR-033](decisions/adr-033-worktree-based-change-lifecycle.md) |
-| Auto-sync delta specs before archive instead of prompting | Preserves transparency while removing friction; syncing is always the correct choice | [ADR-034](decisions/adr-034-auto-sync-before-archive.md) |
+| ~~Auto-sync delta specs before archive instead of prompting~~ | ~~Superseded by ADR-037 — sync and archive eliminated~~ | [ADR-034](decisions/adr-034-auto-sync-before-archive.md) |
 | PR merge check before branch deletion; force delete on confirmed merge | GitHub API is authoritative for merge status; handles all merge strategies including squash | [ADR-035](decisions/adr-035-pr-merge-check-for-branch-deletion.md) |
-| Fix sync race condition via blocking prompt and state-based validation | Subagent prompt conveys blocking intent; baseline spec existence check follows steps 2/3 pattern | [ADR-036](decisions/adr-036-fix-sync-race-condition-in-archive.md) |
+| ~~Fix sync race condition via blocking prompt and state-based validation~~ | ~~Superseded by ADR-037 — sync eliminated~~ | [ADR-036](decisions/adr-036-fix-sync-race-condition-in-archive.md) |
+| Eliminate delta specs, sync, and archive — edit specs directly, flat changes directory | Single spec format, no merge step, completion by tasks.md status not directory location | [ADR-037](decisions/adr-037-eliminate-delta-specs-sync-and-archive.md) |
 
 ### Notable Trade-offs
 
@@ -79,8 +80,7 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 - **ADR consolidation heuristics (ADR-012)**: May misjudge grouping in edge cases; conservative rules minimize false consolidation.
 - **Internal-only ADR references (ADR-013)**: Less direct traceability to GitHub issues; readers must follow archive backlink then read proposal.md to find issue references.
 - **Cross-reference heuristic (ADR-013)**: May miss some relationships when connections are not explicit in archive content; manual review can supplement.
-- **Baseline spec exclusion is text-based (ADR-014)**: AI agents may still ignore text-based instructions; no hard runtime enforcement exists.
-- **Three files for one rule (ADR-014)**: Schema instruction, apply guardrail, and spec all express the same rule; small additive text edits.
+- **~~Baseline spec exclusion (ADR-014)~~**: Superseded by ADR-037 — specs are now edited directly during implementation.
 - **Auto-continue surprises (ADR-015)**: Users accustomed to per-artifact pauses may be surprised by auto-continue behavior.
 - **Checkpoint enforcement is advisory (ADR-015)**: Text-based instructions in skills have no hard runtime enforcement; agents may still deviate.
 - **Inline rationale extraction (ADR-016)**: README table requires agent to parse the em-dash pattern from ADR Decision sections; for consolidated ADRs, agent summarizes the overarching decision.
@@ -98,18 +98,20 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 - **Setup model-invocable (ADR-M001)**: Spec no longer distinguishes setup from other skills; would need revisiting if Claude Code adds user-only discoverable mode.
 - **CLI removal (ADR-027)**: Skills are slightly more verbose with file-read instructions; no programmatic schema validation — mitigated by version-controlled schema and runtime read errors.
 - **Worktree disk usage (ADR-033)**: Each worktree is a full checkout; negligible for markdown projects but potentially significant for large repos. Users must switch directories after `/opsx:new`.
-- **No opt-out for auto-sync (ADR-034)**: Users can no longer archive without syncing; intentional since archiving without syncing was never a valid workflow step. Sync failure blocks archive (safe failure mode).
-- **Force delete bypasses Git safety (ADR-035)**: `git branch -D` skips Git's commit-reachability check; mitigated by GitHub API confirmation of merge status before force-deleting.
-- **LLM may ignore blocking prompt context (ADR-036)**: Prompt-based enforcement relies on LLM compliance; mitigated by state-based validation gate that blocks archive regardless of scheduling.
+- **~~No opt-out for auto-sync (ADR-034)~~**: Superseded by ADR-037 — sync and archive eliminated.
+- **Force delete bypasses Git safety (ADR-035)**: `git branch -D` skips Git's commit-reachability check; mitigated by GitHub API confirmation of merge status before force-deleting. (Now used in lazy worktree cleanup at `/opsx:new`.)
+- **~~LLM may ignore blocking prompt context (ADR-036)~~**: Superseded by ADR-037 — sync eliminated.
+- **Spec conflicts on shared branches (ADR-037)**: Two parallel changes editing the same baseline spec produce git merge conflicts; mitigated by worktree isolation for local changes.
+- **Incremental docs detection depends on proposal Capabilities (ADR-037)**: Author-curated proposal may omit a capability; mitigated by manual `/opsx:docs <capability>` override and preflight traceability.
 
 ## Conventions
 
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
-- **Post-archive version bump:** After `/opsx:archive`, automatically increment patch version in `.claude-plugin/plugin.json` and sync `marketplace.json`. For minor/major releases, manually set versions, create a git tag, and push.
+- **Post-apply version bump:** During the post-apply workflow, increment patch version in `.claude-plugin/plugin.json` and sync `marketplace.json`. For minor/major releases, manually set versions, create a git tag, and push.
 - **README accuracy:** When plugin behavior changes, update the README to reflect the new state.
 - **Workflow friction:** Capture friction as GitHub Issues with the `friction` label.
 - **Design review checkpoint:** After creating specs + design artifacts, always pause for user alignment before preflight/tasks.
-- **No ADR references in specs:** Specs must not reference ADRs — ADRs are generated after archiving.
+- **No ADR references in specs:** Specs must not reference ADRs — ADRs are generated after implementation.
 
 ## Capabilities
 
@@ -124,7 +126,7 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 
 | Capability | Description |
 |---|---|
-| [Change Workspace](capabilities/change-workspace.md) | Create, manage, and archive change workspaces with worktree isolation and date-prefixed naming |
+| [Change Workspace](capabilities/change-workspace.md) | Create and manage change workspaces with worktree isolation and date-prefixed naming |
 | [Artifact Pipeline](capabilities/artifact-pipeline.md) | 6-stage pipeline driven by WORKFLOW.md and Smart Templates with dependency gating and worktree-aware PR integration |
 | [Artifact Generation](capabilities/artifact-generation.md) | Fast-forward generation with smart checkpoints and change selection |
 | [Interactive Discovery](capabilities/interactive-discovery.md) | Standalone interactive research with targeted Q&A for complex features |
@@ -136,13 +138,12 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 | [Constitution Management](capabilities/constitution-management.md) | Constitution lifecycle management and global context enforcement |
 | [Quality Gates](capabilities/quality-gates.md) | Pre-implementation checks, post-implementation verification, and documentation drift detection |
 | [Task Implementation](capabilities/task-implementation.md) | Sequential task execution with progress tracking and pause-on-blocker |
-| [Human Approval Gate](capabilities/human-approval-gate.md) | QA loop with mandatory explicit human approval before archiving |
+| [Human Approval Gate](capabilities/human-approval-gate.md) | QA loop with mandatory explicit human approval before completion |
 
 ### Finalization
 
 | Capability | Description |
 |---|---|
-| [Spec Sync](capabilities/spec-sync.md) | Agent-driven merging of delta specs into baseline specs |
 | [Release Workflow](capabilities/release-workflow.md) | Version management, changelog generation, and consumer updates |
 
 ### Reference
@@ -160,4 +161,4 @@ Layers are independently modifiable — WORKFLOW.md and Smart Templates do not e
 |---|---|
 | [User Docs](capabilities/user-docs.md) | Enriched user-facing capability documentation generated by /opsx:docs |
 | [Architecture Docs](capabilities/architecture-docs.md) | Cross-cutting architecture overview and documentation entry point |
-| [Decision Docs](capabilities/decision-docs.md) | Architecture Decision Records generated from archived design decisions |
+| [Decision Docs](capabilities/decision-docs.md) | Architecture Decision Records generated from completed changes' design decisions |

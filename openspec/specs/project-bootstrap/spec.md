@@ -45,7 +45,7 @@ The `/opsx:bootstrap` command SHALL generate a `constitution.md` file based on t
 - **THEN** the Code Style section SHALL reflect the 4-space indentation and camelCase convention, and the Conventions section SHALL reference the conventional commits format
 
 ### Requirement: Initial Change Creation
-After generating the constitution, the `/opsx:bootstrap` command SHALL create an initial change workspace using the OpenSpec CLI and hand off to the standard pipeline. The initial change SHALL be named according to the project context (e.g., `initial-spec`). The bootstrap command SHALL then inform the user to continue with `/opsx:continue` or `/opsx:ff` to generate artifacts, followed by `/opsx:apply` for the QA loop, and finally `/opsx:archive` which prompts to sync delta specs into baselines. The bootstrap command SHALL NOT include sync or archive as apply tasks — these are separate workflow steps that follow after apply completes.
+After generating the constitution, the `/opsx:bootstrap` command SHALL create an initial change workspace using the OpenSpec CLI and hand off to the standard pipeline. The initial change SHALL be named according to the project context (e.g., `initial-spec`). The bootstrap command SHALL then inform the user to continue with the standard pipeline.
 
 **User Story:** As a developer I want bootstrap to create my first change workspace automatically, so that I can immediately start the spec-driven workflow without manual setup.
 
@@ -57,31 +57,25 @@ After generating the constitution, the `/opsx:bootstrap` command SHALL create an
 #### Scenario: Handoff to standard pipeline
 - **GIVEN** the initial change workspace has been created
 - **WHEN** the bootstrap command completes
-- **THEN** the system SHALL report the created change name and the full workflow: generate artifacts (`/opsx:ff`), run QA loop (`/opsx:apply`), then archive with sync (`/opsx:archive`)
-
-#### Scenario: Sync is not an apply task
-- **GIVEN** the initial change is a documentation-only bootstrap with no code implementation
-- **WHEN** tasks.md is generated for the initial change
-- **THEN** the tasks SHALL contain only QA loop tasks (success metrics, verify, approval)
-- **AND** sync SHALL NOT appear as an apply task because it is handled by the archive step
+- **THEN** the system SHALL report the created change name and inform the user to run `/opsx:ff` or `/opsx:continue` to generate artifacts, followed by `/opsx:apply`, then `/opsx:changelog` and `/opsx:docs`
 
 ### Requirement: Recovery Mode
-The `/opsx:bootstrap` command SHALL detect when baseline specs already exist in `openspec/specs/`. When existing specs are found, the bootstrap command SHALL enter recovery mode: scanning the current codebase, comparing it against existing specs, and reporting drift findings. Recovery mode SHALL NOT overwrite existing specs or the constitution. Instead, it SHALL produce a drift report listing discrepancies between the codebase and the specs, and suggest corrective actions (e.g., `/opsx:new hotfix-xyz` for small drift or a full re-bootstrap for large drift).
+The `/opsx:bootstrap` command SHALL detect when specs already exist in `openspec/specs/`. When existing specs are found, the bootstrap command SHALL enter recovery mode: scanning the current codebase, comparing it against existing specs, and reporting drift findings. Recovery mode SHALL NOT overwrite existing specs or the constitution. Instead, it SHALL produce a drift report listing discrepancies between the codebase and the specs, and suggest corrective actions (e.g., `/opsx:new hotfix-xyz` for small drift or a full re-bootstrap for large drift).
 
 **User Story:** As a maintainer whose codebase has drifted from its specs I want bootstrap to detect and report the drift, so that I can decide how to reconcile without losing existing spec work.
 
 #### Scenario: Recovery mode with minor drift
-- **GIVEN** a project with existing baseline specs and a codebase where two functions have been renamed without spec updates
+- **GIVEN** a project with existing specs and a codebase where two functions have been renamed without spec updates
 - **WHEN** the user runs `/opsx:bootstrap`
 - **THEN** the system SHALL detect the existing specs, enter recovery mode, report the two naming discrepancies, and suggest using `/opsx:new hotfix-xyz` to create a targeted change for the drift
 
 #### Scenario: Recovery mode with major drift
-- **GIVEN** a project with existing baseline specs and a codebase where an entire module has been rewritten without spec updates
+- **GIVEN** a project with existing specs and a codebase where an entire module has been rewritten without spec updates
 - **WHEN** the user runs `/opsx:bootstrap`
 - **THEN** the system SHALL detect the existing specs, enter recovery mode, report the extensive drift, and suggest a full re-bootstrap after backing up existing specs
 
 #### Scenario: Recovery mode does not overwrite
-- **GIVEN** a project with existing baseline specs and constitution
+- **GIVEN** a project with existing specs and constitution
 - **WHEN** the user runs `/opsx:bootstrap` and recovery mode activates
 - **THEN** the system SHALL NOT modify any existing spec files or the constitution, only producing a read-only drift report
 
