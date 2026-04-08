@@ -76,13 +76,21 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 
 ### Requirement: Post-Implementation Verification
 
-The system SHALL verify the implementation against change artifacts when the user invokes `/opsx:verify`. Verification SHALL assess three dimensions: Completeness (task completion and spec coverage), Correctness (requirement implementation accuracy and scenario coverage), and Coherence (design adherence and code pattern consistency). The system SHALL read specs at `openspec/specs/<capability>/spec.md` for the capabilities listed in the change's proposal to verify implementation against. Each issue found SHALL be classified as CRITICAL (must fix before proceeding), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
+The system SHALL verify the implementation against change artifacts when the user invokes `/opsx:verify`. Verification SHALL assess two dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage) and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read specs at `openspec/specs/<capability>/spec.md` for the capabilities listed in the change's proposal to verify implementation against. Each issue found SHALL be classified as CRITICAL (must fix before proceeding), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
 
 When a WARNING is **mechanically fixable** — i.e., it involves stale cross-references between artifacts, inconsistent naming, or outdated text that can be corrected by simple text replacement without judgment — the system SHALL auto-fix the issue inline before presenting the report. Auto-fixed issues SHALL still appear in the report as resolved WARNINGs with a note indicating the fix applied. WARNINGs that require user judgment (e.g., spec/design divergence where the user must choose which is correct) SHALL NOT be auto-fixed and SHALL be presented as open issues for user resolution.
 
-The system SHALL additionally read `preflight.md` and cross-check each side-effect identified in Section C (Side-Effect Analysis) against `tasks.md` entries and codebase implementation evidence. For each side-effect, the system SHALL search for a corresponding task in `tasks.md` (keyword match) or implementation evidence in the codebase (keyword heuristic). If a side-effect has neither a matching task nor detectable implementation evidence, the system SHALL report a WARNING issue with an actionable recommendation. If Section C contains no side-effects (e.g., all risks assessed as NONE), the system SHALL skip the cross-check and note it in the report.
+The system SHALL load the branch diff (full content and file list) as part of context loading. The diff content SHALL be the **primary evidence source** for verifying what this change introduced. Codebase keyword search SHALL serve as a fallback for requirements that may have been implemented in prior changes or pre-existing code. If no common ancestor with the base branch is available (e.g., orphan branch, first commit), the system SHALL skip all diff-based checks and note "No merge base available — diff checks skipped" in the report. Files under `openspec/changes/` and `openspec/specs/` SHALL be excluded from scope checks as they are expected in the diff for any OpenSpec change.
 
-The `/opsx:verify` command SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When invoked as a final verify after the fix loop, the command SHALL operate identically — checking completeness, correctness, and coherence against the current state of code and artifacts. No special flags or modes are needed; the verify skill is stateless and always checks the current state.
+**Task-Diff Mapping**: For each task marked complete in `tasks.md`, the system SHALL check whether at least one file in the diff corresponds to the task description (keyword match against file paths and diff content). A file-level match alone is insufficient — the system SHALL additionally verify that the diff content relates to the task (e.g., a task about error handling should show error-handling code, not just a comment change). Tasks marked complete that produced no corresponding changes in the diff SHALL be flagged as WARNING.
+
+**Requirement Verification**: For each requirement in the relevant specs, the system SHALL search the diff content for evidence of implementation (primary), falling back to codebase keyword search (secondary). The system SHALL assess both existence and correctness in a single pass: missing requirements are CRITICAL, divergent implementations are WARNING, and matching implementations are satisfied.
+
+**Diff Scope Check**: For each file in the diff, the system SHALL check whether the file is traceable to a task description in `tasks.md` or a component listed in `design.md`'s Architecture & Components section. Files that appear in the diff but have no connection to any task or design component SHALL be collected and reported as a single SUGGESTION with the list of untraced files, rather than one issue per file.
+
+**Preflight Side-Effect Cross-Check**: The system SHALL read `preflight.md` Section C and cross-check each identified side-effect against `tasks.md` entries, diff content, and codebase evidence. Side-effects with neither a matching task nor detectable evidence SHALL be reported as WARNING. If Section C contains no actionable side-effects, the system SHALL skip the cross-check and note it in the report.
+
+The `/opsx:verify` command SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When invoked as a final verify after the fix loop, the command SHALL operate identically — checking implementation and scope against the current state of code and artifacts. No special flags or modes are needed; the verify skill is stateless and always checks the current state.
 
 **User Story:** As a developer I want post-implementation verification that checks my code against the specs, so that I can catch gaps, divergences, and inconsistencies before proceeding.
 
@@ -92,9 +100,8 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 - **AND** all spec requirements are implemented and all design decisions are followed
 - **WHEN** the user invokes `/opsx:verify add-user-auth`
 - **THEN** the system produces a verification report
-- **AND** the Completeness dimension shows all tasks and requirements covered
-- **AND** the Correctness dimension shows all scenarios satisfied
-- **AND** the Coherence dimension shows design adherence
+- **AND** the Implementation dimension shows all tasks complete, requirements verified, and scenarios covered
+- **AND** the Scope dimension shows design adherence and no untraced changes
 - **AND** the final assessment is "All checks passed. Ready to proceed."
 
 #### Scenario: Verification finds critical issues
@@ -110,7 +117,7 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 
 - **GIVEN** a spec requiring JWT-based authentication
 - **AND** the implementation uses session cookies instead
-- **WHEN** the system checks correctness
+- **WHEN** the system verifies requirements against the diff content
 - **THEN** the report includes a WARNING: "Implementation may diverge from spec: auth uses session cookies, spec requires JWT"
 - **AND** recommends "Review src/auth/handler.ts:45 against requirement: JWT Authentication"
 
@@ -135,7 +142,7 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 
 - **GIVEN** the project uses kebab-case file naming throughout
 - **AND** a new file is named `userAuth.ts` (camelCase)
-- **WHEN** the system checks coherence
+- **WHEN** the system verifies scope
 - **THEN** the report includes a SUGGESTION: "Code pattern deviation: file userAuth.ts uses camelCase, project convention is kebab-case"
 - **AND** recommends "Consider renaming to user-auth.ts to follow project pattern"
 
@@ -144,7 +151,7 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 - **GIVEN** a change with only tasks.md (no specs or design)
 - **WHEN** the user invokes `/opsx:verify`
 - **THEN** the system verifies task completion only
-- **AND** skips spec coverage and design adherence checks
+- **AND** skips requirement verification and scope checks
 - **AND** notes in the report which checks were skipped and why
 
 #### Scenario: Verification with no spec changes
@@ -152,7 +159,7 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 - **GIVEN** a change that has tasks but the proposal lists no capability modifications
 - **WHEN** the user invokes `/opsx:verify`
 - **THEN** the system skips requirement-level verification
-- **AND** focuses on task completion and code pattern coherence
+- **AND** focuses on task completion and scope checks
 
 #### Scenario: Final verify confirms fix loop resolved all issues
 
@@ -187,6 +194,45 @@ The `/opsx:verify` command SHALL serve as both the initial verification (tasks.m
 - **WHEN** the user invokes `/opsx:verify`
 - **THEN** the system skips the side-effect cross-check
 - **AND** notes "No preflight side-effects to verify" in the report
+
+#### Scenario: Diff scope check finds all files traceable
+
+- **GIVEN** a change with design.md listing `src/skills/verify/SKILL.md` and `openspec/specs/quality-gates/spec.md` as components
+- **AND** the branch diff contains changes to exactly those two files
+- **WHEN** the system performs diff scope verification
+- **THEN** all changed files are traceable to design components
+- **AND** no diff scope issues are raised
+
+#### Scenario: Task marked complete with no corresponding diff
+
+- **GIVEN** a change with tasks.md containing a completed task "Update error messages in auth module"
+- **AND** the branch diff contains no changes to any auth-related files
+- **WHEN** the system performs task-diff mapping
+- **THEN** the report includes a WARNING: "Task marked complete but no corresponding changes in diff: Update error messages in auth module"
+
+#### Scenario: Task-diff mapping with matching changes
+
+- **GIVEN** a change with tasks.md containing a completed task "Add diff scope check to verify SKILL.md"
+- **AND** the branch diff includes `src/skills/verify/SKILL.md`
+- **WHEN** the system performs task-diff mapping
+- **THEN** the task is confirmed as having corresponding changes
+- **AND** no task-diff mapping issue is raised
+
+#### Scenario: Untraced files reported as single suggestion
+
+- **GIVEN** a change where the branch diff includes 3 files not referenced in design.md or any task
+- **WHEN** the system performs diff scope verification
+- **THEN** the report includes a single SUGGESTION listing all 3 untraced files
+- **AND** does not create separate issues per file
+
+#### Scenario: Diff checks skipped when no merge base available
+
+- **GIVEN** a change on an orphan branch with no common ancestor to main
+- **WHEN** the system attempts to determine the common ancestor with main
+- **AND** no common ancestor exists
+- **THEN** the system skips all diff-based checks
+- **AND** notes "No merge base available — diff checks skipped" in the report
+- **AND** proceeds with keyword-based verification as normal
 
 ### Requirement: Documentation Drift Verification
 
@@ -289,6 +335,10 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 - **Empty capability doc**: If a capability doc exists but has no meaningful content (only frontmatter or a single heading), the system SHALL classify it as WARNING ("Capability doc for <name> appears empty").
 - **README with custom sections**: The system SHALL only check the capabilities table and Key Design Decisions table within the README, not custom project-specific sections that may intentionally differ from specs.
 - **Concurrent docs regeneration**: If `/opsx:docs` is running concurrently, the verification report reflects the state at the time of each individual check.
+- **No merge base for diff checks**: If `git merge-base` fails (orphan branch, detached HEAD, first commit), all diff-based checks are skipped gracefully with a note in the report. Keyword-based verification proceeds as normal.
+- **Task description too generic for diff matching**: If a task description is too vague to produce meaningful file path matches (e.g., "Clean up code"), the system SHALL skip that task's diff mapping and note it as inconclusive rather than raising a false warning.
+- **Change artifacts in diff**: Files under `openspec/changes/` and `openspec/specs/` are expected in the diff for any change and SHALL be excluded from unintended change detection (they are always traceable to the change itself).
+- **Diff includes only artifact files**: When a change only modifies specs or planning artifacts (no code files), diff-based checks still apply — task-diff mapping verifies spec edits correspond to tasks, and scope checks verify no unrelated specs were modified.
 
 ## Assumptions
 
@@ -300,3 +350,5 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 - Capability docs in `docs/capabilities/` follow the naming convention `<capability-name>.md` matching the spec directory name in `openspec/specs/`. <!-- ASSUMPTION: Naming convention -->
 - The README capabilities table uses a parseable format (Markdown table or structured list) that allows the system to extract capability names. <!-- ASSUMPTION: README format -->
 - Completed changes' design.md Decisions tables use a consistent Markdown table format with identifiable column headers. <!-- ASSUMPTION: Design decisions format -->
+- Git is available in the execution environment and the working directory is a git repository with a valid merge base to the main branch. <!-- ASSUMPTION: Git availability -->
+- Task descriptions in tasks.md contain enough keywords to match against file paths in the diff (e.g., component names, file names, or module references). <!-- ASSUMPTION: Task description quality -->
