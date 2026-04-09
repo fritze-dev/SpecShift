@@ -72,22 +72,29 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
        - Add WARNING: "Task marked complete but no corresponding changes in diff: <task description>"
        - Recommendation: "Verify this task was implemented or update the task description"
 
-   **Requirement Verification** (using diff as primary evidence, codebase as fallback):
+   **Requirement Verification** (using diff as primary evidence, content comparison for correctness):
    - For each requirement in the relevant specs:
-     1. **Diff evidence** (primary): Search the diff content for keywords and patterns related to the requirement. The diff shows exactly what this change introduced — it is the most relevant evidence source.
-     2. **Codebase evidence** (fallback): If the requirement may have been implemented in a prior change or pre-existing code, search the codebase for keywords related to the requirement.
-     3. Assess whether the evidence matches the requirement intent. Check both existence and correctness in one pass:
+     1. **Identify** the implementation file(s) that should contain this requirement — use design.md references, proposal Impact section, or file naming conventions to locate them
+     2. **Diff evidence** (primary): Search the diff content for keywords and patterns related to the requirement. The diff shows exactly what this change introduced — it is the most relevant evidence source.
+     3. **Codebase evidence** (fallback): If the requirement may have been implemented in a prior change or pre-existing code, search the codebase for keywords related to the requirement.
+     4. **Content comparison** (correctness): When evidence is found, **read** the relevant section of the implementation file (do NOT just confirm keyword presence) and compare against the spec requirement:
+        - **Compare terminology**: extract headings, field names, and normative language from the spec requirement, then check if the implementation uses the same terms. If the spec says "X" but the implementation says "Y" (e.g., spec says "Change context detection" but implementation says "Worktree context detection"), flag as terminology mismatch.
+        - **Compare scope**: if the spec lists N items, fields, or steps, verify the implementation covers all N (not just some)
+     5. Assess whether the evidence matches the requirement intent:
         - If no evidence found anywhere: Add CRITICAL issue: "Requirement not implemented: <requirement name>"
-        - If evidence exists but diverges from spec intent: Add WARNING: "Implementation may diverge from spec: <details>". Recommendation: "Review <file>:<lines> against requirement: <name>"
+        - If terminology mismatch or scope gap detected: Add WARNING: "Implementation diverges from spec: <spec term> vs <implementation term>" or "Implementation covers N of M items from requirement". Recommendation: "Review <file>:<line> — update implementation to match spec terminology, or update spec if the implementation term is correct"
         - If evidence matches: requirement is satisfied
 
-   **Scenario Coverage**:
+   **Scenario Coverage** (read-and-verify):
    - For each scenario in the relevant specs (marked with "#### Scenario:"):
-     - Check if the scenario's conditions (GIVEN/WHEN/THEN) are addressed in the diff content or codebase
-     - Check if tests exist covering the scenario
-     - If scenario appears uncovered:
-       - Add WARNING: "Scenario not covered: <scenario name>"
-       - Recommendation: "Add test or implementation for scenario: <description>"
+     1. **Read** the implementation section that should handle the scenario's GIVEN/WHEN/THEN conditions (check diff content first, then codebase as fallback)
+     2. **Verify preconditions** (GIVEN): does the implementation handle the initial state described?
+     3. **Verify triggers** (WHEN): does the implementation respond to the action described?
+     4. **Verify assertions** (THEN): does the implementation produce the expected outcome?
+     5. Also check if tests exist covering the scenario
+     - If the implementation does not cover a scenario's conditions:
+       - Add WARNING: "Scenario not covered: <scenario name> — <specific gap, e.g., 'THEN clause expects X but implementation does Y'>"
+       - Recommendation: "Add implementation or test for scenario: <description>"
 
 5. **Verify Scope** (Coherence + Side-Effects)
 
@@ -183,7 +190,7 @@ Verify that an implementation matches the change artifacts (specs, tasks, design
 
 **Verification Heuristics**
 
-- **Implementation**: Use diff content as primary evidence for what this change introduced. Fall back to codebase search for pre-existing implementations. Check both existence and correctness in one pass — don't require perfect certainty.
+- **Implementation**: Use diff content as primary evidence for what this change introduced. Fall back to codebase search for pre-existing implementations. When evidence is found, read the actual implementation content and compare against spec requirements — don't just confirm keyword presence. Check both existence and correctness in one pass — don't require perfect certainty, but DO read the actual content before concluding a requirement is covered.
 - **Task-Diff Mapping**: Match task description keywords against file paths AND diff content. A file-level match alone is insufficient — verify the content relates to the task. Generic tasks (no specific component/file references) are inconclusive, not failures.
 - **Scope**: Use file path keyword matching for traceability. Check design decisions against diff evidence. When uncertain, do not flag (err toward fewer false positives).
 - **Side-Effects**: Use keyword matching from preflight Section C against tasks, diff content, and codebase — skip entries that are too generic for meaningful matching.

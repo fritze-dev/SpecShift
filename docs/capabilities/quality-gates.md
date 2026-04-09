@@ -2,7 +2,7 @@
 title: "Quality Gates"
 capability: "quality-gates"
 description: "Provides pre-implementation quality checks via /opsx:preflight, post-implementation verification via /opsx:verify, and documentation drift detection via /opsx:docs-verify."
-lastUpdated: "2026-04-08"
+lastUpdated: "2026-04-09"
 ---
 
 # Quality Gates
@@ -147,7 +147,7 @@ Manual ADRs (files with the `adr-MNNN` prefix) are recognized and excluded from 
 
 ## Known Limitations
 
-- Verify uses the branch diff as its primary evidence source and falls back to heuristic keyword-based codebase search for pre-existing code. If a requirement keyword matches unrelated code, the system prefers SUGGESTION severity to avoid false critical issues.
+- Verify uses the branch diff as primary evidence and reads implementation files for content comparison against spec requirements, using keyword search only for initial file discovery. While this catches terminology mismatches and scope gaps, it still relies on heuristic comparison rather than formal equivalence checking. When uncertain, the system prefers SUGGESTION severity to avoid false critical issues.
 - Task-Diff Mapping relies on keyword matching between task descriptions and file paths/diff content. Tasks with very generic descriptions may be marked as inconclusive rather than flagged.
 - When a preflight side-effect description is too generic, the system skips that entry and notes it as inconclusive rather than raising a false warning.
 - Docs-verify does not perform deep content comparison -- it checks structural alignment, not prose-level semantic equivalence.
