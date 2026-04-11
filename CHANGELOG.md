@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-11 — SessionStart Hook Fallback (v2.0.9)
+
+### Added
+- `SessionStart` hook in `.claude/settings.json` as fallback for plugin auto-install in Claude Code Web sessions — workaround for `enabledPlugins` race condition (anthropics/claude-code#10997, closes #112)
+
 ## 2026-04-11 — Claude Code Web Setup (v2.0.8)
 
 ### Added

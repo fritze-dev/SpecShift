@@ -77,6 +77,7 @@ Layers are independently modifiable -- WORKFLOW.md and Smart Templates do not em
 | Declarative plugin install via `extraKnownMarketplaces` + `enabledPlugins` | Follows docs pattern, no script needed, auto-installs at session start | [ADR-050](decisions/adr-050-declarative-plugin-install-via-marketplace.md) |
 | `.gitignore` negation rule for settings.json | Standard git pattern, allows single file to be tracked in ignored directory | [ADR-051](decisions/adr-051-gitignore-negation-rule-for-settings.md) |
 | No settings.json template in `src/templates/` | settings.json is project-specific (marketplace refs vary), not a pipeline artifact | [ADR-052](decisions/adr-052-no-settings-json-template.md) |
+| SessionStart hook as fallback for plugin auto-install | Workaround for `enabledPlugins` race condition; fires only on new sessions; harmless no-op when upstream fix lands | [ADR-053](decisions/adr-053-session-start-hook-fallback.md) |
 
 ### Notable Trade-offs
 

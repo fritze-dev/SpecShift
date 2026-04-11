@@ -15,8 +15,8 @@
 - [x] 2.8. Approval: Approved.
 
 ## 3. Standard Tasks (Post-Implementation)
-- [ ] 3.1. Run `/opsx:workflow finalize` (generates changelog and updates docs)
-- [ ] 3.2. Bump version
+- [x] 3.1. Run `/opsx:workflow finalize` (generates changelog and updates docs)
+- [x] 3.2. Bump version
 - [ ] 3.3. Commit and push to remote
 - [ ] 3.4. Update PR: mark ready for review, update body with change summary and issue references if applicable (`gh pr ready && gh pr edit --body "... Closes #112"`)
 
