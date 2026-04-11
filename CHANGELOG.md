@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-11 — Agent Skills + AGENTS.md Standards (v2.0.13)
+
+### Changed
+- Rewrite workflow SKILL.md to tool-agnostic Agent Skills Standard format, replace CLAUDE.md with symlink to AGENTS.md, update bootstrap template to generate AGENTS.md, add issues/PR permissions to copilot-setup-steps.yml, update CONSTITUTION.md with Agent Skills conventions
+
+### Added
+- AGENTS.md cross-client project instructions, .agents/skills/workflow/ symlink for cross-client skill discovery
+
+### Removed
+- .github/copilot-instructions.md, .github/skills/ directory
+
 ## 2026-04-11 — GitHub Copilot Coding Agent Setup (v2.0.12)
 
 ### Added
@@ -65,7 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 - `## Knowledge Management` section in CLAUDE.md directing agents to use transparent artifacts (constitution, specs, ADRs, issues) instead of auto-memory for project knowledge — type-to-destination routing maps rules→constitution, decisions→ADRs, requirements→specs, friction→issues (closes #69)
 - `Knowledge transparency` convention in CONSTITUTION.md documenting the project rule
-- `src/templates/claude.md` bootstrap template so consumer projects get CLAUDE.md via `/opsx:workflow init`
+- `src/templates/claude.md` bootstrap template so consumer projects get CLAUDE.md via `workflow init`
 
 ### Changed
 - Init instruction in WORKFLOW.md and consumer template updated to generate CLAUDE.md alongside constitution during Fresh mode
@@ -112,7 +123,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## 2026-04-09 — Skill Consolidation (v2.0.0)
 
 ### Added
-- Single workflow skill (`/opsx:workflow <action>`) replaces 11 separate skill files — 4 actions: `init`, `propose`, `apply`, `finalize`
+- Single workflow skill (`workflow <action>`) replaces 11 separate skill files — 4 actions: `init`, `propose`, `apply`, `finalize`
 - `review.md` pipeline artifact — verification report persisted in the change directory, visible in PRs, not skippable
 - 7-stage pipeline: research → proposal → specs → design → preflight → tasks → review
 - Inline action definitions in WORKFLOW.md body with clickable requirement links to specs in the skill
@@ -122,7 +133,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `documentation` spec (merges user-docs + architecture-docs + decision-docs)
 
 ### Changed
-- **BREAKING**: 13 commands consolidated to 4 (`/opsx:workflow init`, `propose`, `apply`, `finalize`)
+- **BREAKING**: 13 commands consolidated to 4 (`workflow init`, `propose`, `apply`, `finalize`)
 - **BREAKING**: WORKFLOW.md template-version 1 → 3 with actions array and action body sections
 - Architecture Layer 3 updated from "11 Skills" to "single workflow skill with 4 actions"
 - Post-artifact commit logic moved from WORKFLOW.md body to skill internals
