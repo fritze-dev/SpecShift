@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: completed
 branch: worktree-session-start-hook-fallback
 worktree: .claude/worktrees/session-start-hook-fallback
 capabilities:

@@ -9,10 +9,10 @@
 - [x] 2.2. Metric Check: Existing declarative fields preserved — PASS
 - [x] 2.3. Metric Check: Plugin auto-installs in Claude Code Web session — deferred (manual test after merge)
 - [x] 2.4. Auto-Verify: generate review.md using the review template
-- [ ] 2.5. User Testing: **Stop here!** Ask the user for manual approval.
-- [ ] 2.6. Fix Loop: On verify issues or bug reports → fix → re-verify.
-- [ ] 2.7. Final Verify: regenerate review.md after all fixes. Skip if 2.6 was not entered.
-- [ ] 2.8. Approval: Only finish on explicit **"Approved"** by the user.
+- [x] 2.5. User Testing: Approved by user.
+- [x] 2.6. Fix Loop: Not entered.
+- [x] 2.7. Final Verify: Skipped (no fixes needed).
+- [x] 2.8. Approval: Approved.
 
 ## 3. Standard Tasks (Post-Implementation)
 - [ ] 3.1. Run `/opsx:workflow finalize` (generates changelog and updates docs)
