@@ -222,8 +222,7 @@ opsx-enhanced-flow/
 │
 ├── .github/workflows/                     # CI/CD
 │   ├── release.yml                        # Auto tag + release on version change
-│   ├── claude.yml                         # @claude mention handler
-│   └── claude-code-review.yml             # Auto code review on PRs
+│   └── claude.yml                         # @claude mention handler
 │
 └── README.md                              # This file
 ```
