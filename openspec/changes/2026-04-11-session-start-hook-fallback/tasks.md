@@ -2,13 +2,13 @@
 
 ## 1. Implementation
 
-- [ ] 1.1. Add `hooks.SessionStart` entry to `.claude/settings.json` with `claude plugin install opsx@opsx-enhanced-flow 2>/dev/null || true` and `matcher: "startup"`
+- [x] 1.1. Add `hooks.SessionStart` entry to `.claude/settings.json` with `claude plugin install opsx@opsx-enhanced-flow 2>/dev/null || true` and `matcher: "startup"`
 
 ## 2. QA Loop & Human Approval
-- [ ] 2.1. Metric Check: `.claude/settings.json` is valid JSON — PASS / FAIL
-- [ ] 2.2. Metric Check: Existing declarative fields preserved — PASS / FAIL
-- [ ] 2.3. Metric Check: Plugin auto-installs in Claude Code Web session — PASS / FAIL (manual, deferred)
-- [ ] 2.4. Auto-Verify: generate review.md using the review template
+- [x] 2.1. Metric Check: `.claude/settings.json` is valid JSON — PASS
+- [x] 2.2. Metric Check: Existing declarative fields preserved — PASS
+- [x] 2.3. Metric Check: Plugin auto-installs in Claude Code Web session — deferred (manual test after merge)
+- [x] 2.4. Auto-Verify: generate review.md using the review template
 - [ ] 2.5. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 2.6. Fix Loop: On verify issues or bug reports → fix → re-verify.
 - [ ] 2.7. Final Verify: regenerate review.md after all fixes. Skip if 2.6 was not entered.
