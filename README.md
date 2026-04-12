@@ -61,7 +61,3 @@ your-project/
 | Rules | `.specshift/CONSTITUTION.md` | Project-specific conventions |
 | Pipeline | `.specshift/WORKFLOW.md` + Templates | Artifact generation |
 | Router | `SKILL.md` (via plugin) | Action dispatch |
-
-## License
-
-MIT
