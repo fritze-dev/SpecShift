@@ -1,6 +1,6 @@
 ---
 id: specs
-template-version: 2
+template-version: 1
 description: Requirements with Gherkin scenarios (BDD) and optional user stories
 generates: "specs/**/*.md"
 requires: [proposal]

@@ -1,6 +1,6 @@
 ---
 id: tasks
-template-version: 2
+template-version: 1
 description: Implementation checklist with QA loop
 generates: tasks.md
 requires: [tests]
