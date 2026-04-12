@@ -7,7 +7,7 @@ lastUpdated: "2026-04-10"
 
 # Task Implementation
 
-Works through your task checklist systematically via `workflow apply`, implementing each item, tracking progress with clear counts, generating a review.md verification artifact, and pausing whenever a blocker or ambiguity is encountered.
+Works through your task checklist systematically via `specshift apply`, implementing each item, tracking progress with clear counts, generating a review.md verification artifact, and pausing whenever a blocker or ambiguity is encountered.
 
 ## Purpose
 
@@ -19,11 +19,11 @@ Tasks are implemented sequentially in the order listed because the task list rep
 
 ## Features
 
-- **Sequential task execution** via `workflow apply` -- works through pending checkboxes in order, making code changes for each task
+- **Sequential task execution** via `specshift apply` -- works through pending checkboxes in order, making code changes for each task
 - **Automatic progress tracking** -- displays "N/M tasks complete" at session start, after each task, and on pause or completion
 - **Resume from where you left off** -- skips already-completed tasks and starts from the first pending one
 - **Pause on blockers** -- stops and asks for clarification when a task is ambiguous, a design issue is discovered, or a technical constraint prevents progress
-- **Direct spec editing** -- specs at `openspec/specs/` can be modified during implementation when task requirements include spec changes
+- **Direct spec editing** -- specs at `docs/specs/` can be modified during implementation when task requirements include spec changes
 - **review.md generation** -- after all tasks complete, the QA loop automatically generates `review.md` in the change directory as a persistent verification artifact
 - **Standard tasks separation** -- post-implementation steps (changelog, docs, version bump, push) are tracked as checkboxes but not executed by apply. Pre-merge extras run during the post-apply workflow. Post-merge reminders appear as plain bullets.
 - **Parallelizable task markers** -- tasks marked with `[P]` indicate they can be done in parallel. The marker is informational only.
@@ -31,9 +31,9 @@ Tasks are implemented sequentially in the order listed because the task list rep
 
 ## Behavior
 
-### Implementing Tasks (`workflow apply`)
+### Implementing Tasks (`specshift apply`)
 
-When you run `workflow apply`, the system reads all context files from the change directory and the apply instruction from WORKFLOW.md, then works through each pending task. For each task, it reads the description, makes the required code changes, and marks the checkbox as complete. It continues to the next task until all are complete or a blocker is encountered.
+When you run `specshift apply`, the system reads all context files from the change directory and the apply instruction from WORKFLOW.md, then works through each pending task. For each task, it reads the description, makes the required code changes, and marks the checkbox as complete. It continues to the next task until all are complete or a blocker is encountered.
 
 ### Resuming a Partial Session
 
@@ -53,7 +53,7 @@ When all implementation tasks are complete, the QA Loop's Metric Check and Auto-
 
 ### Spec Edits During Implementation
 
-Specs at `openspec/specs/` can be modified during implementation. When a task requires updating a spec, the agent edits the baseline spec directly. There is no separate sync step -- spec edits are committed alongside implementation changes.
+Specs at `docs/specs/` can be modified during implementation. When a task requires updating a spec, the agent edits the baseline spec directly. There is no separate sync step -- spec edits are committed alongside implementation changes.
 
 ### Standard Tasks (Post-Implementation)
 

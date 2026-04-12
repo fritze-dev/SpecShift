@@ -1,6 +1,6 @@
 ---
-template-version: 4
-templates_dir: openspec/templates
+template-version: 1
+templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
 
 actions: [init, propose, apply, finalize]
@@ -24,7 +24,7 @@ Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks →
 
 ## Context
 
-Always read and follow openspec/CONSTITUTION.md before proceeding.
+Always read and follow .specshift/CONSTITUTION.md before proceeding.
 All workflow artifacts (research, proposal, specs, design, preflight, tasks, review)
 must be written in English regardless of docs_language.
 
@@ -38,7 +38,7 @@ Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean co
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
-review artifact: when auto_approve is false, stop before review and suggest workflow apply. When auto_approve is true, do not stop — auto-continue to apply.
+review artifact: when auto_approve is false, stop before review and suggest specshift apply. When auto_approve is true, do not stop — auto-continue to apply.
 
 ## Action: init
 
@@ -49,7 +49,7 @@ Mode detection:
 - Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution and CLAUDE.md
 - Update (templates outdated): merge plugin template updates with local customizations
 - Re-sync (all installed): detect spec drift (code vs specs) + docs drift (docs vs specs)
-Report findings, suggest workflow propose for changes needed.
+Report findings, suggest specshift propose for changes needed.
 
 ## Action: apply
 

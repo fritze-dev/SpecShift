@@ -1,11 +1,11 @@
 {
-  "name": "opsx",
+  "name": "specshift",
   "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
-  "version": "2.0.13",
+  "version": "0.1.0-beta",
   "author": {
     "name": "fritze.dev"
   },
-  "repository": "https://github.com/fritze-dev/opsx-enhanced-flow",
+  "repository": "https://github.com/fritze-dev/specshift",
   "license": "MIT",
-  "keywords": ["openspec", "spec-driven", "documentation", "workflow", "bdd", "gherkin"]
+  "keywords": ["spec-driven", "documentation", "workflow", "bdd", "gherkin"]
 }

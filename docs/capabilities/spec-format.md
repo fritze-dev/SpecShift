@@ -37,11 +37,11 @@ Scenarios use the heading `#### Scenario: <name>` with exactly 4 hashtags. Each 
 
 ### Baseline Specs Represent Current State
 
-Specs at `openspec/specs/<capability>/spec.md` use a `## Purpose` section followed by a `## Requirements` section. Each requirement within the spec follows the standard format: `### Requirement:` header, normative description, optional User Story, and `#### Scenario:` blocks.
+Specs at `docs/specs/<capability>.md` use a `## Purpose` section followed by a `## Requirements` section. Each requirement within the spec follows the standard format: `### Requirement:` header, normative description, optional User Story, and `#### Scenario:` blocks.
 
 ### Frontmatter Controls Documentation Ordering
 
-Specs may include YAML frontmatter at the top of the file with `order` (an integer for display position in the documentation table of contents) and `category` (a kebab-case string for workflow phase grouping). Standard categories are: `setup`, `change-workflow`, `development`, `finalization`, `reference`, `meta`. The `/opsx:docs` command reads these values to determine capability ordering and group headers. If `order` is absent, the agent determines ordering. If `category` is absent, the capability appears in an "Other" group.
+Specs may include YAML frontmatter at the top of the file with `order` (an integer for display position in the documentation table of contents) and `category` (a kebab-case string for workflow phase grouping). Standard categories are: `setup`, `change-workflow`, `development`, `finalization`, `reference`, `meta`. The `specshift finalize` command reads these values to determine capability ordering and group headers. If `order` is absent, the agent determines ordering. If `category` is absent, the capability appears in an "Other" group.
 
 ### Frontmatter Tracks Change Lifecycle
 
@@ -63,7 +63,7 @@ Assumptions are written as a visible list item followed by an HTML comment tag: 
 ## Edge Cases
 
 - If a requirement has zero scenarios, the spec is considered invalid and flagged during preflight.
-- If two specs share the same `order` value, `/opsx:docs` uses alphabetical capability name as a tiebreaker.
-- If a `category` value is not one of the standard categories, `/opsx:docs` still renders it as a group header using title-case formatting.
+- If two specs share the same `order` value, `specshift finalize` uses alphabetical capability name as a tiebreaker.
+- If a `category` value is not one of the standard categories, `specshift finalize` still renders it as a group header using title-case formatting.
 - If a spec has `status: draft` but no `change` field, preflight flags this as a warning (unknown change owner).
 - If a spec has `status: stable` with a `change` field present, the `change` field is ignored (stale data).
