@@ -55,7 +55,7 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 **User Story:** As a developer I want each template to be self-describing with its own instruction and metadata, so that I can understand what a template does without consulting a separate schema file.
 
 #### Scenario: Smart Template contains required frontmatter fields
-- **GIVEN** a Smart Template file (e.g., `.specshift/templates/research.md`)
+- **GIVEN** a Smart Template file (e.g., `.specshift/templates/changes/research.md`)
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** it SHALL contain `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields
 

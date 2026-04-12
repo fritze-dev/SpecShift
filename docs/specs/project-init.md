@@ -90,14 +90,14 @@ For CONSTITUTION.md, the merge operates at **section level**: the system SHALL c
 **User Story:** As a user who has customized my templates I want plugin updates to preserve my customizations, so that re-running `specshift init` after a plugin update does not silently destroy my changes.
 
 #### Scenario: Unchanged template updated silently
-- **GIVEN** a local template `.specshift/templates/research.md` with `template-version: 1` matching the plugin template content exactly
+- **GIVEN** a local template `.specshift/templates/changes/research.md` with `template-version: 1` matching the plugin template content exactly
 - **AND** the plugin update has `template-version: 2` with updated instruction text
 - **WHEN** the user runs `specshift init`
 - **THEN** the local template SHALL be replaced with the plugin's template-version 2 template
 - **AND** the report SHALL show "Template research.md updated (v1 → v2)"
 
 #### Scenario: User-customized template preserved
-- **GIVEN** a local template `.specshift/templates/research.md` with `template-version: 1` but modified instruction content
+- **GIVEN** a local template `.specshift/templates/changes/research.md` with `template-version: 1` but modified instruction content
 - **AND** the plugin template also has `template-version: 1`
 - **WHEN** the user runs `specshift init`
 - **THEN** the local template SHALL NOT be overwritten

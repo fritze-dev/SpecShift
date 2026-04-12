@@ -78,7 +78,7 @@ Each artifact in the pipeline SHALL declare its dependencies explicitly in the S
 - **THEN** the dependency check SHALL fail and report that proposal and specs must be completed first
 
 #### Scenario: Smart Template declares dependencies explicitly
-- **GIVEN** a Smart Template file (e.g., `.specshift/templates/proposal.md`)
+- **GIVEN** a Smart Template file (e.g., `.specshift/templates/changes/proposal.md`)
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** it SHALL have a `requires` field listing its direct dependencies by artifact ID (e.g., `[research]`)
 
@@ -193,7 +193,7 @@ The WORKFLOW.md `apply.instruction` SHALL direct the agent to commit and push al
 Each Smart Template's `instruction` field SHALL contain workflow rules that apply to its artifact type. The tasks template instruction SHALL include the Definition of Done rule (emergent from artifacts). The tasks template instruction SHALL include a standard tasks directive for including universal post-implementation steps and appending constitution-defined project-specific extras. The apply instruction in WORKFLOW.md SHALL include the post-apply workflow sequence and clarify that standard tasks are executed separately after apply completes.
 
 #### Scenario: Tasks template instruction includes DoD rule
-- **GIVEN** the tasks Smart Template at `.specshift/templates/tasks.md`
+- **GIVEN** the tasks Smart Template at `.specshift/templates/changes/tasks.md`
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain a rule stating that Definition of Done is emergent from artifacts
 
@@ -233,7 +233,7 @@ The tasks Smart Template's `instruction` field SHALL include a standard tasks di
 
 #### Scenario: Template includes universal standard tasks
 
-- **GIVEN** the tasks template at `.specshift/templates/tasks.md`
+- **GIVEN** the tasks template at `.specshift/templates/changes/tasks.md`
 - **WHEN** the template is inspected
 - **THEN** it SHALL contain a section 4 with universal post-implementation steps as checkbox items
 
@@ -241,7 +241,7 @@ The tasks Smart Template's `instruction` field SHALL include a standard tasks di
 The proposal Smart Template's `instruction` field SHALL include explicit rules defining what constitutes a capability versus a feature detail, including heuristics for merging (shared actor/trigger/data model) and minimum scope (3+ requirements).
 
 #### Scenario: Guidance defines capability vs feature detail
-- **GIVEN** the proposal Smart Template at `.specshift/templates/proposal.md`
+- **GIVEN** the proposal Smart Template at `.specshift/templates/changes/proposal.md`
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain a definition distinguishing capabilities from feature details and merging heuristics
 
@@ -254,7 +254,7 @@ The proposal Smart Template's `instruction` field SHALL include explicit rules d
 The proposal Smart Template's `instruction` field SHALL include a mandatory consolidation check requiring the agent to review existing specs, check domain overlap, check pair-wise overlap between new capabilities, and verify minimum requirement counts.
 
 #### Scenario: Consolidation check is present in proposal template instruction
-- **GIVEN** the proposal Smart Template at `.specshift/templates/proposal.md`
+- **GIVEN** the proposal Smart Template at `.specshift/templates/changes/proposal.md`
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain a mandatory consolidation check with steps for existing spec review, domain overlap, pair-wise overlap, and minimum requirements
 
@@ -274,7 +274,7 @@ The proposal template SHALL include a `### Consolidation Check` section between 
 **User Story:** As a reviewer reading a proposal I want to see the agent's consolidation reasoning documented, so that I can verify the capability boundaries are well-considered before specs are created.
 
 #### Scenario: Proposal template includes Consolidation Check section
-- **GIVEN** the proposal template at `.specshift/templates/proposal.md`
+- **GIVEN** the proposal template at `.specshift/templates/changes/proposal.md`
 - **WHEN** the template is inspected
 - **THEN** it SHALL contain a `### Consolidation Check` section with instructions for documenting existing specs reviewed, overlap assessment, and merge assessment
 
