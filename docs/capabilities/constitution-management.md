@@ -20,7 +20,7 @@ The constitution is generated from observed patterns rather than invented from s
 ## Features
 
 - **Schema-Defined Template**: The constitution section structure is defined by a template in the active schema's template directory. The bootstrap skill reads this template as a starting structure and adapts sections to fit the project -- adding, omitting, or restructuring as needed.
-- **Bootstrap-Generated Constitution**: The `/opsx:bootstrap` command scans source files, configuration files, directory structures, and dependency manifests to infer the constitution. Every entry is traceable to an observed pattern -- no invented or aspirational rules.
+- **Bootstrap-Generated Constitution**: The `specshift init` command scans source files, configuration files, directory structures, and dependency manifests to infer the constitution. Every entry is traceable to an observed pattern -- no invented or aspirational rules.
 - **Active Resolution of Uncertain Items**: During bootstrap, the agent iterates through all uncertain items, presents each to the user, documents the decision, and removes the marker. No `<!-- REVIEW -->` markers remain after bootstrap completes.
 - **Global Context Enforcement**: Every skill invocation and artifact generation step reads the constitution before proceeding, configured through WORKFLOW.md.
 - **Automatic Updates During Design**: When a design introduces new technologies or patterns, the constitution is updated to reflect them. Changes are noted in the design document for visibility during review.
@@ -35,7 +35,7 @@ The constitution's section structure comes from a template file in the active sc
 
 ### Constitution Generated from Codebase Scan
 
-When `/opsx:bootstrap` runs on an existing project, it reads the constitution template for the section structure and then scans source files, configuration files (like `tsconfig.json` and ESLint configs), directory structures, and dependency manifests. The resulting `openspec/CONSTITUTION.md` includes the detected tech stack, code style rules, architecture patterns, and conventions. Technologies or frameworks that are not detected in the codebase are not included -- the agent does not invent conventions.
+When `specshift init` runs on an existing project, it reads the constitution template for the section structure and then scans source files, configuration files (like `tsconfig.json` and ESLint configs), directory structures, and dependency manifests. The resulting `.specshift/CONSTITUTION.md` includes the detected tech stack, code style rules, architecture patterns, and conventions. Technologies or frameworks that are not detected in the codebase are not included -- the agent does not invent conventions.
 
 ### Uncertain Items Resolved Through User Interaction
 
@@ -43,7 +43,7 @@ When the agent encounters inconsistent patterns during bootstrap (for example, b
 
 ### Constitution Is Read Before Every AI Action
 
-The WORKFLOW.md references `openspec/CONSTITUTION.md` as a required context file. When any skill is invoked -- whether `/opsx:new`, `/opsx:continue`, or any other command -- the agent loads and considers the constitution content before generating output. If the constitution is missing, the agent warns the user and recommends running `/opsx:bootstrap`.
+The WORKFLOW.md references `.specshift/CONSTITUTION.md` as a required context file. When any skill is invoked -- whether `specshift propose`, `specshift apply`, or any other command -- the agent loads and considers the constitution content before generating output. If the constitution is missing, the agent warns the user and recommends running `specshift init`.
 
 ### Constitution Is Updated During Design Phases
 
@@ -60,7 +60,7 @@ The constitution's Conventions section includes a "Workflow friction" entry requ
 ## Known Limitations
 
 - Constitution updates during design are immediately visible to subsequent skill invocations only if the agent re-reads context files. This is assumed to be standard file system behavior.
-- The WORKFLOW.md workflow rules must be configured correctly during `/opsx:setup` to reference the constitution.
+- The WORKFLOW.md workflow rules must be configured correctly during `specshift init` to reference the constitution.
 
 ## Future Enhancements
 

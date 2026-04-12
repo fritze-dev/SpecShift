@@ -6,7 +6,7 @@ lastUpdated: "2026-04-08"
 ---
 # Release Workflow
 
-The release workflow handles version management for the plugin, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, consumer version pinning, developer local marketplace workflow, changelog generation via `/opsx:changelog`, and documented processes for manual releases and consumer updates.
+The release workflow handles version management for the plugin, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, consumer version pinning, developer local marketplace workflow, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Without an automated release workflow, version bumps are a manual step that is r
 
 ## Rationale
 
-The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes without frontmatter) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities (falling back to parsing the Capabilities section). It also reads `openspec/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
+The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes without frontmatter) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities (falling back to parsing the Capabilities section). It also reads `.specshift/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
 
 ## Features
 
@@ -26,7 +26,7 @@ The auto-bump is implemented as a constitution convention rather than a skill mo
 - **Developer local marketplace** -- developers register the local repo as marketplace source for live plugin development in VS Code and CLI
 - **Manual minor/major releases** -- documented process for intentional version changes; the Action handles tagging automatically
 - **Consumer update guidance** -- clear steps for consumers to get the latest plugin version
-- **Changelog generation** -- `/opsx:changelog` produces release notes from completed changes in Keep a Changelog format, using proposal frontmatter for change detection
+- **Changelog generation** -- `specshift finalize` produces release notes from completed changes in Keep a Changelog format, using proposal frontmatter for change detection
 - **Language-aware changelog** -- changelog entries can be generated in the language configured in `docs_language`
 - **Post-apply next steps** -- apply output includes guidance for the complete post-apply workflow
 
@@ -42,11 +42,11 @@ When a version bump is pushed to `main`, a GitHub Action automatically creates a
 
 ### Plugin Source Directory
 
-Plugin source code (skills, templates, manifest) lives in the `src/` subdirectory. Consumer plugin caches contain only `src/` contents -- documentation, CI workflows, OpenSpec project files, and changelogs are not downloaded. The marketplace uses `source: "./src"` to reference the plugin subdirectory.
+Plugin source code (skills, templates, manifest) lives in the `src/` subdirectory. Consumer plugin caches contain only `src/` contents -- documentation, CI workflows, project spec files, and changelogs are not downloaded. The marketplace uses `source: "./src"` to reference the plugin subdirectory.
 
 ### Consumer Version Pinning
 
-Consumers can pin to a specific plugin version by adding the marketplace with a tag reference (for example, `claude plugin marketplace add fritze-dev/opsx-enhanced-flow#v1.0.30`). Pinned marketplaces do not receive updates when new versions are released.
+Consumers can pin to a specific plugin version by adding the marketplace with a tag reference (for example, `claude plugin marketplace add fritze-dev/specshift#v1.0.30`). Pinned marketplaces do not receive updates when new versions are released.
 
 ### Developer Local Marketplace
 
@@ -62,11 +62,11 @@ For intentional minor or major version changes, you manually set the version in 
 
 ### Consumer Update Process
 
-When a new plugin version is available, consumers run `claude plugin marketplace update opsx-enhanced-flow` to refresh the listing, then `claude plugin update opsx@opsx-enhanced-flow` to install the update, and restart Claude Code to load the new version.
+When a new plugin version is available, consumers run `claude plugin marketplace update specshift` to refresh the listing, then `claude plugin update specshift@specshift` to install the update, and restart Claude Code to load the new version.
 
 ### Update Not Detected
 
-If `claude plugin update` does not detect a new version, first refresh the marketplace listing with `claude plugin marketplace update opsx-enhanced-flow` and retry. As a last resort, uninstall and reinstall the plugin.
+If `claude plugin update` does not detect a new version, first refresh the marketplace listing with `claude plugin marketplace update specshift` and retry. As a last resort, uninstall and reinstall the plugin.
 
 ### Skill Immutability
 
@@ -74,19 +74,19 @@ Skills in `skills/` are generic plugin code shared across all consumers and are 
 
 ### Project-Specific Behavior in Constitution
 
-When project-specific post-apply behavior is needed (such as version bumps), it is defined as a convention in `openspec/CONSTITUTION.md`, not added as a step in the skill file.
+When project-specific post-apply behavior is needed (such as version bumps), it is defined as a convention in `.specshift/CONSTITUTION.md`, not added as a step in the skill file.
 
 ### End-to-End Install Flow
 
-The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `/opsx:setup` followed by `/opsx:bootstrap`.
+The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `specshift init`.
 
 ### End-to-End Update Flow
 
-The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `/opsx:setup` again is safe (idempotent) and ensures schema updates are picked up.
+The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `specshift init` again is safe (idempotent) and ensures schema updates are picked up.
 
 ### Post-Push Developer Plugin Update
 
-For developers using the local marketplace, running `claude plugin update opsx@opsx-enhanced-flow` detects the local version change and updates the cached plugin. For developers using the GitHub marketplace, the existing `marketplace update` + `plugin update` flow applies.
+For developers using the local marketplace, running `claude plugin update specshift@specshift` detects the local version change and updates the cached plugin. For developers using the GitHub marketplace, the existing `marketplace update` + `plugin update` flow applies.
 
 ### Post-Apply Workflow Next Steps
 
@@ -94,7 +94,7 @@ After a completed change, the post-apply workflow includes next steps: verify, c
 
 ### Changelog from Single Change
 
-Running `/opsx:changelog` scans change directories, identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy proposals), reads the proposal's `capabilities` frontmatter to find affected specs, and produces changelog entries summarizing what changed from a user perspective. Entries use the Keep a Changelog format with sections like Added, Changed, and Fixed.
+Running `specshift finalize` scans change directories, identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy proposals), reads the proposal's `capabilities` frontmatter to find affected specs, and produces changelog entries summarizing what changed from a user perspective. Entries use the Keep a Changelog format with sections like Added, Changed, and Fixed.
 
 ### Multiple Changes Ordered Newest First
 
@@ -106,7 +106,7 @@ If `CHANGELOG.md` already contains manually written entries, new entries are add
 
 ### No Completed Changes to Process
 
-If no completed changes exist, `/opsx:changelog` informs you that no completed changes were found.
+If no completed changes exist, `specshift finalize` informs you that no completed changes were found.
 
 ### Internal-Only Changes
 
@@ -114,7 +114,7 @@ If a completed change describes purely internal refactoring with no user-visible
 
 ### Changelog in Configured Language
 
-When `openspec/WORKFLOW.md` contains a `docs_language` setting (for example, `German`), `/opsx:changelog` generates section headers and entry descriptions in that language. Dates remain in ISO format and product names stay in English.
+When `.specshift/WORKFLOW.md` contains a `docs_language` setting (for example, `German`), `specshift finalize` generates section headers and entry descriptions in that language. Dates remain in ISO format and product names stay in English.
 
 ### Default Language
 
@@ -131,7 +131,7 @@ If the documentation language is changed after entries have already been generat
 
 ## Future Enhancements
 
-- A `/opsx:status` skill for checking the current project and plugin state.
+- A `specshift status` skill for checking the current project and plugin state.
 - Sparse checkout via `git-subdir` for even more efficient consumer downloads.
 
 ## Edge Cases
