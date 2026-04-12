@@ -1,4 +1,4 @@
-# ADR-001: SpecShift v1.0 Architecture — Restructuring from OpenSpec
+# ADR-M001: SpecShift v1.0 Architecture — Restructuring from OpenSpec
 
 ## Status
 Accepted
