@@ -4,9 +4,15 @@ A lightweight, spec-driven workflow for autonomous AI agents using Claude Code.
 
 > *Every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.*
 
+*Inspired by [OpenSpec](https://openspec.dev) and GitHub's [Spec-Kit](https://github.com/github/spec-kit).*
+
 ## Installation
 
 ```bash
+# Add the marketplace
+claude plugin marketplace add fritze-dev/specshift
+
+# Install the plugin
 claude plugin install specshift
 ```
 
@@ -25,6 +31,8 @@ specshift apply
 # Finalize (changelog, docs, version bump)
 specshift finalize
 ```
+
+By default, `auto_approve` is enabled — the pipeline runs end-to-end from propose through apply to finalize without manual checkpoints. Disable it in `.specshift/WORKFLOW.md` if you prefer to review each phase.
 
 ## How It Works
 
