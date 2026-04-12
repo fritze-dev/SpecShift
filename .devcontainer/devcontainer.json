@@ -1,6 +1,6 @@
 // For format details, see https://aka.ms/devcontainer.json
 {
-  "name": "opsx-enhanced-flow",
+  "name": "specshift",
   "image": "mcr.microsoft.com/devcontainers/base:noble",
 
   "features": {
@@ -9,7 +9,7 @@
   },
 
   "postCreateCommand": {
-    "plugin": "claude plugin marketplace add . --scope user && claude plugin install opsx@opsx-enhanced-flow"
+    "plugin": "claude plugin marketplace add . --scope user && claude plugin install specshift"
   },
 
   "customizations": {

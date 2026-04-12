@@ -13,16 +13,16 @@ instruction: |
 
   Overlap Verification (before editing any spec files):
   1. Read the proposal's Consolidation Check section.
-  2. For each new capability, scan existing specs in openspec/specs/ for overlapping
+  2. For each new capability, scan existing specs in docs/specs/ for overlapping
      requirements (same actor, same trigger, same data model).
   3. If overlap is found: STOP and note it. The capability should be reclassified as
      a Modified Capability on the existing spec, not a new spec. Update the proposal's
      Capabilities section to reflect this before proceeding.
 
   Edit or create one spec file per capability listed in the proposal's Capabilities section.
-  - New capabilities: create openspec/specs/<capability>/spec.md using the exact
+  - New capabilities: create docs/specs/<capability>.md using the exact
     kebab-case name from the proposal.
-  - Modified capabilities: edit the existing file at openspec/specs/<capability>/spec.md
+  - Modified capabilities: edit the existing file at docs/specs/<capability>.md
     in place. Add, modify, or remove requirements as described in the proposal.
 
   Format requirements (strict ordering):

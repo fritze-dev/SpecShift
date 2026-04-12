@@ -1,17 +1,17 @@
 {
-  "name": "opsx-enhanced-flow",
+  "name": "specshift",
   "owner": {
     "name": "fritze.dev"
   },
   "metadata": {
-    "description": "OPSX Enhanced Flow — spec-driven development workflow plugin for Claude Code"
+    "description": "Spec-driven development workflow plugin for Claude Code"
   },
   "plugins": [
     {
-      "name": "opsx",
+      "name": "specshift",
       "source": "./src",
       "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
-      "version": "2.0.13"
+      "version": "0.1.0-beta"
     }
   ]
 }

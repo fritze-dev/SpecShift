@@ -1,13 +1,13 @@
 {
   "extraKnownMarketplaces": {
-    "opsx-enhanced-flow": {
+    "specshift": {
       "source": {
         "source": "github",
-        "repo": "fritze-dev/opsx-enhanced-flow"
+        "repo": "fritze-dev/specshift"
       }
     }
   },
   "enabledPlugins": {
-    "opsx@opsx-enhanced-flow": true
+    "specshift": true
   }
 }

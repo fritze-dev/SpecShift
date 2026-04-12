@@ -25,7 +25,7 @@ instruction: |
   - **Assumptions**: Format: `- Visible assumption text. <!-- ASSUMPTION: short tag -->`. If none: "No assumptions made."
 
   If this feature introduces new technologies, patterns, or architectural
-  changes, update openspec/CONSTITUTION.md accordingly.
+  changes, update .specshift/CONSTITUTION.md accordingly.
 
   Focus on architecture and approach, not line-by-line implementation.
   Reference the proposal for motivation and specs for requirements.

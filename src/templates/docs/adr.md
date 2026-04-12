@@ -63,14 +63,14 @@ Accepted (YYYY-MM-DD)
      ALWAYS use proper markdown link syntax: [descriptive text](path).
 
      CORRECT:
-     - [Spec: three-layer-architecture](../../openspec/specs/three-layer-architecture/spec.md)
+     - [Spec: three-layer-architecture](../../docs/specs/three-layer-architecture.md)
      - [ADR-019: Constitution Convention Only](adr-019-constitution-convention-only.md)
      - [GitHub Issue #21](https://github.com/owner/repo/issues/21)
 
      WRONG (raw path as link text):
-     - [../../openspec/specs/three-layer-architecture/spec.md](../../openspec/specs/three-layer-architecture/spec.md)
+     - [../../docs/specs/three-layer-architecture.md](../../docs/specs/three-layer-architecture.md)
 -->
 
-- [Spec: <capability-name>](../../openspec/specs/<capability>/spec.md)
+- [Spec: <capability-name>](../../docs/specs/<capability>.md)
 - [ADR-NNN: <decision-title>](adr-NNN-slug.md)
 - [GitHub Issue #N](https://github.com/owner/repo/issues/N)

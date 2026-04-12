@@ -19,11 +19,11 @@ template-version: 1
 
 - **Three-layer architecture:** CONSTITUTION.md (global rules) → WORKFLOW.md + Smart Templates (artifact pipeline + inline actions) → Router (single workflow skill with 4 built-in actions (init, propose, apply, finalize) + consumer-defined custom actions)
 - Layers are independently modifiable — WORKFLOW.md and Smart Templates do not embed router logic, the router depends on them via direct file reads
-- **Router immutability:** The workflow skill (`skills/workflow/SKILL.md`) is generic plugin code shared across all consumers. They MUST NOT be modified for project-specific behavior. Project-specific workflows and conventions MUST be defined in this constitution.
+- **Router immutability:** The workflow skill (`skills/specshift/SKILL.md`) is generic plugin code shared across all consumers. They MUST NOT be modified for project-specific behavior. Project-specific workflows and conventions MUST be defined in this constitution.
 - Plugin manifests live in `.claude-plugin/` (plugin.json, marketplace.json)
-- Pipeline source of truth: `openspec/WORKFLOW.md` (orchestration + actions) + `openspec/templates/` (Smart Templates)
-- Specs: `openspec/specs/<capability>/spec.md` (one directory per capability, edited directly during specs stage)
-- Changes: `openspec/changes/YYYY-MM-DD-<feature>/` (date-prefixed at creation, contains planning artifacts + review.md)
+- Pipeline source of truth: `.specshift/WORKFLOW.md` (orchestration + actions) + `.specshift/templates/` (Smart Templates)
+- Specs: `docs/specs/<capability>.md` (one file per capability, edited directly during specs stage)
+- Changes: `.specshift/changes/YYYY-MM-DD-<feature>/` (date-prefixed at creation, contains planning artifacts + review.md)
 
 ## Code Style
 
@@ -39,15 +39,14 @@ template-version: 1
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
 - **Post-apply version bump:** During the post-apply workflow, automatically increment the patch version in `src/.claude-plugin/plugin.json` (e.g., `1.0.3` → `1.0.4`) and sync the `version` field in `.claude-plugin/marketplace.json` to match. If versions are out of sync, use `src/.claude-plugin/plugin.json` as source of truth. Display the new version. A GitHub Action automatically creates a git tag and GitHub Release when the version change is pushed to `main`. For intentional minor/major releases, manually set the version in both files and push — the Action handles tagging and release creation.
 - **Plugin source layout:** Plugin source code lives in `src/` (skills, templates, plugin.json). Project files (docs, CI, specs, changelog) stay at the repo root. Consumer plugin caches contain only `src/` contents. The marketplace.json at `.claude-plugin/marketplace.json` uses `source: "./src"`.
-- **Local development:** Developers register the local repo as marketplace via `claude plugin marketplace add <local-path> --scope user`. Skill changes reload via `/reload-plugins`. Version changes require `claude plugin update opsx@opsx-enhanced-flow`.
+- **Local development:** Developers register the local repo as marketplace via `claude plugin marketplace add <local-path> --scope user`. Skill changes reload via `/reload-plugins`. Version changes require `claude plugin update specshift`.
 - **README accuracy:** When plugin behavior changes (skills, WORKFLOW.md, templates, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
 - **Knowledge transparency:** Project knowledge (architecture decisions, conventions, design rationale, workflow patterns) MUST live in version-controlled artifacts — constitution for rules, specs for requirements, ADRs for decisions, GitHub Issues for friction/bugs. Internal auto-memory files are opaque and non-shareable; project knowledge MUST NOT be stored there.
 - **Design review checkpoint:** After creating specs + design artifacts, pause for user alignment before proceeding to preflight/tasks — unless `auto_approve` is true, in which case continue without pausing. When `auto_approve` is false, the design phase is the mandatory review checkpoint.
 - **No ADR references in specs:** Specs MUST NOT reference ADRs (e.g., "see ADR-019"). ADRs are generated after implementation — specs exist before ADRs do. Specs describe requirements; ADRs document the decisions that shaped them.
-- **Template synchronization:** Changes to `openspec/WORKFLOW.md` (actions, pipeline, body sections) must also be reflected in `src/templates/workflow.md`. The `worktree` config may intentionally differ between project and consumer template (e.g., `enabled: true` in project, commented out in consumer).
-- **Agent Skills Standard:** The workflow skill at `src/skills/workflow/SKILL.md` follows the Agent Skills standard (agentskills.io). For cross-client discovery in this repo, `.agents/skills/workflow/SKILL.md` is a symlink to `src/skills/workflow/SKILL.md`. The plugin marketplace distributes `src/skills/` to Claude Code consumers.
-- **AGENTS.md:** Project-level agent instructions live in `AGENTS.md` (agents.md standard). `CLAUDE.md` is a symlink to `AGENTS.md`. Both files use tool-agnostic language.
+- **Template synchronization:** Changes to `.specshift/WORKFLOW.md` (actions, pipeline, body sections) must also be reflected in `src/templates/workflow.md`. The `worktree` config may intentionally differ between project and consumer template (e.g., `enabled: true` in project, commented out in consumer).
+- **Agent instructions:** Project-level agent instructions live in `CLAUDE.md`. Instructions use tool-agnostic language.
 - **Tool-agnostic instructions:** Specs, skills, and templates MUST describe intent (e.g., "create a draft PR") rather than hardcoding specific CLI tools (e.g., `gh pr create`). The plugin runs across environments with different tooling — Claude Code Web (MCP tools), desktop (gh CLI), or API-only. Concrete tool names may appear in parenthetical examples (e.g., "available GitHub tooling (gh CLI, MCP tools, or API)") but MUST NOT be the sole instruction.
 
 ## Standard Tasks
@@ -61,4 +60,4 @@ template-version: 1
 - [ ] Update PR: mark ready for review, update body with change summary and issue references if applicable (e.g., `Closes #X`)
 
 ### Post-Merge
-- Update plugin locally (`claude plugin marketplace update opsx-enhanced-flow && claude plugin update opsx@opsx-enhanced-flow`)
+- Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift`)

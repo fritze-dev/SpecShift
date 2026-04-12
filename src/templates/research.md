@@ -5,12 +5,12 @@ description: Discovery research, coverage assessment, and clarification question
 generates: research.md
 requires: []
 instruction: |
-  If existing specs are present in openspec/specs/, first check whether
+  If existing specs are present in docs/specs/, first check whether
   they still reflect the current codebase. Note any stale-spec risks
   from code changed outside the spec process.
 
   Context loading guardrails:
-  - Always read: openspec/specs/*/spec.md (source of truth),
+  - Always read: docs/specs/*.md (source of truth),
     docs/README.md (architecture overview and Key Design Decisions index)
   - When relevant: docs/decisions/adr-*.md — use the Key Design
     Decisions table in docs/README.md as index; deep-dive into

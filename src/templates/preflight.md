@@ -26,7 +26,7 @@ instruction: |
 <!-- Do global rules need updating due to new patterns? -->
 
 ## E. Duplication & Consistency
-<!-- Overlapping stories? Contradictions between specs? Inconsistencies with existing specs in openspec/specs/? -->
+<!-- Overlapping stories? Contradictions between specs? Inconsistencies with existing specs in docs/specs/? -->
 
 ## F. Assumption Audit
 <!-- Collect all <!-- ASSUMPTION --> markers from spec.md and design.md.
