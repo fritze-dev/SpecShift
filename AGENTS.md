@@ -1,16 +1,3 @@
----
-id: agents
-template-version: 2
-description: AGENTS.md bootstrap template with standard agent directives
-generates: AGENTS.md
-requires: []
-instruction: |
-  Generate AGENTS.md with project-specific agent instructions.
-  Always include the Workflow and Knowledge Management sections.
-  Add project-specific rules discovered during codebase analysis.
-  Use REVIEW markers for items needing user confirmation.
-  After generating AGENTS.md, create a symlink: CLAUDE.md → AGENTS.md
----
 # Project Rules
 
 ## Workflow
