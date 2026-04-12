@@ -423,7 +423,7 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 - **Workflow template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` does not exist, report an error and suggest reinstalling the plugin.
 - **AGENTS.md bootstrap template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` does not exist, skip AGENTS.md generation and warn that the plugin may need updating. Do not block init.
 - **AGENTS.md manually edited after init**: User edits to AGENTS.md are authoritative. Re-running init SHALL NOT overwrite a manually edited AGENTS.md.
-- **Template merge with subdirectories**: The merge detection SHALL recursively process templates in subdirectories (e.g., `templates/specs/spec.md`, `templates/docs/capability.md`).
+- **Template merge with subdirectories**: The merge detection SHALL recursively process templates in subdirectories (e.g., `templates/docs/specs/spec.md`, `templates/docs/capability.md`).
 - **Plugin downgrades**: If the plugin `template-version` is lower than the local `template-version`, the system SHALL warn and skip (do not downgrade).
 - **GitHub tooling available but not authenticated**: Report "GitHub tooling: available but not authenticated" and skip worktree opt-in.
 - **User declines worktree mode**: Leave WORKFLOW.md with commented-out `worktree:` section — no changes needed.
