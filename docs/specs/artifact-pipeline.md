@@ -292,7 +292,7 @@ The proposal template SHALL include a `### Consolidation Check` section between 
 The specs Smart Template's `instruction` field SHALL include an overlap verification step before editing spec files, requiring the agent to read the proposal's Consolidation Check and scan existing specs for overlap.
 
 #### Scenario: Overlap verification is present in specs template instruction
-- **GIVEN** the specs Smart Template at `.specshift/templates/docs/specs/spec.md`
+- **GIVEN** the specs Smart Template at `.specshift/templates/docs/spec.md`
 - **WHEN** its `instruction` frontmatter field is inspected
 - **THEN** it SHALL contain an overlap verification step
 
