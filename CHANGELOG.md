@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-13 — Plugin Version Check
+
+### Added
+- `plugin-version` field in WORKFLOW.md frontmatter — stamped by `specshift init` from `plugin.json`, enables automatic detection of plugin updates
+- Plugin Version Check (Step 3) in SKILL.md router — advisory warning when installed plugin version differs from project's `plugin-version`, with actionable suggestion to run `specshift init`
+- Plugin Version Stamp requirement in `project-init.md` — init writes `plugin-version` on fresh install, re-init, and legacy upgrades
+
+### Changed
+- SKILL.md router restructured from 5 redundant steps to 5 clean steps: Load Configuration → Identify Action → Plugin Version Check → Change Context Detection → Dispatch
+- WORKFLOW.md is now read exactly once in Step 1 (previously referenced across Steps 1, 2, and 4)
+- Workflow template `template-version` bumped from 2 to 3
+
 ## 2026-04-13 — Fix Loop Tiered Re-entry
 
 ### Changed
