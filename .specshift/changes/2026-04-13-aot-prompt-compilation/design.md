@@ -5,105 +5,94 @@ has_decisions: true
 
 ## Context
 
-Der Router-Skill (`src/skills/specshift/SKILL.md`) löst Requirements aktuell zur Laufzeit auf, indem er komplette Spec-Dateien aus `docs/specs/` liest. Dieser JIT-Ansatz verursacht hohen Token-Overhead (~60%), verhindert eine saubere Distribution (da Endnutzer keine Specs im Workspace haben) und erhöht die Latenz.
+Der Router-Skill (`src/skills/specshift/SKILL.md`) löst Requirements aktuell zur Laufzeit auf, indem er komplette Spec-Dateien aus `docs/specs/` liest. Dieser JIT-Ansatz verursacht ~50% Token-Overhead, verhindert eine saubere Distribution (Endnutzer haben keine Specs) und erhöht die Latenz.
 
-Dieses Design führt einen AOT (Ahead-of-Time) Compilations-Step ein. Dieser extrahiert während der finalize-Phase alle relevanten Requirement-Blöcke in statische Markdown-Dateien pro Aktion. Die JIT-Auflösung wird für Built-in Actions durch einen performanten Datei-Read ersetzt.
+Dieses Design führt einen AOT (Ahead-of-Time) Compilations-Step ein, der Requirements in statische Dateien extrahiert. Instructions bleiben projektspezifisch in WORKFLOW.md (JIT), Requirements werden vorkompiliert (AOT).
 
 ## Architecture & Components
 
 ### Compilation Flow
 
 ```
-src/skills/specshift/SKILL.md ───┐
-  (Source + Requirement-Links)   │
+src/actions/*.md ────────────────┐
+  (Requirement-Links pro Action) │
                                  │
-src/templates/ ──────────────────┤
-  (Source Templates)             │
-                                 ├──→ scripts/compile-skills.sh ──→ .claude/skills/specshift/
-docs/specs/*.md ─────────────────┤                                    ├── SKILL.md (kopiert)
-  (Requirement-Blöcke)          │                                    ├── templates/ (kopiert)
-                                 │                                    └── actions/
-.specshift/WORKFLOW.md ──────────┘                                        ├── propose.md (kompiliert)
-  (Action Instructions)                                                   ├── apply.md (kompiliert)
-                                                                          ├── finalize.md (kompiliert)
-                                                                          └── init.md (kompiliert)
+src/skills/specshift/SKILL.md ───┤
+  (Router, 1:1 kopiert)          │
+                                 ├──→ scripts/compile-skills.sh ──→ .claude/
+src/templates/ ──────────────────┤                                    ├── .claude-plugin/plugin.json
+  (Smart Templates, kopiert)     │                                    └── skills/specshift/
+                                 │                                        ├── SKILL.md
+src/.claude-plugin/plugin.json ──┤                                        ├── actions/*.md (kompiliert)
+                                 │                                        └── templates/
+docs/specs/*.md ─────────────────┘
+  (Requirement-Blöcke)
 ```
 
-`src/` ist die authoritative Quelle (Hand-edit). `.claude/skills/specshift/` ist das Release-Artefakt (generiert und in Git eingecheckt). Claude Code entdeckt den Skill automatisch über den `.claude/skills/` Pfad.
+`src/` = authoritative Quelle (Hand-edit). `.claude/` = Plugin-Root und Release-Artefakt (generiert, in Git eingecheckt). Marketplace `source: "./.claude"`.
 
-### Dateianpassungen
+### Dateien
 
-| Datei | Änderung |
-|-------|----------|
-| `src/skills/specshift/SKILL.md` | Schritt 4: Liest kompilierte Dateien aus `actions/` statt Links aufzulösen. Entfernung der JIT-Logik für Standard-Aktionen. Die bestehenden `### Action: <name> — Requirements` Sektionen dienen als Compiler-Input. |
-| `.specshift/WORKFLOW.md` | Ergänzung des Compilation-Steps in der finalize Instruction. |
-| `.specshift/CONSTITUTION.md` | Neue Architektur-Regel: `.claude/skills/specshift/` ist das offizielle Release-Verzeichnis und MUSS in Git eingecheckt werden. |
-| `.gitignore` | Sicherstellen, dass `.claude/skills/specshift/` nicht ignoriert wird (Whitelist: `!/.claude/skills/`). |
-| `.claude-plugin/marketplace.json` | Update des `source` Pfads auf `.claude/skills/specshift`. |
-
-### Neue Dateien
-
-| Datei | Zweck |
+| Datei | Rolle |
 |-------|-------|
-| `scripts/compile-skills.sh` | Standalone-Compilations-Skript. Kopiert Source + kompiliert Actions. |
-| `.claude/skills/specshift/SKILL.md` | Kopiert von `src/skills/specshift/SKILL.md` |
-| `.claude/skills/specshift/templates/` | Gespiegelt von `src/templates/` |
-| `.claude/skills/specshift/actions/propose.md` | Kompiliert: Instruction + 8 Requirement-Blöcke |
-| `.claude/skills/specshift/actions/apply.md` | Kompiliert: Instruction + 10 Requirement-Blöcke |
-| `.claude/skills/specshift/actions/finalize.md` | Kompiliert: Instruction + 10 Requirement-Blöcke |
-| `.claude/skills/specshift/actions/init.md` | Kompiliert: Instruction + 8 Requirement-Blöcke |
+| `src/skills/specshift/SKILL.md` | Router-Source — reines Runtime-Dokument, keine Spec-Links |
+| `src/actions/{propose,apply,finalize,init}.md` | Compiler-Input — klickbare relative Links zu Specs |
+| `src/templates/` | Template-Source |
+| `src/.claude-plugin/plugin.json` | Version Source of Truth |
+| `scripts/compile-skills.sh` | AOT Compiler — loopt über `src/actions/`, extrahiert, kopiert |
+| `.claude/` | Plugin-Root (standard Layout: `.claude-plugin/`, `skills/`, alles in Git) |
+| `.specshift/WORKFLOW.md` | Finalize-Instruction enthält Compile-Step |
+| `.specshift/CONSTITUTION.md` | Release-Directory-Regel, AOT-Konvention |
 
-### Compiler Algorithmus (scripts/compile-skills.sh)
+### Compiler Algorithmus
 
-1. **Struktur kopieren**: `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md` kopieren. `src/templates/` nach `.claude/skills/specshift/templates/` spiegeln.
-2. **SKILL.md parsen**: Die `### Action: <name> — Requirements` Sektionen finden und die Mapping-Liste (Aktion → Spec-Links) daraus extrahieren.
-3. **Extraktion**: Für jeden Link die Ziel-Spec in `docs/specs/` lesen und exakt den Block unter `### Requirement: <Name>` extrahieren (bis zum nächsten Heading gleicher oder höherer Ebene).
-4. **Instructions lesen**: Die `### Instruction` Texte aus der `.specshift/WORKFLOW.md` für die jeweilige Aktion extrahieren.
-5. **Version lesen**: `version` aus `src/.claude-plugin/plugin.json` parsen.
-6. **Assemblierung**: Die Dateien in `.claude/skills/specshift/actions/<action>.md` schreiben (Frontmatter + Instruction + extrahierte Requirements).
-7. **Validierung**: Anzahl extrahierter Requirements mit Anzahl der Links in SKILL.md abgleichen. Bei Diskrepanz → Warning mit konkreter Angabe fehlender Requirements.
-8. **Report**: Zusammenfassung ausgeben (kompilierte Aktionen, Requirements pro Aktion, Warnungen).
+1. Kopiere `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md`
+2. Kopiere `src/templates/` → `.claude/skills/specshift/templates/`
+3. Kopiere `src/.claude-plugin/plugin.json` → `.claude/.claude-plugin/plugin.json`
+4. Für jede `src/actions/<action>.md`:
+   - Parse Markdown-Links, löse relative Pfade zu `docs/specs/` auf
+   - Extrahiere `### Requirement: <Name>` Blöcke aus den Specs
+   - Schreibe `.claude/skills/specshift/actions/<action>.md` mit `# Requirements` + Blöcken
+5. Validiere: Link-Count vs extrahierte Count pro Action
+6. Report ausgeben
 
-### Router Logik (SKILL.md Schritt 4)
+### Runtime-Trennung
 
-**Neu:**
-- Für Built-in Actions (propose, apply, finalize, init): Lese `actions/<action>.md`.
-- **Wenn Datei fehlt**: Hard Error — "Kompilierte Aktions-Datei fehlt. Bitte `bash scripts/compile-skills.sh` ausführen."
-- Für Custom Actions: Weiterhin JIT-Read der Instruction aus der lokalen WORKFLOW.md.
+| Was | Quelle | Wann | Warum |
+|-----|--------|------|-------|
+| Instructions | `.specshift/WORKFLOW.md` | JIT (Runtime) | Projektspezifisch — jedes Projekt kann Actions anpassen |
+| Requirements | `.claude/skills/specshift/actions/*.md` | AOT (Compile-Time) | Plugin-level — konsistent über alle Consumer |
 
 ## Goals & Success Metrics
 
-- **Token-Reduktion**: Kompilierte propose-Datei < 300 Zeilen (vs ~695 Zeilen bei JIT). PASS/FAIL per Zeilenvergleich.
-- **Self-contained Release**: `.claude/skills/specshift/` enthält alles für die Laufzeit. Kein Zugriff auf `docs/specs/` nötig. PASS/FAIL durch Ausführung in einem Projekt ohne `docs/specs/`.
-- **Kompilierungs-Korrektheit**: `bash scripts/compile-skills.sh` erzeugt 4 nicht-leere Action-Dateien. Jede Datei enthält alle verlinkten Requirements (Count-Match mit SKILL.md Links). PASS/FAIL per Count-Vergleich.
-- **Rückwärts-Kompatibilität**: `specshift <action>` Befehle funktionieren nach der Änderung identisch. PASS/FAIL durch propose/apply/finalize Zyklus.
+- **Token-Reduktion**: Compiled propose.md < 350 Zeilen (vs ~700 bei JIT). PASS/FAIL per Zeilenvergleich.
+- **Self-contained Plugin**: `.claude/` enthält alles für die Laufzeit. Kein `docs/specs/` nötig. PASS/FAIL.
+- **Kompilierungs-Korrektheit**: `bash scripts/compile-skills.sh` erzeugt 4 Dateien, Count-Match mit Source-Links. PASS/FAIL.
+- **Standard Plugin Layout**: `.claude/` folgt Claude Code Konvention (`.claude-plugin/`, `skills/`, auto-discovery). PASS/FAIL.
 
 ## Non-Goals
 
 - Änderung des Markdown-Spec-Formats
 - Änderung des Smart Template Formats
 - Änderung der `specshift <action>` UX
-- Kompilierung von Custom Action Instructions (bleiben JIT)
-- CI-Check für veraltete kompilierte Dateien (Future Enhancement)
+- Kompilierung von Custom Action Instructions
+- CI-Check für veraltete kompilierte Dateien
 
 ## Decisions
 
 | Entscheidung | Rationale | Alternativen |
 |-------------|-----------|--------------|
-| Kein JIT-Fallback | "Fail Fast"-Prinzip. Da die Artefakte im Git liegen, deutet eine fehlende Datei auf ein korruptes Repo hin. Ein Fallback würde bei Endnutzern (ohne `docs/specs/`) ohnehin fehlschlagen. | JIT-Fallback (komplexer, unzuverlässig beim Nutzer) |
-| Release in `.claude/skills/` | Nutzt Claude Codes native Skill-Discovery. Macht das Tool "Zero-Config" für neue Teammitglieder. | Distribution via `src/` (erfordert manuelle Plugin-Installation) |
-| Git-Persistenz | Das Release-Verzeichnis wird eingecheckt, damit der Workflow auch ohne lokalen Build-Step für reine "Nutzer" funktioniert. | Verzeichnis auf `.gitignore` setzen (erfordert Build-Step bei jedem Nutzer) |
-| Hybrid: Thin Router + kompilierte Action-Dateien | Erhält ~40 Zeilen shared Logic (Steps 1-3), behält `specshift` Skill-Registrierung, Zero Breaking Change. | Full Standalone Skills pro Action (bricht UX, dupliziert Logic) |
-| Requirement-Links bleiben in SKILL.md als Compiler-Input | Single Source of Truth für Action-Requirement-Mapping; keine neuen Dateien. | Separate `requirements.md` Manifest-Datei |
-| Bash-only Compiler-Skript | Passt zum Tech-Stack (keine Runtime-Dependencies), Specs nutzen konsistentes Format. | Python/Node-Skript (fügt Dependency hinzu) |
-| Custom Actions bleiben JIT | Keine Spec-Requirements zu kompilieren; Instruction-Text ist self-contained in WORKFLOW.md. | Custom Action Instructions auch kompilieren (kein Vorteil) |
+| Instructions JIT, Requirements AOT | Instructions sind projektspezifisch (WORKFLOW.md), Requirements sind plugin-level (Specs). Saubere Trennung. | Beides AOT (bricht Projekt-Anpassung), beides JIT (Token-Overhead) |
+| Plugin-Root `.claude/` mit `source: "./.claude"` | Standard Claude Code Layout. Auto-Discovery + Marketplace gleichzeitig. | `source: "./.claude/skills/specshift"` (doppeltes .claude-plugin nötig) |
+| `src/actions/*.md` als Compiler-Input | Eine Datei pro Action, klickbare Links, spiegelt Zielstruktur. SKILL.md bleibt sauber. | Monolithisches Manifest, Links in SKILL.md (SKILL.md wird unreines Runtime-Dokument) |
+| Keine Frontmatter in kompilierten Dateien | Vermeidet Agent-Confusion. Nur `# Requirements` + Blöcke. | Frontmatter mit compiled-at/version/sources (Noise für den Agent) |
+| Git-Persistenz | Release-Verzeichnis eingecheckt — Consumer brauchen keinen Build-Step. | .gitignore (erfordert Build bei jedem Nutzer) |
+| Bash-only Compiler | Passt zum Tech-Stack (keine Runtime-Dependencies). | Python/Node (fügt Dependency hinzu) |
 
 ## Risiken & Gegenmaßnahmen
 
-- **Veraltete Artefakte im Dev-Loop**: Entwickler könnten Specs ändern, aber vergessen zu kompilieren. → Maßnahme: Der finalize-Schritt erzwingt die Kompilierung. Für den schnellen Loop gibt es `bash scripts/compile-skills.sh`.
-- **Fragiles Bash-Parsing**: Markdown-Strukturen sind Text. → Maßnahme: Das Skript validiert, dass die Anzahl der extrahierten Requirements mit der Anzahl der Links in SKILL.md übereinstimmt. Bei Diskrepanz → Warning/Error.
-- **Zwei Compilation-Einstiegspunkte** (Skript + finalize) → Maßnahme: finalize delegiert an dasselbe Skript; eine Implementierung.
-- **Zusätzliche Dateien in `.claude/`** → Akzeptabler Trade-off für Token-Einsparung, Auto-Discovery und Self-contained Distribution.
+- **Veraltete Artefakte im Dev-Loop** → Finalize erzwingt Kompilierung. `bash scripts/compile-skills.sh` für schnellen Loop.
+- **Fragiles Bash-Parsing** → Robuste Pfad-Auflösung (`sed` statt starres Prefix-Match), CRLF-Handling, Count-Validierung.
 
 ## Open Questions
 
@@ -111,5 +100,5 @@ No open questions.
 
 ## Assumptions
 
-- Spec-Dateien behalten das konsistente Heading-Format (`### Requirement: <Name>` gefolgt von Content bis zum nächsten `### ` oder `## `). <!-- ASSUMPTION: Consistent spec heading format -->
-- Das `scripts/` Verzeichnis ist ein akzeptabler Ort für Developer-Utilities in diesem Projekt. <!-- ASSUMPTION: Scripts directory convention -->
+- Spec-Dateien behalten das konsistente Heading-Format (`### Requirement: <Name>`). <!-- ASSUMPTION: Consistent spec heading format -->
+- `scripts/` ist ein akzeptabler Ort für Developer-Utilities. <!-- ASSUMPTION: Scripts directory convention -->
