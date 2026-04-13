@@ -1,9 +1,8 @@
 ---
 order: 3
 category: reference
-status: draft
-change: 2026-04-13-enforce-template-version-bump
-version: 6
+status: stable
+version: 7
 lastModified: 2026-04-13
 ---
 ## Purpose

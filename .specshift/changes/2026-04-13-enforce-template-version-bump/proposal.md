@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: claude/add-dark-mode-gFEcV
 capabilities:
   new: []

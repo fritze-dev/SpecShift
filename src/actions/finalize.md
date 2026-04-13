@@ -10,3 +10,4 @@
 - [Generate Documentation Table of Contents](../../docs/specs/documentation.md#requirement-generate-documentation-table-of-contents)
 - [ADR Generation from Change Decisions](../../docs/specs/documentation.md#requirement-adr-generation-from-change-decisions)
 - [Post-Merge Worktree Cleanup](../../docs/specs/change-workspace.md#requirement-post-merge-worktree-cleanup)
+- [Finalize Template-Version Validation](../../docs/specs/quality-gates.md#requirement-finalize-template-version-validation)

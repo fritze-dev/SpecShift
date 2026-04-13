@@ -1,10 +1,9 @@
 ---
 order: 8
 category: development
-status: draft
-change: 2026-04-13-enforce-template-version-bump
-version: 3
-lastModified: 2026-04-10
+status: stable
+version: 4
+lastModified: 2026-04-13
 ---
 ## Purpose
 
