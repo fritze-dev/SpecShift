@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: completed
 branch: fix-reinit-and-finalize-friction
 worktree: .claude/worktrees/fix-reinit-and-finalize-friction
 capabilities:

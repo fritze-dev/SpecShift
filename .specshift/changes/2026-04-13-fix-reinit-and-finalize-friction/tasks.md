@@ -22,7 +22,7 @@ Spec edits already completed during propose phase (specs stage).
 - [x] 3.6. Metric Check: `.specshift/CONSTITUTION.md` version-bump convention mentions "consumer projects" — PASS
 - [x] 3.7. Metric Check: `.specshift/CONSTITUTION.md` template sync says `src/templates/` is authoritative — PASS
 - [x] 3.8. Metric Check: `CLAUDE.md` contains File Ownership section — PASS
-- [ ] 3.9. Auto-Verify: generate review.md using the review template
+- [x] 3.9. Auto-Verify: generate review.md using the review template — Verdict: PASS
 - [ ] 3.10. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.11. Fix Loop: On verify issues or bug reports → fix → re-verify.
 - [ ] 3.12. Final Verify: regenerate review.md after all fixes. Skip if 3.11 was not entered.
