@@ -1,4 +1,4 @@
-# Requirements: finalize
+# Requirements
 
 
 ### Requirement: Generate Changelog from Completed Changes

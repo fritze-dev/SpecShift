@@ -109,7 +109,7 @@ for action_file in "$ACTIONS_SRC"/*.md; do
   # Write compiled action file (requirements only — instructions come from WORKFLOW.md at runtime)
   outfile="$SKILL_DIR/actions/$action.md"
   {
-    echo "# Requirements: $action"
+    echo "# Requirements"
     if [[ -n "$requirements_content" ]]; then
       echo "$requirements_content"
     fi

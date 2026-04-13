@@ -1,4 +1,4 @@
-# Requirements: propose
+# Requirements
 
 
 ### Requirement: Propose as Single Entry Point for Pipeline Traversal
