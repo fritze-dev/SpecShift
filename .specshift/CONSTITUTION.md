@@ -24,6 +24,7 @@ template-version: 1
 - Pipeline source of truth: `.specshift/WORKFLOW.md` (orchestration + actions) + `.specshift/templates/` (Smart Templates)
 - Specs: `docs/specs/<capability>.md` (one file per capability, edited directly during specs stage)
 - Changes: `.specshift/changes/YYYY-MM-DD-<feature>/` (date-prefixed at creation, contains planning artifacts + review.md)
+- **Release directory:** `.claude/skills/specshift/` is the generated release artifact (SKILL.md, templates, compiled action files). It is committed to Git and MUST NOT be hand-edited — regenerate via `bash scripts/compile-skills.sh`.
 
 ## Code Style
 
@@ -38,7 +39,8 @@ template-version: 1
 
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
 - **Post-apply version bump:** During the post-apply workflow, automatically increment the patch version in `src/.claude-plugin/plugin.json` (e.g., `1.0.3` → `1.0.4`) and sync the `version` field in `.claude-plugin/marketplace.json` to match. If versions are out of sync, use `src/.claude-plugin/plugin.json` as source of truth. Display the new version. A GitHub Action automatically creates a git tag and GitHub Release when the version change is pushed to `main`. For intentional minor/major releases, manually set the version in both files and push — the Action handles tagging and release creation.
-- **Plugin source layout:** Plugin source code lives in `src/` (skills, templates, plugin.json). Project files (docs, CI, specs, changelog) stay at the repo root. Consumer plugin caches contain only `src/` contents. The marketplace.json at `.claude-plugin/marketplace.json` uses `source: "./src"`.
+- **Plugin source layout:** Plugin source code lives in `src/` (skills, templates, plugin.json). The release directory at `.claude/skills/specshift/` is built from `src/` via `bash scripts/compile-skills.sh` and contains the compiled skill, templates, and pre-extracted action files. Project files (docs, CI, specs, changelog) stay at the repo root. The marketplace.json at `.claude-plugin/marketplace.json` uses `source: "./.claude/skills/specshift"`.
+- **AOT compilation:** After editing specs, run `bash scripts/compile-skills.sh` to regenerate the release directory. The finalize action runs this automatically.
 - **Local development:** Developers register the local repo as marketplace via `claude plugin marketplace add <local-path> --scope user`. Skill changes reload via `/reload-plugins`. Version changes require `claude plugin update specshift@specshift`.
 - **README accuracy:** When plugin behavior changes (skills, WORKFLOW.md, templates, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
