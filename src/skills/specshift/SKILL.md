@@ -30,15 +30,15 @@ If WORKFLOW.md was missing in Step 1 and action is not `init`: tell the user to 
 
 ## Step 3: Plugin Version Check
 
-**Skip for `init`** — init is how versions get stamped and updated.
+**Skip for `init`** — init is how versions get updated.
 
-1. Read the plugin manifest at `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (i.e., `../../.claude-plugin/plugin.json` relative to this skill) and extract the `version` field.
-2. Read the `plugin-version` field from the WORKFLOW.md frontmatter loaded in Step 1.
+1. Read the `plugin-version` field from the compiled workflow template at `templates/workflow.md` (relative to this skill). This contains the current plugin version, injected at compile time.
+2. Read the `plugin-version` field from the project's WORKFLOW.md frontmatter loaded in Step 1.
 3. Compare:
-   - If `plugin-version` is missing or empty: display "**Note:** Run `specshift init` to enable plugin version tracking."
-   - If `plugin-version` matches the plugin manifest `version`: proceed silently.
-   - If `plugin-version` does NOT match: display "**Plugin update available:** project installed with v{plugin-version}, current plugin is v{version}. Run `specshift init` to update."
-4. If `plugin.json` cannot be read: skip the check silently.
+   - If either `plugin-version` is missing or empty: display "**Note:** Run `specshift init` to enable plugin version tracking."
+   - If both match: proceed silently.
+   - If they differ: display "**Plugin update available:** project installed with v{project-version}, current plugin is v{template-version}. Run `specshift init` to update."
+4. If the compiled template cannot be read: skip the check silently.
 5. In all cases, **continue** with the dispatched action — the check is advisory, not blocking.
 
 ## Step 4: Change Context Detection
