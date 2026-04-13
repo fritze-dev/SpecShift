@@ -25,31 +25,41 @@
   - Action: Run `specshift init`
   - Verify: CLAUDE.md is NOT modified; WARNING reports "CLAUDE.md missing standard section: Knowledge Management"; suggestion to add section manually
 
-### release-workflow
+#### Constitution Generation — Version-Bump Detection
 
-#### Auto Patch Version Bump — Edge Cases
+- [ ] **Scenario: Consumer project with package.json**
+  - Setup: Consumer project with `package.json` containing a version field
+  - Action: Run `specshift init`
+  - Verify: Generated CONSTITUTION.md Conventions section includes a version-bump convention referencing `package.json`
 
-- [ ] **Edge Case: Consumer project without plugin.json**
-  - Setup: Consumer project without `src/.claude-plugin/plugin.json`
+- [ ] **Scenario: Consumer project without version files**
+  - Setup: Consumer project with no version files (no package.json, pyproject.toml, etc.)
+  - Action: Run `specshift init`
+  - Verify: Generated CONSTITUTION.md Conventions section does NOT include a version-bump convention
+
+#### Consumer Finalize — Constitution-Driven Version-Bump
+
+- [ ] **Scenario: Consumer project with version-bump convention**
+  - Setup: Consumer project whose CONSTITUTION.md defines a version-bump convention
+  - Action: Run `specshift finalize`
+  - Verify: Version-bump step follows the convention from the constitution
+
+- [ ] **Scenario: Consumer project without version-bump convention**
+  - Setup: Consumer project whose CONSTITUTION.md has no version-bump convention
   - Action: Run `specshift finalize`
   - Verify: Version-bump step is silently skipped; no error or warning
 
-- [ ] **Edge Case: Non-semver version field**
-  - Setup: `plugin.json` with version field containing non-semver value
-  - Action: Run `specshift finalize`
-  - Verify: System warns and skips the bump
+### Template & Convention Consistency
 
-### Workflow & Constitution Consistency
-
-- [ ] **Verify: WORKFLOW.md finalize instruction is conditional**
-  - Setup: Read `src/templates/workflow.md` and `.specshift/WORKFLOW.md`
+- [ ] **Verify: Consumer workflow template finalize is constitution-driven**
+  - Setup: Read `src/templates/workflow.md`
   - Action: Check finalize step 3
-  - Verify: Both contain conditional "if src/.claude-plugin/plugin.json exists" phrasing
+  - Verify: Contains "if the constitution defines a version-bump convention, follow it; otherwise skip"
 
-- [ ] **Verify: CONSTITUTION.md version-bump convention has skip clause**
-  - Setup: Read `.specshift/CONSTITUTION.md`
-  - Action: Check post-apply version bump convention
-  - Verify: Contains "consumer projects" skip clause
+- [ ] **Verify: Consumer constitution template has version-bump detection**
+  - Setup: Read `src/templates/constitution.md`
+  - Action: Check frontmatter instruction and Conventions section
+  - Verify: Frontmatter includes version-bump detection instructions; Conventions section mentions version-bump convention
 
 - [ ] **Verify: Template sync direction corrected**
   - Setup: Read `.specshift/CONSTITUTION.md`
@@ -65,9 +75,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Total scenarios | 8 |
+| Total scenarios | 10 |
 | Automated tests | 0 |
-| Manual test items | 8 |
+| Manual test items | 10 |
 | Preserved (@manual) | 0 |
 | Edge case tests | 2 |
 | Warnings | 0 |

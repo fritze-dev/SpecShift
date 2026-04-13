@@ -6,27 +6,25 @@ Spec edits already completed during propose phase (specs stage).
 
 ## 2. Implementation
 
-- [x] 2.1. [P] Update `src/templates/workflow.md` finalize step 3 — make version-bump conditional on `plugin.json` existence
-- [x] 2.2. [P] Update `.specshift/WORKFLOW.md` finalize step 3 — mirror conditional from `src/templates/workflow.md`
-- [x] 2.3. [P] Update `.specshift/CONSTITUTION.md` line 40 — add consumer-project skip clause to version-bump convention
-- [x] 2.4. [P] Update `.specshift/CONSTITUTION.md` line 48 — fix template synchronization direction
-- [x] 2.5. [P] Update `CLAUDE.md` — add File Ownership section documenting `src/` vs `.specshift/` vs `docs/`
+- [x] 2.1. [P] Update `src/templates/workflow.md` finalize step 3 — make version-bump constitution-driven (follow convention if defined, skip otherwise)
+- [x] 2.2. [P] Update `src/templates/constitution.md` — add version-bump detection instructions to frontmatter and Conventions section
+- [x] 2.3. [P] Update `.specshift/CONSTITUTION.md` line 48 — fix template synchronization direction
+- [x] 2.4. [P] Update `CLAUDE.md` — add File Ownership section documenting `src/` vs `.specshift/` vs `docs/`
 
 ## 3. QA Loop & Human Approval
 
 - [x] 3.1. Metric Check: `project-init.md` contains "CLAUDE.md" in Template Merge paragraph — PASS
 - [x] 3.2. Metric Check: `project-init.md` contains "missing standard section detected on re-init" scenario — PASS
-- [x] 3.3. Metric Check: `release-workflow.md` contains `## Edge Cases` section — PASS
-- [x] 3.4. Metric Check: `src/templates/workflow.md` finalize step 3 contains conditional — PASS
-- [x] 3.5. Metric Check: `.specshift/WORKFLOW.md` finalize step 3 mirrors conditional — PASS
-- [x] 3.6. Metric Check: `.specshift/CONSTITUTION.md` version-bump convention mentions "consumer projects" — PASS
-- [x] 3.7. Metric Check: `.specshift/CONSTITUTION.md` template sync says `src/templates/` is authoritative — PASS
-- [x] 3.8. Metric Check: `CLAUDE.md` contains File Ownership section — PASS
-- [x] 3.9. Auto-Verify: generate review.md using the review template — Verdict: PASS
-- [ ] 3.10. User Testing: **Stop here!** Ask the user for manual approval.
-- [ ] 3.11. Fix Loop: On verify issues or bug reports → fix → re-verify.
-- [ ] 3.12. Final Verify: regenerate review.md after all fixes. Skip if 3.11 was not entered.
-- [ ] 3.13. Approval: Only finish on explicit **"Approved"** by the user.
+- [x] 3.3. Metric Check: `project-init.md` Constitution Generation mentions version files — PASS
+- [x] 3.4. Metric Check: `src/templates/workflow.md` finalize step 3 contains "if the constitution defines a version-bump convention" — PASS
+- [x] 3.5. Metric Check: `src/templates/constitution.md` contains version-bump detection instructions — PASS
+- [x] 3.6. Metric Check: `.specshift/CONSTITUTION.md` template sync says `src/templates/` is authoritative — PASS
+- [x] 3.7. Metric Check: `CLAUDE.md` contains File Ownership section — PASS
+- [x] 3.8. Auto-Verify: generate review.md using the review template — Verdict: PASS
+- [ ] 3.9. User Testing: **Stop here!** Ask the user for manual approval.
+- [ ] 3.10. Fix Loop: On verify issues or bug reports → fix → re-verify.
+- [ ] 3.11. Final Verify: regenerate review.md after all fixes. Skip if 3.10 was not entered.
+- [ ] 3.12. Approval: Only finish on explicit **"Approved"** by the user.
 
 ## 4. Standard Tasks (Post-Implementation)
 
