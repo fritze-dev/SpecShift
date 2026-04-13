@@ -9,9 +9,9 @@
   "plugins": [
     {
       "name": "specshift",
-      "source": "./src",
+      "source": "./.claude",
       "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
-      "version": "0.1.1-beta"
+      "version": "0.1.2-beta"
     }
   ]
 }

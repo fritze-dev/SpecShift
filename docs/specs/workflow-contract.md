@@ -2,8 +2,8 @@
 order: 3
 category: reference
 status: stable
-version: 5
-lastModified: 2026-04-10
+version: 6
+lastModified: 2026-04-13
 ---
 ## Purpose
 
@@ -77,9 +77,9 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 
 ### Requirement: Inline Action Definitions
 
-WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links (clickable markdown links to specific spec requirements using the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`) SHALL live in the SKILL.md file, NOT in WORKFLOW.md. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the sub-agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
+WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links SHALL live in separate source files at `src/actions/<action>.md` (one file per action, with clickable relative links to spec files). These links are consumed by the AOT compiler to produce compiled requirement files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the executing agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
 
-For built-in actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and the requirement links from the SKILL.md, load the referenced requirement sections from specs, and spawn a sub-agent via the Agent tool with the instruction text as primary directive and the extracted requirements as behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links.
+For built-in actions, the router SHALL read the `### Instruction` from WORKFLOW.md (project-specific, JIT) and the compiled requirements file at `actions/<action>.md` (pre-extracted, AOT). The instruction serves as the primary directive; the requirements provide behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links or compiled files.
 
 The system SHALL provide 4 built-in actions: `init` (project initialization and health check), `propose` (pipeline traversal for artifact generation), `apply` (task implementation with review.md generation), and `finalize` (post-approval changelog, docs, and version-bump). Consumer projects MAY define additional custom actions by adding them to the `actions` array and providing corresponding `## Action: <name>` body sections.
 
@@ -89,24 +89,22 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 - **GIVEN** a WORKFLOW.md with a `## Action: apply` body section
 - **WHEN** the section is inspected
 - **THEN** it SHALL contain `### Instruction` with procedural guidance text
-- **AND** it SHALL NOT contain requirement links (those live in the SKILL.md)
+- **AND** it SHALL NOT contain requirement links (those live in `src/actions/`)
 
-#### Scenario: Router executes built-in action as sub-agent
+#### Scenario: Router executes built-in action with instruction + compiled requirements
 - **GIVEN** a user invokes `specshift apply`
-- **WHEN** the router reads `## Action: apply` from WORKFLOW.md body and requirement links from the SKILL.md
-- **THEN** it SHALL parse the requirement links from the SKILL.md
-- **AND** SHALL load each linked requirement section from the target spec files
-- **AND** SHALL read the `### Instruction` from the WORKFLOW.md body section
-- **AND** SHALL spawn a sub-agent with `### Instruction` text as primary directive and extracted requirements as behavioral context
-- **AND** the sub-agent SHALL NOT receive the router's full conversation history
+- **WHEN** the router processes the command
+- **THEN** it SHALL read the `### Instruction` from WORKFLOW.md `## Action: apply`
+- **AND** SHALL read the compiled requirements from `actions/apply.md` (relative to the skill directory)
+- **AND** SHALL use the instruction as primary directive, bounded by the requirements as behavioral context
 
-#### Scenario: Router executes custom action as sub-agent
+#### Scenario: Router executes custom action directly
 - **GIVEN** a WORKFLOW.md with `actions: [init, propose, apply, qa-review, finalize]`
 - **AND** a `## Action: qa-review` body section with `### Instruction`
 - **WHEN** a user invokes `specshift qa-review`
 - **THEN** the router SHALL read the `### Instruction` from the `## Action: qa-review` body section
 - **AND** SHALL execute the instruction directly (the agent decides whether to handle it inline or spawn a sub-agent)
-- **AND** SHALL NOT look for requirement links in the SKILL.md for this action
+- **AND** SHALL NOT look for compiled requirement files for this action
 
 #### Scenario: Actions are not pipeline steps
 - **GIVEN** a WORKFLOW.md with `pipeline: [research, proposal, specs, design, preflight, tasks, review]`
@@ -121,7 +119,7 @@ The system SHALL provide a single router skill that handles all user-facing comm
 1. **Intent recognition**: Determine which command was invoked and validate it against the `actions` array
 2. **Change context detection** (for all actions except `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches, fall back to worktree convention if inside a worktree
 3. **WORKFLOW.md loading**: Read frontmatter for `templates_dir`, `pipeline`, and `actions`
-4. **Dispatch**: For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — read action definition from WORKFLOW.md, spawn sub-agent with instruction + requirement links. For custom actions — read action definition from WORKFLOW.md, execute instruction directly with change context (no requirement links, agent decides execution mode).
+4. **Dispatch**: For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — read instruction from WORKFLOW.md + compiled requirements from `actions/<action>.md`, execute with instruction as directive bounded by requirements. For custom actions — read instruction from WORKFLOW.md, execute directly with change context (no compiled requirements, agent decides execution mode).
 
 **User Story:** As a developer I want a single entry point that handles built-in and custom actions with shared logic, so that change detection and context loading happen once and consumer projects can extend the workflow.
 
@@ -138,10 +136,11 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **AND** SHALL traverse the `pipeline` array, generating artifacts in sequence
 - **AND** SHALL support checkpoint/resume (skip completed artifacts)
 
-#### Scenario: Router dispatches apply to sub-agent
+#### Scenario: Router dispatches apply with instruction + compiled requirements
 - **GIVEN** the user invokes `specshift apply`
-- **WHEN** the router detects the change and reads `actions.apply`
-- **THEN** it SHALL spawn a sub-agent with the apply instruction and referenced specs
+- **WHEN** the router detects the change
+- **THEN** it SHALL read the `### Instruction` from WORKFLOW.md and the compiled requirements from `actions/apply.md`
+- **AND** SHALL execute with the instruction as primary directive, bounded by the requirements
 
 #### Scenario: Init runs without change context
 - **GIVEN** the user invokes `specshift init`
@@ -156,7 +155,7 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **THEN** the router SHALL validate `qa-review` against the `actions` array
 - **AND** SHALL read the `### Instruction` from the `## Action: qa-review` section
 - **AND** SHALL execute the instruction directly (agent decides execution mode)
-- **AND** SHALL NOT look for requirement links in SKILL.md
+- **AND** SHALL NOT look for compiled requirement files
 
 #### Scenario: Router auto-dispatches propose→apply→finalize when auto_approve is true
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
@@ -188,12 +187,12 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **Empty `pipeline` array**: Router SHALL report that no artifacts are defined and stop.
 - **`templates_dir` points to nonexistent directory**: Router SHALL report the missing directory and suggest running `specshift init`.
 - **Unknown action referenced**: If an action name does not match any entry in the `actions` array from WORKFLOW.md frontmatter, the router SHALL report the error and list available actions.
-- **Action with missing spec**: If a spec listed in the SKILL.md's requirement links does not exist at the referenced path, the sub-agent SHALL proceed without it and note the missing spec.
+- **Action with missing spec**: If a spec referenced in `src/actions/*.md` does not exist at the referenced path, the compiler SHALL skip it with a warning. The compiled requirements file will be incomplete.
 - **Custom action without body section**: If a custom action is listed in the `actions` array but has no corresponding `## Action: <name>` body section in WORKFLOW.md, the router SHALL report the missing instruction and stop.
 - **Custom action with init skip**: Custom actions SHALL go through change context detection (like apply/finalize), not skip it like init. If a custom action does not need change context, the instruction text should handle that.
+- **Compiled file has no requirements section**: If a compiled file contains only the instruction (no requirements), the router SHALL proceed with the instruction only — this is valid for actions with no requirement links.
 
 ## Assumptions
 
 - Claude natively parses YAML frontmatter from markdown files when instructed to read and interpret them. <!-- ASSUMPTION: Claude YAML frontmatter parsing -->
-- The Agent tool is available in the execution environment and supports spawning sub-agents with custom prompts and bounded context. <!-- ASSUMPTION: Agent tool availability -->
-- Sub-agents spawned via the Agent tool can read and write files in the same working directory as the router. <!-- ASSUMPTION: Sub-agent file access -->
+- The execution environment supports reading files relative to the skill directory (for compiled action files) and relative to the project root (for WORKFLOW.md and change artifacts). <!-- ASSUMPTION: File access paths -->

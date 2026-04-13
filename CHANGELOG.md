@@ -3,6 +3,20 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-13 — AOT Prompt Compilation
+
+### Added
+- AOT (Ahead-of-Time) skill compilation: requirements are pre-extracted from specs into focused action files during finalize, reducing runtime token usage by ~50%
+- `scripts/compile-skills.sh`: standalone compiler script that builds the release directory from source
+- `src/actions/`: per-action requirement manifests with clickable relative links to specs
+- `.claude/` as plugin root: standard Claude Code plugin layout with auto-discovery + marketplace distribution
+- Instruction/requirements separation: instructions stay project-specific in WORKFLOW.md (JIT), requirements are plugin-level in compiled files (AOT)
+
+### Changed
+- Router SKILL.md reads instruction from WORKFLOW.md + compiled requirements from `actions/<action>.md` instead of resolving spec links at runtime
+- Marketplace source changed from `./src` to `./.claude`
+- Plugin distribution now includes only SKILL.md, compiled actions, templates, and plugin.json — no specs or docs shipped to consumers
+
 ## 2026-04-13 — Fix CLAUDE.md re-init drift + agnostic finalize version-bump
 
 ### Fixed
