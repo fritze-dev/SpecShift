@@ -2,8 +2,8 @@
 order: 12
 category: finalization
 status: stable
-version: 2
-lastModified: 2026-04-13
+version: 1
+lastModified: 2026-04-08
 ---
 ## Purpose
 
@@ -348,14 +348,6 @@ The repository SHALL maintain a clear separation between plugin source files (in
 - **WHEN** the file layout is inspected
 - **THEN** `CLAUDE.md` SHALL exist at the repository root
 - **AND** SHALL NOT exist inside `src/`
-
-## Edge Cases
-
-- If `src/.claude-plugin/plugin.json` does not exist (consumer projects without plugin manifests), the version bump step SHALL be silently skipped.
-- If `CHANGELOG.md` is missing when the release Action runs, the release SHALL be created with a minimal body instead of failing.
-- If a consumer adds the marketplace before the `src/` restructuring, the old cache is replaced on the next `plugin update`.
-- If the version field contains a non-semver value, the system SHALL warn and skip the bump rather than producing an invalid version.
-- If the change directory contains changes with only internal refactoring, the changelog agent either omits the entry or uses a minimal note to avoid fabricating user-facing changes.
 
 #### Scenario: Workflow project files separate from plugin
 
