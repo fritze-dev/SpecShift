@@ -1,5 +1,5 @@
 ---
-compiled-at: 2026-04-13T14:38:00Z
+compiled-at: 2026-04-13T14:41:58Z
 specshift-version: 0.1.1-beta
 sources:
   - docs/specs/release-workflow.md

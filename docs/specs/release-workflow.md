@@ -291,22 +291,38 @@ The project documentation SHALL describe the local marketplace setup for plugin 
 - **THEN** the old version SHALL still be reported by `claude plugin list`
 - **AND** only after `claude plugin update specshift@specshift` SHALL the new version be active
 
-### Requirement: Plugin Source Directory Structure
+### Requirement: Source and Release Directory Structure
 
-The plugin source code SHALL reside in a `src/` subdirectory at the repository root. The `src/` directory SHALL contain: `.claude-plugin/plugin.json` (plugin manifest), `skills/` (all skill definitions), and `templates/` (Smart Templates for consumer projects). Files not needed by consumers (documentation, CI workflows, workflow project files, changelogs) SHALL remain at the repository root, outside `src/`.
+The repository SHALL maintain two distinct directories for the plugin:
 
-**User Story:** As a plugin consumer I want to download only the files needed to run the plugin, so that my local cache is clean and minimal.
+**Source directory (`src/`)**: Contains the authoritative, hand-edited plugin files: `src/.claude-plugin/plugin.json` (plugin manifest, version source of truth), `src/skills/specshift/SKILL.md` (router with requirement link mappings), and `src/templates/` (Smart Templates). Developers edit files in `src/` to change plugin behavior.
 
-#### Scenario: Consumer cache contains only release files
+**Release directory (`.claude/skills/specshift/`)**: Contains the self-contained, generated release artifact built by the AOT compiler (`scripts/compile-skills.sh`). It includes: `SKILL.md` (copied from `src/`), `templates/` (copied from `src/`), `.claude-plugin/plugin.json` (copied from `src/`), and `actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Claude Code auto-discovers the skill from `.claude/skills/`.
 
-- **GIVEN** a marketplace with `source: "./.claude/skills/specshift"` pointing to the release directory
-- **WHEN** a consumer installs the plugin
-- **THEN** the consumer's plugin cache SHALL contain only the contents of `.claude/skills/specshift/` (SKILL.md, templates, compiled actions, plugin.json)
-- **AND** SHALL NOT contain docs, CI workflows, changelogs, specs, or workflow project files
+Files not needed by consumers — documentation, CI workflows, specs, changelog, project workflow configuration — SHALL remain at the repository root, outside both `src/` and `.claude/skills/specshift/`.
+
+**User Story:** As a plugin developer I want a clear separation between source files I edit and the release artifact that consumers receive, so that I can iterate on source files and rebuild the release without mixing concerns.
+
+#### Scenario: Source directory contains editable files
+
+- **GIVEN** the repository with `src/` plugin subdirectory
+- **WHEN** the directory is inspected
+- **THEN** `src/skills/specshift/SKILL.md` SHALL contain the router with requirement link mappings
+- **AND** `src/templates/` SHALL contain the authoritative Smart Templates
+- **AND** `src/.claude-plugin/plugin.json` SHALL contain the version (source of truth)
+
+#### Scenario: Release directory contains generated files
+
+- **GIVEN** the repository after running `bash scripts/compile-skills.sh`
+- **WHEN** `.claude/skills/specshift/` is inspected
+- **THEN** it SHALL contain `SKILL.md` (copy of `src/skills/specshift/SKILL.md`)
+- **AND** `templates/` (copy of `src/templates/`)
+- **AND** `.claude-plugin/plugin.json` (copy of `src/.claude-plugin/plugin.json`)
+- **AND** `actions/` with compiled action files for each built-in action
 
 #### Scenario: Plugin root resolves to release directory
 
-- **GIVEN** a plugin installed from a marketplace with `source: "./.claude/skills/specshift"`
+- **GIVEN** a plugin installed from the marketplace
 - **WHEN** a skill references `${CLAUDE_PLUGIN_ROOT}`
 - **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `.claude/skills/specshift/` directory
 - **AND** `${CLAUDE_PLUGIN_ROOT}/templates/` SHALL contain the Smart Templates
@@ -314,56 +330,41 @@ The plugin source code SHALL reside in a `src/` subdirectory at the repository r
 
 ### Requirement: Marketplace Source Configuration
 
-The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude/skills/specshift"` to reference the compiled release directory. This relative path SHALL resolve correctly for both local filesystem marketplaces (`claude plugin marketplace add <local-path>`) and GitHub-based marketplaces (`claude plugin marketplace add owner/repo`). The `plugin.json` manifest SHALL reside inside `src/.claude-plugin/plugin.json`, separate from the marketplace-level `.claude-plugin/marketplace.json` at the repo root.
+The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude/skills/specshift"` to point to the release directory. The marketplace SHALL NOT point to `src/` directly — consumers receive the compiled release artifact, not the raw source. This path SHALL resolve correctly for both local filesystem marketplaces and GitHub-based marketplaces. The plugin version is determined by `.claude-plugin/plugin.json` inside the release directory (copied there by the compiler from `src/.claude-plugin/plugin.json`).
 
-**User Story:** As a plugin developer I want the marketplace to work with both local paths and GitHub, so that I can develop locally and distribute to consumers without config changes.
+**User Story:** As a plugin consumer I want the marketplace to deliver a self-contained skill with pre-compiled requirements, so that I can use the workflow immediately without needing the framework's internal spec files.
 
-#### Scenario: Local marketplace resolves release directory
+#### Scenario: Marketplace points to release directory
 
-- **GIVEN** a developer registers the local repo as marketplace via `claude plugin marketplace add /path/to/repo`
-- **AND** `marketplace.json` has `source: "./.claude/skills/specshift"`
-- **WHEN** Claude Code reads the marketplace configuration
-- **THEN** the plugin SHALL load from `/path/to/repo/.claude/skills/specshift/`
-- **AND** the developer's local file changes SHALL be reflected after `claude plugin update`
+- **GIVEN** `.claude-plugin/marketplace.json` with `source: "./.claude/skills/specshift"`
+- **WHEN** a consumer installs the plugin
+- **THEN** the consumer's plugin cache SHALL contain the release directory contents (SKILL.md, templates, compiled actions, plugin.json)
+- **AND** SHALL NOT contain `docs/specs/`, `src/`, CI workflows, or changelog
 
-#### Scenario: GitHub marketplace resolves release directory
+#### Scenario: Version detection via release directory
 
-- **GIVEN** a consumer adds the marketplace via `claude plugin marketplace add owner/repo`
-- **WHEN** Claude Code clones the repository and reads `marketplace.json` with `source: "./.claude/skills/specshift"`
-- **THEN** the plugin SHALL load from the cloned repository's `.claude/skills/specshift/` directory
+- **GIVEN** the compiler has copied `src/.claude-plugin/plugin.json` (version `1.0.4`) to `.claude/skills/specshift/.claude-plugin/plugin.json`
+- **WHEN** a consumer runs `claude plugin update`
+- **THEN** the system SHALL detect version `1.0.4` from the release directory's `plugin.json`
 
-#### Scenario: Version in src plugin.json drives update detection
+#### Scenario: Local developer marketplace
 
-- **GIVEN** a marketplace with `source: "./.claude/skills/specshift"`
-- **WHEN** the version in `src/.claude-plugin/plugin.json` changes and the release directory is recompiled
-- **THEN** `claude plugin update` SHALL detect the new version
-- **AND** SHALL update the cached plugin from `.claude/skills/specshift/`
+- **GIVEN** a developer registers the local repo via `claude plugin marketplace add /path/to/repo`
+- **WHEN** the developer edits `src/` files and runs `bash scripts/compile-skills.sh`
+- **THEN** `claude plugin update specshift@specshift` SHALL pick up the rebuilt release directory
 
 ### Requirement: Repository Layout Separation
 
-The repository SHALL maintain a clear separation between plugin source files (in `src/`) and project management files (at repo root). The repository root SHALL contain: `.claude-plugin/marketplace.json`, `.specshift/` (project's own workflow configuration), `docs/`, `.github/`, `.devcontainer/`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. The `src/` directory SHALL NOT contain project-specific files such as CLAUDE.md, README.md, or workflow project configuration.
+The repository SHALL maintain a clear three-way separation: plugin source (`src/`), release artifact (`.claude/skills/specshift/`), and project management files (repo root). The repo root SHALL contain: `.claude-plugin/marketplace.json`, `.specshift/` (project workflow), `docs/`, `scripts/`, `.github/`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. Project-specific files SHALL NOT exist inside `src/` or `.claude/skills/specshift/`.
 
-#### Scenario: CLAUDE.md is project-level only
+#### Scenario: Three-way separation
 
-- **GIVEN** the repository with `src/` plugin subdirectory
+- **GIVEN** the repository after a complete `specshift finalize` cycle
 - **WHEN** the file layout is inspected
-- **THEN** `CLAUDE.md` SHALL exist at the repository root
-- **AND** SHALL NOT exist inside `src/`
-
-#### Scenario: Workflow project files separate from plugin
-
-- **GIVEN** the repository with `src/` plugin subdirectory
-- **WHEN** the file layout is inspected
-- **THEN** `.specshift/WORKFLOW.md`, `.specshift/CONSTITUTION.md`, `docs/specs/`, and `.specshift/changes/` SHALL exist at the repository root
-- **AND** SHALL NOT exist inside `src/`
-
-#### Scenario: Release directory is separate from source
-
-- **GIVEN** the repository with `src/` plugin source and `.claude/skills/specshift/` release directory
-- **WHEN** the file layout is inspected
-- **THEN** `src/` SHALL contain the authoritative source files (SKILL.md, templates, plugin.json)
-- **AND** `.claude/skills/specshift/` SHALL contain the generated release artifact (copied SKILL.md, copied templates, compiled action files)
-- **AND** both SHALL be committed to Git
+- **THEN** `src/` SHALL contain only plugin source files (SKILL.md, templates, plugin.json)
+- **AND** `.claude/skills/specshift/` SHALL contain only the generated release (copied source + compiled actions)
+- **AND** the repo root SHALL contain project files (CLAUDE.md, docs/, .specshift/, CHANGELOG.md)
+- **AND** no project files SHALL exist inside `src/` or `.claude/skills/specshift/`
 
 ### Requirement: AOT Skill Compilation
 
