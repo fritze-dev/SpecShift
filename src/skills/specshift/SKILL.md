@@ -41,7 +41,7 @@ For `propose`, `apply`, `finalize`:
 ## Step 4: Load Action Context
 
 1. Read the `## Action: <action>` section from WORKFLOW.md body for the `### Instruction`.
-2. For built-in actions (propose, apply, finalize, init): read the compiled requirements file at `actions/<action>.md` (relative to this skill). If the compiled file is missing, abort with: "Compiled requirements file missing. Run `bash scripts/compile-skills.sh` to generate it."
+2. For built-in actions (propose, apply, finalize, init): read the compiled requirements file at `actions/<action>.md` (relative to this skill).
 3. For custom actions: no compiled requirements — the instruction from WORKFLOW.md is self-contained.
 
 ## Step 5: Dispatch
