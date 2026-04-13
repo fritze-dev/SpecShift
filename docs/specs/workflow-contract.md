@@ -2,7 +2,7 @@
 order: 3
 category: reference
 status: stable
-version: 6
+version: 7
 lastModified: 2026-04-13
 ---
 ## Purpose
@@ -22,6 +22,7 @@ The system SHALL support an `.specshift/WORKFLOW.md` file as the pipeline orches
 - `actions` (array of action names, e.g., `[init, propose, apply, finalize]` — each has a corresponding `## Action: <name>` body section)
 - `worktree` (optional object with `enabled`, `path_pattern`, `auto_cleanup`)
 - `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
+- `plugin-version` (string, machine-managed — stamped by `specshift init` from the plugin's `plugin.json` version field. Used by the router for version mismatch detection. Consumers SHALL NOT edit this field manually.)
 - `docs_language` (optional, defaults to English)
 
 **Markdown body** — prose instructions as named sections:
@@ -115,11 +116,12 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 
 ### Requirement: Router Dispatch Pattern
 
-The system SHALL provide a single router skill that handles all user-facing commands. The router SHALL validate commands against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing, the router SHALL fall back to the built-in actions: `init`, `propose`, `apply`, `finalize`. The router SHALL implement shared orchestration logic once:
-1. **Intent recognition**: Determine which command was invoked and validate it against the `actions` array
-2. **Change context detection** (for all actions except `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches, fall back to worktree convention if inside a worktree
-3. **WORKFLOW.md loading**: Read frontmatter for `templates_dir`, `pipeline`, and `actions`
-4. **Dispatch**: For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — read instruction from WORKFLOW.md + compiled requirements from `actions/<action>.md`, execute with instruction as directive bounded by requirements. For custom actions — read instruction from WORKFLOW.md, execute directly with change context (no compiled requirements, agent decides execution mode).
+The system SHALL provide a single router skill that handles all user-facing commands. The router SHALL validate commands against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing, the router SHALL fall back to the built-in actions: `init`, `propose`, `apply`, `finalize`. The router SHALL read WORKFLOW.md exactly once and implement shared orchestration logic in the following steps:
+1. **Load Configuration**: Read `.specshift/WORKFLOW.md` once. Extract all frontmatter fields (`templates_dir`, `pipeline`, `actions`, `worktree`, `auto_approve`, `plugin-version`) and all body sections (`## Context`, `## Action: <name>`). Follow `## Context` instructions (typically: read CONSTITUTION.md). If WORKFLOW.md is missing: note it and fall back to built-in defaults.
+2. **Identify Action**: Parse the first argument and validate it against the `actions` array loaded in Step 1. If WORKFLOW.md was missing and action is not `init`: stop and suggest running `specshift init`.
+3. **Plugin Version Check** (skip for `init`): Read the plugin manifest at `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` and compare its `version` field against the `plugin-version` field from WORKFLOW.md frontmatter. If `plugin-version` is missing or empty: display a note suggesting `specshift init` to enable version tracking. If versions do not match: display an advisory warning with installed vs current version and suggest `specshift init`. If versions match: proceed silently. The check is advisory — the dispatched action SHALL proceed regardless.
+4. **Change context detection** (skip for `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches, fall back to worktree convention if inside a worktree.
+5. **Dispatch**: Load compiled requirements from `actions/<action>.md` (relative to the skill) for built-in actions. Use the `### Instruction` from the `## Action: <name>` section (already loaded in Step 1) as primary directive, bounded by compiled requirements. For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — execute with instruction + requirements. For custom actions — execute instruction directly with change context (no compiled requirements, agent decides execution mode).
 
 **User Story:** As a developer I want a single entry point that handles built-in and custom actions with shared logic, so that change detection and context loading happen once and consumer projects can extend the workflow.
 
@@ -172,6 +174,33 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **THEN** the router SHALL stop and suggest `specshift apply`
 - **AND** SHALL NOT auto-dispatch subsequent actions
 
+#### Scenario: Plugin version check — versions match
+- **GIVEN** WORKFLOW.md contains `plugin-version: 0.1.3-beta`
+- **AND** the plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift propose`
+- **THEN** no version warning SHALL be displayed
+- **AND** the action SHALL proceed normally
+
+#### Scenario: Plugin version check — mismatch warns and continues
+- **GIVEN** WORKFLOW.md contains `plugin-version: 0.1.2-beta`
+- **AND** the plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift propose`
+- **THEN** the router SHALL display an advisory warning: "Plugin update available: project installed with v0.1.2-beta, current plugin is v0.1.3-beta. Run `specshift init` to update."
+- **AND** the action SHALL proceed normally
+
+#### Scenario: Plugin version check — missing field shows note
+- **GIVEN** WORKFLOW.md has no `plugin-version` field in its frontmatter
+- **WHEN** the user runs `specshift propose`
+- **THEN** the router SHALL display: "Note: Run `specshift init` to enable plugin version tracking."
+- **AND** the action SHALL proceed normally
+
+#### Scenario: Plugin version check — skipped for init
+- **GIVEN** WORKFLOW.md contains `plugin-version: 0.1.2-beta`
+- **AND** the plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift init`
+- **THEN** no version warning SHALL be displayed
+- **AND** init SHALL proceed to update the `plugin-version` field
+
 #### Scenario: Router rejects action not in actions array
 - **GIVEN** a WORKFLOW.md with `actions: [init, propose, apply, finalize]`
 - **WHEN** a user invokes `specshift deploy`
@@ -191,6 +220,8 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **Custom action without body section**: If a custom action is listed in the `actions` array but has no corresponding `## Action: <name>` body section in WORKFLOW.md, the router SHALL report the missing instruction and stop.
 - **Custom action with init skip**: Custom actions SHALL go through change context detection (like apply/finalize), not skip it like init. If a custom action does not need change context, the instruction text should handle that.
 - **Compiled file has no requirements section**: If a compiled file contains only the instruction (no requirements), the router SHALL proceed with the instruction only — this is valid for actions with no requirement links.
+- **Plugin manifest unreadable**: If `plugin.json` cannot be read during the version check, the router SHALL skip the check silently and proceed. Do not block on a missing manifest.
+- **Plugin version downgrade**: If `plugin-version` in WORKFLOW.md is higher than `plugin.json` version, the same mismatch warning applies — any difference triggers the advisory.
 
 ## Assumptions
 
