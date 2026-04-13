@@ -24,7 +24,7 @@ Spec edits already completed during propose phase (specs stage).
 - [x] 3.9. User Testing: User reviewed, identified wrong target files and plugin-specific logic in consumer templates
 - [x] 3.10. Fix Loop: Corrected approach — reverted .specshift/ and release-workflow changes, made consumer templates agnostic, updated specs and all artifacts
 - [x] 3.11. Final Verify: all 7 metrics PASS, out-of-scope files confirmed unchanged
-- [ ] 3.12. Approval: Only finish on explicit **"Approved"** by the user.
+- [x] 3.12. Approval: Approved by user.
 
 ## 4. Standard Tasks (Post-Implementation)
 
