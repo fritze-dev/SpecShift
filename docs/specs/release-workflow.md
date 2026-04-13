@@ -297,20 +297,20 @@ The plugin source code SHALL reside in a `src/` subdirectory at the repository r
 
 **User Story:** As a plugin consumer I want to download only the files needed to run the plugin, so that my local cache is clean and minimal.
 
-#### Scenario: Consumer cache contains only plugin files
+#### Scenario: Consumer cache contains only release files
 
-- **GIVEN** a marketplace with `source: "./src"` pointing to the plugin subdirectory
+- **GIVEN** a marketplace with `source: "./.claude/skills/specshift"` pointing to the release directory
 - **WHEN** a consumer installs the plugin
-- **THEN** the consumer's plugin cache SHALL contain only the contents of `src/` (skills, templates, plugin.json)
-- **AND** SHALL NOT contain docs, CI workflows, changelogs, or workflow project files
+- **THEN** the consumer's plugin cache SHALL contain only the contents of `.claude/skills/specshift/` (SKILL.md, templates, compiled actions, plugin.json)
+- **AND** SHALL NOT contain docs, CI workflows, changelogs, specs, or workflow project files
 
-#### Scenario: Plugin root resolves to src directory
+#### Scenario: Plugin root resolves to release directory
 
-- **GIVEN** a plugin installed from a marketplace with `source: "./src"`
+- **GIVEN** a plugin installed from a marketplace with `source: "./.claude/skills/specshift"`
 - **WHEN** a skill references `${CLAUDE_PLUGIN_ROOT}`
-- **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `src/` directory
+- **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `.claude/skills/specshift/` directory
 - **AND** `${CLAUDE_PLUGIN_ROOT}/templates/` SHALL contain the Smart Templates
-- **AND** `${CLAUDE_PLUGIN_ROOT}/skills/` SHALL contain all skill definitions
+- **AND** `${CLAUDE_PLUGIN_ROOT}/actions/` SHALL contain the compiled action files
 
 ### Requirement: Marketplace Source Configuration
 
