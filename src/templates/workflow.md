@@ -1,5 +1,6 @@
 ---
-template-version: 2
+template-version: 3
+plugin-version: ""
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
 
