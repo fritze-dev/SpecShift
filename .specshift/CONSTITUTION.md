@@ -39,7 +39,7 @@ template-version: 1
 - **Commits:** Imperative present tense with category prefix (e.g., `Refactor: ...`, `Fix: ...`)
 - **Post-apply version bump:** During the post-apply workflow, automatically increment the patch version in `src/.claude-plugin/plugin.json` (e.g., `1.0.3` → `1.0.4`) and sync the `version` field in `.claude-plugin/marketplace.json` to match. If versions are out of sync, use `src/.claude-plugin/plugin.json` as source of truth. Display the new version. A GitHub Action automatically creates a git tag and GitHub Release when the version change is pushed to `main`. For intentional minor/major releases, manually set the version in both files and push — the Action handles tagging and release creation.
 - **Plugin source layout:** Plugin source code lives in `src/` (skills, templates, plugin.json). Project files (docs, CI, specs, changelog) stay at the repo root. Consumer plugin caches contain only `src/` contents. The marketplace.json at `.claude-plugin/marketplace.json` uses `source: "./src"`.
-- **Local development:** Developers register the local repo as marketplace via `claude plugin marketplace add <local-path> --scope user`. Skill changes reload via `/reload-plugins`. Version changes require `claude plugin update specshift`.
+- **Local development:** Developers register the local repo as marketplace via `claude plugin marketplace add <local-path> --scope user`. Skill changes reload via `/reload-plugins`. Version changes require `claude plugin update specshift@specshift`.
 - **README accuracy:** When plugin behavior changes (skills, WORKFLOW.md, templates, constitution, architecture), update the README to reflect the new state. The README is the primary user-facing documentation and must stay consistent with the implementation.
 - **Workflow friction:** When workflow execution reveals friction, capture it as a GitHub Issue with the `friction` label. Include: what happened, expected behavior, and suggested fix.
 - **Knowledge transparency:** Project knowledge (architecture decisions, conventions, design rationale, workflow patterns) MUST live in version-controlled artifacts — constitution for rules, specs for requirements, ADRs for decisions, GitHub Issues for friction/bugs. Internal auto-memory files are opaque and non-shareable; project knowledge MUST NOT be stored there.
@@ -60,4 +60,4 @@ template-version: 1
 - [ ] Update PR: mark ready for review, update body with change summary and issue references if applicable (e.g., `Closes #X`)
 
 ### Post-Merge
-- Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift`)
+- Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`)
