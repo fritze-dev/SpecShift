@@ -16,6 +16,12 @@ claude plugin marketplace add fritze-dev/specshift
 claude plugin install specshift
 ```
 
+## Update
+
+```bash
+claude plugin marketplace update specshift && claude plugin update specshift@specshift
+```
+
 ## Quick Start
 
 ```bash
