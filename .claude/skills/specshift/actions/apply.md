@@ -504,7 +504,7 @@ Verify issues and user correction requests SHALL be resolved via a tiered re-ent
 - A design decision in `design.md` is factually reversed by the correction → Design Pivot
 - The correction touches files outside those listed in `design.md` Architecture & Components → Design Pivot
 - The correction reveals that a listed requirement does not apply to the correct audience → Scope Change
-- More than two incremental fix commits on the same issue → probable Design Pivot or Scope Change
+- More than two incremental fix commits on the same issue → heuristic signal; treat as Design Pivot or Scope Change unless the agent can confirm each commit was a genuine independent Tweak
 
 **Artifact staleness rule**: For Tier 2 and Tier 3 corrections, ALL stale change artifacts SHALL be updated before re-implementing. A stale artifact is any change file (design.md, tasks.md, preflight.md, review.md) that still describes the original (wrong) approach. The system SHALL NOT leave stale artifacts in the change directory that contradict the corrected implementation.
 
@@ -543,6 +543,18 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **AND** SHALL update `tasks.md` affected sections to remove old tasks and add corrected ones
 - **AND** SHALL delete `review.md` (stale) before re-implementing
 - **AND** SHALL generate a new `review.md` from the corrected implementation
+
+#### Scenario: Classify correction as Scope Change — update specs and re-implement
+
+- **GIVEN** a review correction that reveals the wrong capability scope was targeted (e.g., a requirement listed in the proposal does not apply to the correct audience)
+- **AND** the implementation approach may be sound, but the requirements themselves need revision
+- **WHEN** the system checks detection signals and finds "correction reveals that a listed requirement does not apply to the correct audience"
+- **THEN** it SHALL identify this as Tier 3 — Scope Change
+- **AND** SHALL update `docs/specs/<capability>.md` and `proposal.md` to reflect the corrected scope
+- **AND** SHALL update `design.md` to align with the corrected requirements
+- **AND** SHALL re-generate affected task sections in `tasks.md`
+- **AND** SHALL re-implement fully from the corrected design
+- **AND** SHALL regenerate `review.md` after re-implementation
 
 #### Scenario: Fix code to resolve critical issue
 

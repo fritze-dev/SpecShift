@@ -1,6 +1,6 @@
 ---
 id: tasks
-template-version: 1
+template-version: 2
 description: Implementation checklist with QA loop
 generates: tasks.md
 requires: [tests]
@@ -58,7 +58,10 @@ instruction: |
 - [ ] 3.1. Metric Check: Verify each Success Metric from design.md — PASS / FAIL.
 - [ ] 3.2. Auto-Verify: generate review.md using the review template.
 - [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
-- [ ] 3.4. Fix Loop: Classify each correction before fixing — **Tweak** (wrong value/typo → fix in place) / **Design Pivot** (wrong files/approach → update design.md + re-generate affected tasks + re-implement) / **Scope Change** (wrong requirements → update specs + design + re-implement fully). Update all stale artifacts before re-implementing. Specs must match code before proceeding.
+- [ ] 3.4. Fix Loop: Classify each correction before fixing. Update all stale artifacts before re-implementing. Specs must match code before proceeding.
+  - **Tweak**: wrong value/typo → fix in place
+  - **Design Pivot**: wrong files/approach → update design.md + re-generate affected tasks + re-implement
+  - **Scope Change**: wrong requirements → update specs + design + re-implement fully
 - [ ] 3.5. Final Verify: regenerate review.md after all fixes to confirm consistency. Skip if 3.4 was not entered.
 - [ ] 3.6. Approval: Only finish on explicit **"Approved"** by the user.
 
