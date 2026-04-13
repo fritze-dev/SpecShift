@@ -48,33 +48,34 @@ For `propose`, `apply`, `finalize`:
 
 ### `propose` — Pipeline Traversal
 
-1. Read all change artifacts (if change exists) and the propose instruction from WORKFLOW.md
-2. For each step in `pipeline` array: read Smart Template at `<templates_dir>/<id>.md`, check artifact status, generate if ready
-3. **After each artifact**, commit and push:
+1. Read all change artifacts (if change exists).
+2. Execute the action using the `### Instruction` from WORKFLOW.md as your primary directive, bounded by the strict requirements extracted in `actions/propose.md`.
+3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/<id>.md`, check artifact status, generate if ready
+4. **After each artifact**, commit and push:
    - Stage the change artifacts and specs
    - Commit with message `WIP: <change-name> — <artifact-id>`
    - Push to remote
    - On first push (no PR exists): Create a draft PR titled `<Change Name>` with body `WIP: <change-name>` using available GitHub tooling (gh CLI, MCP tools, or API)
    - Skip PR creation if no GitHub tooling is available. Continue on push failure.
-4. Follow the instruction from `## Action: propose` for checkpoint behavior, workspace creation, and pipeline gates
-5. **Auto-dispatch to apply**: If `auto_approve` is `true` in WORKFLOW.md frontmatter and propose completed successfully (all pipeline artifacts generated, no BLOCKED preflight), automatically dispatch the `apply` action using the same change context. Do NOT pause — proceed directly.
+5. Follow the checkpoint behavior, workspace creation, and pipeline gates defined in the requirements.
+6. **Auto-dispatch to apply**: If `auto_approve` is `true` in WORKFLOW.md frontmatter and propose completed successfully (all pipeline artifacts generated, no BLOCKED preflight), automatically dispatch the next stage by running `specshift apply` using the same change context. Do NOT pause — proceed directly.
 
 ### `apply` — Implementation
 
 1. Read all change artifacts (research, proposal, design, tasks, specs)
-2. Execute the action using the compiled action context from `actions/apply.md` (instruction + pre-extracted requirements) and the change directory path and artifact paths
+2. Execute the action using the `### Instruction` from WORKFLOW.md as your primary directive, bounded by the strict requirements extracted in `actions/apply.md`. Use the change directory and artifact paths for context.
 3. Implement tasks, generate review.md, run the QA loop
-4. **Auto-dispatch to finalize**: If `auto_approve` is `true` and review.md verdict is PASS (no CRITICAL, no WARNING), automatically dispatch the `finalize` action using the same change context. Do NOT pause for user approval — proceed directly.
+4. **Auto-dispatch to finalize**: If `auto_approve` is `true` and review.md verdict is PASS (no CRITICAL, no WARNING), automatically dispatch the next stage by running `specshift finalize` using the same change context. Do NOT pause for user approval — proceed directly.
 
 ### `finalize` — Post-Approval
 
 1. Read change artifacts for context (proposal, review.md)
-2. Execute the action using the compiled action context from `actions/finalize.md`
+2. Execute the action using the `### Instruction` from WORKFLOW.md bounded by the strict requirements in `actions/finalize.md`.
 
 ### `init` — Project Setup
 
 1. If WORKFLOW.md missing: this IS the fresh install — proceed with default init behavior
-2. Execute the action using the compiled action context from `actions/init.md`
+2. Execute the action using the `### Instruction` from WORKFLOW.md bounded by the strict requirements in `actions/init.md`.
 
 ### Custom Action — Direct Execution
 
