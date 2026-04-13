@@ -29,6 +29,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 - **Environment checks** -- detects GitHub tooling availability, git version (2.5+ for worktree support), and `.gitignore` configuration
 - **Worktree opt-in** -- offers to enable worktree-based change isolation when GitHub tooling is available, including GitHub merge strategy configuration
 - **Legacy migration** -- detects old schema-based layouts and automatically migrates to the WORKFLOW.md format
+- **Plugin version stamping** -- reads the `version` field from `plugin.json` and writes it as `plugin-version` in WORKFLOW.md frontmatter, enabling the router to detect plugin updates
 - **Idempotent re-initialization** -- skips already-completed steps when run on an initialized project
 - **Spec drift detection** -- compares existing specs against the codebase and reports discrepancies with suggested corrective actions
 - **Documentation drift verification** -- checks capability docs, ADRs, and README against current specs across three dimensions with CLEAN/DRIFTED/OUT OF SYNC verdicts
@@ -38,7 +39,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 
 ### Fresh Project Initialization
 
-When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template, creates a CONSTITUTION.md placeholder, and generates CLAUDE.md from the bootstrap template. If GitHub tooling is available and authenticated, it offers to enable worktree mode and configure the GitHub repository for rebase-merge. The command validates that all files are in place and reports a summary. If CLAUDE.md already exists, init skips generation and preserves the existing file.
+When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template (with `plugin-version` stamped from `plugin.json`), creates a CONSTITUTION.md placeholder, and generates CLAUDE.md from the bootstrap template. If GitHub tooling is available and authenticated, it offers to enable worktree mode and configure the GitHub repository for rebase-merge. The command validates that all files are in place and reports a summary. If CLAUDE.md already exists, init skips generation and preserves the existing file.
 
 ### Codebase Scanning and Constitution Generation
 
