@@ -20,7 +20,7 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 ## Features
 
 - **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (7 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
-- **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, stamped by `specshift init` from `plugin.json`. The router compares this against the current plugin version on every action (except init) and displays an advisory warning on mismatch
+- **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, baked into the compiled workflow template at compile time. The router compares the project's `plugin-version` against the compiled template's version on every action (except init) and displays an advisory warning on mismatch
 - **Smart Template format** -- each template carries `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields in YAML frontmatter, with the output structure as the markdown body
 - **Inline action definitions** -- `actions` array in frontmatter lists action names (built-in and custom); each action has a `## Action: <name>` body section with `### Instruction` for procedural guidance
 - **Custom actions** -- consumer projects define additional actions by adding names to the `actions` array and writing corresponding `## Action: <name>` body sections with self-contained instructions; no plugin modification required

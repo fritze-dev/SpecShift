@@ -35,6 +35,14 @@ cp -r src/templates/ "$SKILL_DIR/templates/"
 mkdir -p "$PLUGIN_ROOT/.claude-plugin"
 cp "$PLUGIN_JSON" "$PLUGIN_ROOT/.claude-plugin/plugin.json"
 
+# --- Stamp plugin-version into compiled workflow template ---
+
+PLUGIN_VERSION=$(grep -o '"version": *"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/"version": *"//;s/"//')
+if [[ -n "$PLUGIN_VERSION" ]]; then
+  sed -i "s/^plugin-version: \"\"$/plugin-version: $PLUGIN_VERSION/" "$SKILL_DIR/templates/workflow.md"
+  echo "Stamped plugin-version: $PLUGIN_VERSION into compiled workflow template"
+fi
+
 total_actions=0
 total_requirements=0
 warnings=0
