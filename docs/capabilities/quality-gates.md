@@ -2,7 +2,7 @@
 title: "Quality Gates"
 capability: "quality-gates"
 description: "Preflight checks during propose, review.md verification during apply, and docs drift detection during init"
-lastUpdated: "2026-04-10"
+lastUpdated: "2026-04-13"
 ---
 
 # Quality Gates
@@ -15,19 +15,19 @@ Starting implementation on incomplete or contradictory specs wastes effort and p
 
 ## Rationale
 
-Preflight covers seven distinct dimensions (traceability, gaps, side effects, constitution compliance, duplication, marker audit, and draft spec validation) because each catches a different category of problem expensive to fix during implementation. Verify now produces a `review.md` artifact in the change directory rather than a transient report -- this makes verification results persistent, PR-visible, and not skippable (file existence is checked). Verify assesses two dimensions -- Implementation (Completeness + Correctness) and Scope (Coherence + Side-Effects) -- using the branch diff as the primary evidence source. The verify completion step flips spec `draft` to `stable`, bumps `version`, and sets `lastModified`. Documentation drift verification moved from a standalone command to an init health check, consolidating project-level checks under a single entry point. All gates are stateless and report findings without auto-fixing (except mechanically fixable WARNINGs in verify).
+Preflight covers eight distinct dimensions (traceability, gaps, side effects, constitution compliance, duplication, marker audit, draft spec validation, and template-version freshness) because each catches a different category of problem expensive to fix during implementation. Verify now produces a `review.md` artifact in the change directory rather than a transient report -- this makes verification results persistent, PR-visible, and not skippable (file existence is checked). Verify assesses two dimensions -- Implementation (Completeness + Correctness) and Scope (Coherence + Side-Effects) -- using the branch diff as the primary evidence source. The verify completion step flips spec `draft` to `stable`, bumps `version`, and sets `lastModified`. Documentation drift verification moved from a standalone command to an init health check, consolidating project-level checks under a single entry point. All gates are stateless and report findings without auto-fixing (except mechanically fixable WARNINGs in verify).
 
 > **Workflow sequence**: Preflight runs during `specshift propose` after the design phase and before task creation. Verify runs during `specshift apply` as part of the QA loop (generating review.md). Docs drift detection runs during `specshift init` as a project health check.
 
 ## Features
 
-- **Preflight Quality Check** (`specshift propose`): Mandatory review across seven dimensions before tasks are created, producing `preflight.md` with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED.
+- **Preflight Quality Check** (`specshift propose`): Mandatory review across eight dimensions before tasks are created, producing `preflight.md` with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED.
 - **Draft Spec Validation**: Preflight verifies that all specs with `status: draft` belong to the current change. Foreign drafts are BLOCKED; orphaned drafts are WARNING.
 - **Mandatory Pause on Warnings**: When preflight returns PASS WITH WARNINGS, the system pauses and requires explicit acknowledgment before task creation.
 - **Post-Implementation Verification** (`specshift apply`): Verification that produces `review.md` in the change directory -- a persistent artifact assessing Implementation and Scope dimensions using the branch diff as primary evidence, with issues classified as CRITICAL, WARNING, or SUGGESTION.
 - **Draft Spec Gate in Verify**: Verify checks all specs modified by the change for `status: draft`. Any remaining drafts produce a CRITICAL issue.
 - **Verify Completion (Draft-to-Stable Flip)**: When verify passes and the change is approved, spec tracking fields are finalized: `status` flips to `stable`, `change` is removed, `version` increments, `lastModified` is set. The proposal's `status` is set to `completed`.
-- **Seven Preflight Dimensions**: Traceability Matrix, Gap Analysis, Side-Effect Analysis, Constitution Check, Duplication and Consistency, Marker Audit, and Draft Spec Validation.
+- **Eight Preflight Dimensions**: Traceability Matrix, Gap Analysis, Side-Effect Analysis, Constitution Check, Duplication and Consistency, Marker Audit, Draft Spec Validation, and Template-Version Freshness.
 - **Test Coverage Verification**: Verify includes an 8th dimension checking that generated tests cover all spec scenarios and that automated test stubs exist for automatable scenarios when a framework is configured.
 - **Diff-Based Verification**: Verify loads the full branch diff as primary evidence. Codebase keyword search serves as a fallback.
 - **Task-Diff Mapping**: For each completed task, verify checks that the diff contains corresponding changes matching both file paths and content.
@@ -35,6 +35,7 @@ Preflight covers seven distinct dimensions (traceability, gaps, side effects, co
 - **Preflight Side-Effect Cross-Check**: Verify reads `preflight.md` Section C and cross-checks each side-effect against tasks, diff, and codebase evidence.
 - **Documentation Drift Detection** (`specshift init`): Checks capability docs, ADRs, and README against specs across three dimensions with CLEAN/DRIFTED/OUT OF SYNC verdicts. Uses `has_decisions` frontmatter for efficient ADR scanning.
 - **Auto-Fix for Mechanical WARNINGs**: Stale cross-references, inconsistent naming, and outdated text are fixed inline. Judgment-required WARNINGs remain as open issues.
+- **Finalize Template-Version Validation**: Safety net before skill compilation -- verifies all modified `src/templates/` files have their `template-version` incremented. Stops finalize if unbumped versions are detected.
 
 ## Behavior
 
@@ -63,6 +64,16 @@ Draft specs whose `change` field matches the current change are confirmed valid.
 #### Preflight Passes With Warnings
 
 When no blockers are found but minor gaps are detected, the verdict is "PASS WITH WARNINGS." The system pauses and asks you to acknowledge each warning before proceeding.
+
+#### Preflight Detects Unbumped Template-Version
+
+When a change modifies files under `src/templates/` but the `template-version` field has not been incremented, the Template-Version Freshness dimension flags the file as BLOCKED. When template-versions are correctly bumped, the check passes. When no templates were modified, the check is skipped.
+
+### Finalize: Template-Version Validation (`specshift finalize`)
+
+#### Finalize Validates Template-Versions Before Compilation
+
+Before running skill compilation, finalize compares each modified template's `template-version` against the base branch. If any template has content changes without a version bump, finalize stops and requests the maintainer to fix the versions. If no templates were modified, the check is skipped silently.
 
 ### Verify: review.md During Apply (`specshift apply`)
 
@@ -122,5 +133,7 @@ When scanning completed changes for design decisions, the system checks `has_dec
 
 - If a change has no spec files, preflight aborts and reports that specs must be created first.
 - If tasks.md does not exist, verify reports the missing artifact and suggests generating it.
-- If no merge base is available (orphan branch, first commit), diff-based checks are skipped with a note.
+- If no merge base is available (orphan branch, first commit), diff-based checks are skipped with a note. Template-version freshness and finalize validation are also skipped.
 - If `docs/capabilities/` does not exist, all specs are reported as missing capability docs without erroring.
+- If a modified template under `src/templates/` has no `template-version` field, preflight and finalize flag it as BLOCKED.
+- If a template file is renamed (deleted at old path, created at new path), the new file should have `template-version: 1`.

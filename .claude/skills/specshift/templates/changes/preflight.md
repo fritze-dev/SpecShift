@@ -1,6 +1,6 @@
 ---
 id: preflight
-template-version: 1
+template-version: 2
 description: "Quality gate: traceability, gaps, side effects, assumption audit"
 generates: preflight.md
 requires: [design]
@@ -36,3 +36,12 @@ instruction: |
 ## G. Review Marker Audit
 <!-- Scan for any remaining <!-- REVIEW --> or <!-- REVIEW: ... --> markers.
      Any REVIEW marker found = Blocking (must be resolved before implementation). -->
+
+## H. Template-Version Freshness
+<!-- For changes that modify files under src/templates/:
+     1. Identify all template files changed in this branch vs. the base branch.
+     2. For each changed template, read its template-version field.
+     3. Compare against the base branch value of template-version.
+     4. If content changed but template-version was NOT incremented: BLOCKED.
+     5. If no src/templates/ files changed: report "No template changes detected — skipped."
+     6. If no merge base is available: skip and note "No merge base available — template-version check skipped." -->

@@ -475,3 +475,35 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 - **WHEN** `git worktree remove` fails
 - **THEN** the system SHALL report the failure and suggest manual cleanup
 - **AND** SHALL NOT block the workflow
+
+### Requirement: Finalize Template-Version Validation
+
+The `specshift finalize` action SHALL validate that all modified Smart Templates under `src/templates/` have their `template-version` field incremented before running skill compilation. This serves as a safety net — preflight catches the issue early, but finalize provides a last-chance gate before the release directory is built.
+
+The finalize action SHALL compare the current branch's template files against the base branch (main). For each template file with content changes, the system SHALL verify that `template-version` is higher than the base branch value. If any template has content changes without a version bump, finalize SHALL report the issue and stop before compilation, requesting the maintainer to fix the versions.
+
+If no template files were modified in the change, this check SHALL be skipped silently.
+
+**User Story:** As a plugin maintainer I want finalize to catch unbumped template-versions as a last resort, so that a stale template-version never reaches the compiled release directory.
+
+#### Scenario: Finalize detects unbumped template-version
+
+- **GIVEN** a change that modified `src/templates/changes/tasks.md` content
+- **AND** the `template-version` field was not incremented
+- **WHEN** the user invokes `specshift finalize`
+- **THEN** the system SHALL report: "Template src/templates/changes/tasks.md has content changes but template-version was not incremented"
+- **AND** SHALL stop before running skill compilation
+- **AND** SHALL request the maintainer to increment the version
+
+#### Scenario: Finalize passes when all template-versions are bumped
+
+- **GIVEN** a change that modified `src/templates/changes/tasks.md` and incremented its `template-version`
+- **WHEN** the user invokes `specshift finalize`
+- **THEN** the template-version validation SHALL pass
+- **AND** finalize SHALL proceed to skill compilation
+
+#### Scenario: Finalize skips check when no templates modified
+
+- **GIVEN** a change that did not modify any files under `src/templates/`
+- **WHEN** the user invokes `specshift finalize`
+- **THEN** the template-version validation SHALL be skipped silently

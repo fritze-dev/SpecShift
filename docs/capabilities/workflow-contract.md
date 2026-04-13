@@ -2,7 +2,7 @@
 title: "Workflow Contract"
 capability: "workflow-contract"
 description: "WORKFLOW.md pipeline orchestration, Smart Templates, inline actions, custom actions, and router dispatch"
-lastUpdated: "2026-04-10"
+lastUpdated: "2026-04-13"
 ---
 
 # Workflow Contract
@@ -25,6 +25,7 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 - **Custom actions** -- consumer projects define additional actions by adding names to the `actions` array and writing corresponding `## Action: <name>` body sections with self-contained instructions; no plugin modification required
 - **Router dispatch pattern** -- single router handles all commands (built-in and custom) with shared intent recognition, change context detection, and WORKFLOW.md loading; validates actions against the `actions` array with fallback to built-in list
 - **Template versioning** -- `template-version` (integer, monotonically increasing) enables version-aware merge during `specshift init`
+- **Template-version bump discipline** -- when Smart Template content changes, `template-version` must be incremented; enforced by preflight dimension (H) and finalize validation
 - **Auto-approve default** -- `auto_approve` defaults to `true` when absent or uncommented; the full pipeline runs end-to-end without pausing: propose skips the design checkpoint, auto-dispatches apply; apply skips the user testing pause on PASS, auto-dispatches finalize. Set to `false` to pause at every checkpoint (design review, user testing gate, approval).
 
 ## Behavior
@@ -48,6 +49,10 @@ Each built-in action (init, propose, apply, finalize) has a `## Action: <name>` 
 ### Custom Actions Execute Instructions Directly
 
 Custom actions listed in the `actions` array have their `## Action: <name>` sections read by the router, which executes the instruction directly. The executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links -- their instruction text is self-contained. Custom actions go through change context detection (like apply/finalize), enabling them to operate on the current change.
+
+### Template-Version Bump Discipline
+
+When a plugin maintainer modifies the content of any Smart Template under `src/templates/`, the `template-version` field in that file's YAML frontmatter must be incremented before merge. Whitespace-only changes do not require a version bump. When multiple templates change in one PR, each independently gets its version incremented by 1. New template files start at `template-version: 1`. This discipline is enforced by preflight (dimension H, BLOCKED severity) and finalize (validation before compilation).
 
 ### Router Validates Actions Dynamically
 
