@@ -1,4 +1,4 @@
-# Action: apply — Requirements
+# Requirements
 
 - [Implement Tasks from Task List](../../docs/specs/task-implementation.md#requirement-implement-tasks-from-task-list)
 - [Progress Tracking](../../docs/specs/task-implementation.md#requirement-progress-tracking)

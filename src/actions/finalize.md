@@ -1,4 +1,4 @@
-# Action: finalize — Requirements
+# Requirements
 
 - [Generate Changelog from Completed Changes](../../docs/specs/release-workflow.md#requirement-generate-changelog-from-completed-changes)
 - [Completion Workflow Next Steps](../../docs/specs/release-workflow.md#requirement-completion-workflow-next-steps)

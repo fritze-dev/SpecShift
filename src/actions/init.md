@@ -1,4 +1,4 @@
-# Action: init — Requirements
+# Requirements
 
 - [Install Workflow](../../docs/specs/project-init.md#requirement-install-workflow)
 - [Template Merge on Re-Init](../../docs/specs/project-init.md#requirement-template-merge-on-re-init)

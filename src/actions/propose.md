@@ -1,4 +1,4 @@
-# Action: propose — Requirements
+# Requirements
 
 - [Propose as Single Entry Point for Pipeline Traversal](../../docs/specs/artifact-pipeline.md#requirement-propose-as-single-entry-point-for-pipeline-traversal)
 - [Eight-Stage Pipeline](../../docs/specs/artifact-pipeline.md#requirement-eight-stage-pipeline)
