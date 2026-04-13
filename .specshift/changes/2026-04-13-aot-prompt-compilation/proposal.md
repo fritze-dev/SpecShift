@@ -43,7 +43,7 @@ The router's JIT requirement resolution loads entire spec files to extract indiv
 
 ## Impact
 
-- **Affected code**: `src/skills/specshift/SKILL.md` (router dispatch), `.claude/skills/specshift/` (new release directory), `.specshift/WORKFLOW.md` (finalize instruction), `scripts/compile-skills.sh` (new), `.specshift/CONSTITUTION.md` (architecture rules update), `.claude-plugin/marketplace.json` (source path update)
+- **Affected code**: `src/skills/specshift/SKILL.md` (router dispatch), `.claude/skills/specshift/` (new release directory), `.specshift/WORKFLOW.md` (finalize instruction), `scripts/compile-skills.sh` (new), `.specshift/CONSTITUTION.md` (architecture rules update), `.claude-plugin/marketplace.json` (source path update), `.gitignore` (whitelist `.claude/skills/`)
 - **Performance**: ~60% token reduction per action at runtime; single file read instead of multi-file resolution
 - **Distribution**: Release directory shifts from `src/` to `.claude/skills/specshift/`. Consumers get auto-discovered skills without plugin installation.
 

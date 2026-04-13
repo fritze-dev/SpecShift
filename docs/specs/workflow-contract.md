@@ -212,12 +212,12 @@ Compiled action files are generated artifacts produced by the AOT compiler (`scr
 - **THEN** it SHALL read the compiled file for instruction and requirements
 - **AND** SHALL NOT attempt to read `docs/specs/` files
 
-#### Scenario: Compiled file missing falls back to JIT
+#### Scenario: Compiled file missing triggers hard error
 
 - **GIVEN** the compiled action file `actions/apply.md` does not exist
-- **WHEN** the router attempts to load the action context
-- **THEN** it SHALL fall back to reading the `### Instruction` from WORKFLOW.md and resolving requirement links from SKILL.md against `docs/specs/` files
-- **AND** SHALL log a warning that compiled action files are missing
+- **WHEN** the router attempts to load the action context for a built-in action
+- **THEN** it SHALL abort with an error message: "Compiled action file missing. Run `bash scripts/compile-skills.sh` to generate it."
+- **AND** SHALL NOT attempt JIT resolution as a fallback
 
 ### Requirement: Dev Sync Utility
 
@@ -258,7 +258,7 @@ The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) —
 - **Action with missing spec**: If a spec listed in the SKILL.md's requirement links does not exist at the referenced path, the sub-agent SHALL proceed without it and note the missing spec.
 - **Custom action without body section**: If a custom action is listed in the `actions` array but has no corresponding `## Action: <name>` body section in WORKFLOW.md, the router SHALL report the missing instruction and stop.
 - **Custom action with init skip**: Custom actions SHALL go through change context detection (like apply/finalize), not skip it like init. If a custom action does not need change context, the instruction text should handle that.
-- **Compiled action file missing**: If a compiled action file does not exist for a built-in action, the router SHALL fall back to JIT resolution (reading WORKFLOW.md instruction + resolving SKILL.md requirement links against spec files) and log a warning.
+- **Compiled action file missing**: If a compiled action file does not exist for a built-in action, the router SHALL abort with a hard error directing the user to run `bash scripts/compile-skills.sh`. No JIT fallback — since consumers lack `docs/specs/`, a fallback would fail anyway.
 - **Compiled file has no requirements section**: If a compiled file contains only the instruction (no requirements), the router SHALL proceed with the instruction only — this is valid for actions with no requirement links.
 - **Dev script run outside repo root**: The script SHALL detect that it is not in the repo root (no `src/skills/specshift/SKILL.md` found) and exit with an error message.
 
