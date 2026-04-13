@@ -314,7 +314,7 @@ The plugin source code SHALL reside in a `src/` subdirectory at the repository r
 
 ### Requirement: Marketplace Source Configuration
 
-The `.claude-plugin/marketplace.json` at the repository root SHALL use a `source` field pointing to the release directory. When AOT compilation is configured, the source SHALL be `./.claude/skills/specshift` (the compiled release directory). When AOT is not configured, the source SHALL be `./src` (the plugin source directory). This relative path SHALL resolve correctly for both local filesystem marketplaces (`claude plugin marketplace add <local-path>`) and GitHub-based marketplaces (`claude plugin marketplace add owner/repo`). The `plugin.json` manifest SHALL reside inside `src/.claude-plugin/plugin.json`, separate from the marketplace-level `.claude-plugin/marketplace.json` at the repo root.
+The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude/skills/specshift"` to reference the compiled release directory. This relative path SHALL resolve correctly for both local filesystem marketplaces (`claude plugin marketplace add <local-path>`) and GitHub-based marketplaces (`claude plugin marketplace add owner/repo`). The `plugin.json` manifest SHALL reside inside `src/.claude-plugin/plugin.json`, separate from the marketplace-level `.claude-plugin/marketplace.json` at the repo root.
 
 **User Story:** As a plugin developer I want the marketplace to work with both local paths and GitHub, so that I can develop locally and distribute to consumers without config changes.
 
