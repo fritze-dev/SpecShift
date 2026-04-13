@@ -1,13 +1,13 @@
 ---
 title: "Human Approval Gate"
 capability: "human-approval-gate"
-description: "QA loop with review.md artifact, fix-verify cycles, auto_approve bypass, and mandatory human approval"
-lastUpdated: "2026-04-10"
+description: "QA loop with review.md artifact, tiered fix-verify cycles, auto_approve bypass, and mandatory human approval"
+lastUpdated: "2026-04-13"
 ---
 
 # Human Approval Gate
 
-No change is finalized without explicit human sign-off. The QA loop ensures that every change is verified via a persistent `review.md` artifact, issues are resolved through a structured fix cycle, and the user gives a clear "Approved" before the change can proceed to finalization.
+No change is finalized without explicit human sign-off. The QA loop ensures that every change is verified via a persistent `review.md` artifact, issues are resolved through a structured tiered fix cycle, and the user gives a clear "Approved" before the change can proceed to finalization.
 
 ## Purpose
 
@@ -15,63 +15,74 @@ Automated workflows risk finalizing changes that have unresolved issues or do no
 
 ## Rationale
 
-The QA loop places verification before approval so that the user reviews concrete findings rather than making a judgment call without data. Verification now produces a `review.md` artifact in the change directory instead of a transient report -- this makes verification persistent, PR-visible, and not skippable (file existence is the check). The fix loop supports bidirectional feedback -- when implementation reveals that a spec is wrong, updating the spec is a valid resolution path. A final verification pass after the fix loop catches issues introduced by the fixes themselves. Success metrics from the design phase are carried into the QA loop as PASS/FAIL checkboxes. The `auto_approve` configuration in WORKFLOW.md allows projects to skip the human gate after a passing review, enabling fully autonomous pipeline execution when desired.
+The QA loop places verification before approval so that the user reviews concrete findings rather than making a judgment call without data. Verification produces a `review.md` artifact in the change directory — persistent, PR-visible, and not skippable (file existence is the check). The fix loop uses a three-tier classification (Tweak, Design Pivot, Scope Change) with concrete detection signals so agents can mechanically determine correction depth rather than relying on subjective judgment. Three tiers strike the right balance: two tiers (fix vs. re-enter) proved too coarse in practice, while four or more add unnecessary complexity. The `auto_approve` configuration allows fully autonomous pipeline execution when desired, while a FAIL verdict always stops regardless of the setting.
 
 ## Features
 
 - **Mandatory Human Approval**: The system requires an explicit "Approved" response before a change can proceed to the post-apply workflow. Ambiguous responses are not accepted.
-- **review.md as Approval Gate**: Verification produces a persistent `review.md` artifact in the change directory, replacing the previous transient verify report. The artifact is PR-visible and not skippable.
-- **Structured QA Loop**: The tasks.md template includes a QA section with steps in order: Metric Check, Auto-Verify, User Testing, Fix Loop, Final Verify, and Approval. Implementation changes are committed and pushed before User Testing.
+- **review.md as Approval Gate**: Verification produces a persistent `review.md` artifact in the change directory. The artifact is PR-visible and not skippable.
+- **Structured QA Loop**: The tasks.md template includes a QA section with steps in order: Metric Check, Auto-Verify, User Testing, Fix Loop, Final Verify, and Approval.
 - **Success Metric Checkboxes**: Every success metric from `design.md` is carried over as a PASS/FAIL checkbox. All must be marked PASS before approval.
-- **Fix-Verify Cycles**: Issues are resolved by fixing code or updating specs. Multiple iterations are supported until all critical issues are resolved.
-- **Final Verification Pass**: After the fix loop completes, a final `review.md` is regenerated to confirm all fixes are consistent. Skipped if the fix loop was not entered.
-- **Bidirectional Feedback**: When implementation reveals that a spec or design is wrong, updating the spec is a valid resolution path.
-- **Auto-Approve Configuration**: When `auto_approve: true` is set in WORKFLOW.md, the pipeline proceeds without user confirmation after a passing review.md verdict. A FAIL verdict always stops regardless of this setting.
+- **Tiered Fix-Verify Cycles**: Corrections are classified into three tiers with matching re-entry depth — from fixing a value in place to full re-implementation from updated specs.
+- **Detection Signals**: Observable signals (reverted tasks, invalidated metrics, reversed design decisions, out-of-scope files) guide tier classification mechanically.
+- **Artifact Staleness Rule**: Design Pivot and Scope Change corrections update all stale change artifacts before re-implementing.
+- **Final Verification Pass**: After the fix loop completes, a final `review.md` is regenerated to confirm all fixes are consistent.
+- **Bidirectional Feedback**: When implementation reveals that a spec or design is wrong, updating the spec is a valid resolution path at all tiers.
+- **Auto-Approve Configuration**: When `auto_approve: true` is set in WORKFLOW.md, the pipeline proceeds without user confirmation after a passing review.md verdict.
 
 ## Behavior
 
-### Approval After Clean Verification
+Run `specshift apply` for implementation and the QA loop. The apply action implements tasks, generates review.md, runs the fix loop if needed, and requests approval.
+
+### Approval After Clean Verification (specshift apply)
 
 When all tasks are complete, apply generates `review.md` in the change directory. If the report shows no CRITICAL or WARNING issues and all success metric checkboxes are marked PASS, the system presents the report and asks for explicit approval. The user responds "Approved" and the system proceeds to the post-apply workflow.
 
-### Critical Issues Block Approval
+### Critical Issues Block Approval (specshift apply)
 
 When a review.md report contains CRITICAL issues, the system does not request approval. It states that critical issues must be resolved first and lists the specific issues.
 
-### Warnings Can Be Acknowledged
+### Warnings Can Be Acknowledged (specshift apply)
 
 When a report contains no CRITICAL issues but does contain WARNINGs, the system requests approval while highlighting the warnings. The user may respond "Approved" to accept them.
 
-### Success Metrics Are Carried Into the QA Loop
+### Success Metrics Are Carried Into the QA Loop (specshift apply)
 
 When `design.md` contains success metrics, the generated tasks.md includes a PASS/FAIL checkbox for each one. All must be marked PASS before approval can be granted.
 
-### Final Verify Runs After the Fix Loop
+### Tiered Fix Loop (specshift apply)
+
+Before applying any fix, the system classifies the correction into one of three tiers:
+
+- **Tier 1 — Tweak**: The correction changes a value, line, or detail within the current approach (wrong value, typo, missing line). The system fixes it in place and regenerates review.md.
+- **Tier 2 — Design Pivot**: The correction changes which files are modified or which approach is used, but requirements are still correct. The system updates design.md, discards and re-generates affected task sections, re-implements from the corrected design, then regenerates review.md.
+- **Tier 3 — Scope Change**: The correction changes which requirements apply or who the target audience is. The system updates specs and proposal.md, updates design.md, re-generates tasks, re-implements fully, then regenerates review.md.
+
+The system checks observable detection signals before classifying: whether completed tasks need reverting, whether success metrics still apply, whether design decisions are reversed, whether corrections touch files outside the design, and whether requirements no longer apply to the correct audience.
+
+### Artifact Staleness Rule (specshift apply)
+
+For Design Pivot and Scope Change corrections, all stale change artifacts (design.md, tasks.md, preflight.md, review.md) are updated before re-implementing. A stale artifact is one that still describes the original wrong approach. The system does not leave stale artifacts in the change directory.
+
+### Final Verify Runs After the Fix Loop (specshift apply)
 
 When the fix loop resolves all issues, a final `review.md` is regenerated. The final report must confirm 0 CRITICAL issues before approval is requested. If new issues are found, the developer returns to the fix loop.
 
-### Final Verify Is Skipped When First Verify Is Clean
+### Auto-Approve Skips Human Gate (specshift apply)
 
-When the first verify finds no CRITICAL or WARNING issues, User Testing finds no bugs, and the fix loop is not entered, the Final Verify step is marked complete immediately.
-
-### Fix Loop Resolves Issues Through Code or Spec Changes
-
-Issues are resolved by fixing code to match the spec or updating the spec to match the intended implementation. After fixes, `review.md` is regenerated to confirm resolution. If a fix introduces a new issue, it appears in the next report. When implementation reveals a design is wrong, updating design.md is a valid resolution.
-
-### Auto-Approve Skips Human Gate
-
-When `auto_approve: true` is set in WORKFLOW.md and review.md's verdict is PASS (no CRITICAL, no WARNING), the pipeline skips the user testing pause and proceeds directly to finalize without pausing for human approval. The design review checkpoint during propose is also skipped. A FAIL or BLOCKED verdict always stops regardless of the setting, and PASS WITH WARNINGS still pauses for acknowledgment.
+When `auto_approve: true` is set in WORKFLOW.md and review.md's verdict is PASS (no CRITICAL, no WARNING), the pipeline skips the user testing pause and proceeds directly to finalize. A FAIL or BLOCKED verdict always stops regardless of the setting, and PASS WITH WARNINGS still pauses for acknowledgment.
 
 ## Known Limitations
 
 - Spec updates during the fix loop do not automatically re-trigger preflight.
 - The fix loop has no maximum iteration count; it continues until the user is satisfied.
-- "Approved" is the canonical approval token, recognized case-insensitively.
+- Agents reading the tiered re-entry instructions must apply the classification before patching — no runtime enforcement beyond the instruction text.
 
 ## Edge Cases
 
-- If review.md has never been generated, the QA Loop approval checkbox is not checked. The system warns that verification has not been performed.
+- If review.md has never been generated, the system warns that verification has not been performed.
 - If code changes are made after the last verify run, the review.md may be stale. The system notes the timestamp relative to recent changes.
-- If `design.md` does not contain success metrics, the QA Loop section has no PASS/FAIL checkboxes but still includes the mandatory approval checkbox.
 - If the user provides an ambiguous response, the system clarifies that it needs an explicit "Approved."
-- If verification produces only SUGGESTION-level findings, the system proceeds directly to requesting approval.
+- If the system cannot determine whether a correction is Tier 1 or Tier 2, it errs toward Design Pivot to ensure artifact freshness.
+- If a Tier 1 fix reveals that the underlying problem is a Tier 2 or Tier 3 issue, the system re-classifies at the higher tier and applies the corresponding re-entry depth.
+- If a Scope Change is identified after partial implementation, the system updates the spec first, then re-generates design and tasks before continuing. Partial work that conflicts with the new scope is reverted.
