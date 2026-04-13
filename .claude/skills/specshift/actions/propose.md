@@ -1,14 +1,4 @@
-## Instruction
-
-Create change workspace if needed, then traverse the pipeline generating artifacts.
-If no change exists: ask user what to build, derive kebab-case name, create workspace (with worktree if enabled).
-Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean completed proposals and merged PRs. For closed PRs or branches inactive beyond stale_days, prompt the user before cleanup. Read proposals from worktree filesystem paths.
-Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
-Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
-Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
-review artifact: when auto_approve is false, stop before review and suggest running the specshift skill with `apply`. When auto_approve is true, do not stop — auto-continue to apply.
-
-## Requirements
+# Requirements: propose
 
 
 ### Requirement: Propose as Single Entry Point for Pipeline Traversal

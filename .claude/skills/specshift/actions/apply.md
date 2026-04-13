@@ -1,17 +1,4 @@
-## Instruction
-
-Implement tasks from tasks.md, then generate review.md.
-QA loop: implement → generate review.md → fix if FAIL → regenerate review.md → until PASS.
-Delete existing review.md before starting implementation.
-When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause and auto-continue to finalize.
-Fix loop: after any fix, regenerate review.md before presenting to user.
-Artifact freshness: update preflight/design if fix resolves flagged issues.
-Standard Tasks (post-implementation section) are NOT part of apply.
-Constitution standard tasks: pre-merge executed during post-apply, post-merge remain as reminders.
-Before committing, mark all standard task checkboxes as complete except post-merge.
-After review.md PASS, commit and push implementation. When auto_approve is false, pause for user approval. When auto_approve is true, auto-continue to finalize.
-
-## Requirements
+# Requirements: apply
 
 
 ### Requirement: Implement Tasks from Task List

@@ -8,7 +8,6 @@ set -euo pipefail
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
 ACTIONS_SRC="src/actions"
-WORKFLOW=".specshift/WORKFLOW.md"
 PLUGIN_JSON="src/.claude-plugin/plugin.json"
 PLUGIN_ROOT=".claude"
 SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
@@ -22,11 +21,6 @@ fi
 
 if [[ ! -d "$ACTIONS_SRC" ]]; then
   echo "Error: $ACTIONS_SRC/ not found." >&2
-  exit 1
-fi
-
-if [[ ! -f "$WORKFLOW" ]]; then
-  echo "Error: $WORKFLOW not found." >&2
   exit 1
 fi
 
@@ -83,42 +77,6 @@ extract_requirement() {
   echo "$output"
 }
 
-# --- Extract action instruction from WORKFLOW.md ---
-
-extract_instruction() {
-  local action="$1"
-  local found_action=false
-  local found_instruction=false
-  local output=""
-
-  while IFS= read -r line; do
-    if [[ "$found_action" == false ]]; then
-      if [[ "$line" == "## Action: $action" ]]; then
-        found_action=true
-      fi
-    elif [[ "$found_instruction" == false ]]; then
-      if [[ "$line" == "### Instruction" ]]; then
-        found_instruction=true
-      elif [[ "$line" =~ ^##\  ]]; then
-        break
-      fi
-    else
-      if [[ "$line" =~ ^##\  ]]; then
-        break
-      fi
-      output="$output"$'\n'"$line"
-    fi
-  done < "$WORKFLOW"
-
-  if [[ "$found_instruction" == false ]]; then
-    echo "WARNING: Instruction for action '$action' not found in $WORKFLOW" >&2
-    ((warnings++)) || true
-    return 1
-  fi
-
-  echo "$output" | sed '/./,$!d'
-}
-
 # --- Main: loop over src/actions/*.md ---
 
 for action_file in "$ACTIONS_SRC"/*.md; do
@@ -148,21 +106,11 @@ for action_file in "$ACTIONS_SRC"/*.md; do
     fi
   done < "$action_file"
 
-  # Extract instruction
-  instruction=$(extract_instruction "$action") || {
-    echo "  Skipping action '$action' — no instruction found."
-    continue
-  }
-
-  # Write compiled action file
+  # Write compiled action file (requirements only — instructions come from WORKFLOW.md at runtime)
   outfile="$SKILL_DIR/actions/$action.md"
   {
-    echo "## Instruction"
-    echo ""
-    echo "$instruction"
+    echo "# Requirements: $action"
     if [[ -n "$requirements_content" ]]; then
-      echo ""
-      echo "## Requirements"
       echo "$requirements_content"
     fi
   } > "$outfile"

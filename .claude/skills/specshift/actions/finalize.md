@@ -1,14 +1,4 @@
-## Instruction
-
-Post-approval finalization, executed sequentially:
-1. Changelog: incremental entries from completed change
-2. Docs: regenerate affected capability docs, ADRs, README
-3. Version-bump: increment patch in src/.claude-plugin/plugin.json, sync .claude-plugin/marketplace.json
-4. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/`
-On error in one step: continue with next, report failures at end.
-Check review.md exists with verdict PASS before proceeding.
-
-## Requirements
+# Requirements: finalize
 
 
 ### Requirement: Generate Changelog from Completed Changes

@@ -1,13 +1,4 @@
-## Instruction
-
-Project initialization and health check.
-Mode detection:
-- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution and CLAUDE.md
-- Update (templates outdated): merge plugin template updates with local customizations
-- Re-sync (all installed): detect spec drift (code vs specs) + docs drift (docs vs specs)
-Report findings, suggest running the specshift skill with `propose` for changes needed.
-
-## Requirements
+# Requirements: init
 
 
 ### Requirement: Install Workflow
