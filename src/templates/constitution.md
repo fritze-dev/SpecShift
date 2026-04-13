@@ -28,7 +28,9 @@ instruction: |
 (Limits, requirements, compatibility rules)
 
 ## Conventions
-(Naming, commits, branching, file organization)
+(Naming, commits, branching, file organization.
+ Note: the finalize version-bump step only runs when src/.claude-plugin/plugin.json exists.
+ Consumer projects without plugin manifests skip version-bump silently.)
 
 ## Standard Tasks
 
