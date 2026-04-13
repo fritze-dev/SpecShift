@@ -2,7 +2,7 @@
 order: 12
 category: setup
 status: stable
-version: 4
+version: 5
 lastModified: 2026-04-13
 ---
 ## Purpose
@@ -50,6 +50,30 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL skip the worktree opt-in question
 - **AND** SHALL leave the `worktree:` section commented out in WORKFLOW.md
+
+### Requirement: Plugin Version Stamp
+
+The `specshift init` command SHALL read the `version` field from the plugin manifest at `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` and write it as the `plugin-version` field in the `.specshift/WORKFLOW.md` YAML frontmatter. This SHALL happen on both fresh installs (when WORKFLOW.md is generated from the template) and re-inits (when WORKFLOW.md already exists). On re-init, the `plugin-version` field SHALL always be updated to the current plugin version, regardless of whether other template changes trigger a merge — `plugin-version` is a machine-managed field, not user-editable. If WORKFLOW.md has no `plugin-version` field (legacy install), init SHALL add the field.
+
+**User Story:** As a consumer I want my project to track which plugin version installed it, so that the router can detect when a plugin update is available and suggest `specshift init`.
+
+#### Scenario: Plugin version stamped on fresh install
+- **GIVEN** a project directory without `.specshift/WORKFLOW.md`
+- **AND** the plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift init`
+- **THEN** the generated WORKFLOW.md SHALL contain `plugin-version: 0.1.3-beta` in its YAML frontmatter
+
+#### Scenario: Plugin version updated on re-init
+- **GIVEN** a project with `.specshift/WORKFLOW.md` containing `plugin-version: 0.1.2-beta`
+- **AND** the current plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift init`
+- **THEN** the WORKFLOW.md `plugin-version` field SHALL be updated to `0.1.3-beta`
+
+#### Scenario: Plugin version added to legacy WORKFLOW.md
+- **GIVEN** a project with `.specshift/WORKFLOW.md` that has no `plugin-version` field
+- **AND** the current plugin manifest contains `version: 0.1.3-beta`
+- **WHEN** the user runs `specshift init`
+- **THEN** the WORKFLOW.md SHALL have `plugin-version: 0.1.3-beta` added to its YAML frontmatter
 
 ### Requirement: Legacy Migration
 The init command SHALL detect legacy project layouts (presence of `openspec/schemas/opsx-enhanced/schema.yaml` without `.specshift/WORKFLOW.md`) and perform migration: (1) generate WORKFLOW.md from schema.yaml content and config.yaml settings, (2) move templates from `openspec/schemas/opsx-enhanced/templates/` to `.specshift/templates/` converting them to Smart Template format, (3) rename `.specshift/constitution.md` to `.specshift/CONSTITUTION.md`, (4) remove the `openspec/schemas/` directory and `openspec/config.yaml` after successful migration.

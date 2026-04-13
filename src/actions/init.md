@@ -1,6 +1,7 @@
 # Requirements
 
 - [Install Workflow](../../docs/specs/project-init.md#requirement-install-workflow)
+- [Plugin Version Stamp](../../docs/specs/project-init.md#requirement-plugin-version-stamp)
 - [Template Merge on Re-Init](../../docs/specs/project-init.md#requirement-template-merge-on-re-init)
 - [First-Run Codebase Scan](../../docs/specs/project-init.md#requirement-first-run-codebase-scan)
 - [Constitution Generation](../../docs/specs/project-init.md#requirement-constitution-generation)
