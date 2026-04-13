@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: plugin-version-check
 worktree: .claude/worktrees/plugin-version-check
 capabilities:
