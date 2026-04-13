@@ -1,5 +1,5 @@
 ---
-compiled-at: 2026-04-13T14:41:58Z
+compiled-at: 2026-04-13T15:25:05Z
 specshift-version: 0.1.1-beta
 sources:
   - docs/specs/project-init.md

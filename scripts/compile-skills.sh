@@ -2,13 +2,15 @@
 set -euo pipefail
 
 # AOT Skill Compiler for SpecShift
-# Builds the release directory at .claude/skills/specshift/ from source files.
+# Builds the release directory at .claude/ from source files.
+# Plugin root = .claude/ (marketplace source: "./.claude")
 # Run from the repository root: bash scripts/compile-skills.sh
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
 WORKFLOW=".specshift/WORKFLOW.md"
 PLUGIN_JSON="src/.claude-plugin/plugin.json"
-RELEASE_DIR=".claude/skills/specshift"
+PLUGIN_ROOT=".claude"
+SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
 
 # --- Preflight ---
 
@@ -33,13 +35,15 @@ COMPILED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # --- Copy source files ---
 
-echo "Copying source files to $RELEASE_DIR/ ..."
-rm -rf "$RELEASE_DIR"
-mkdir -p "$RELEASE_DIR/actions"
-cp "$SKILL_SRC" "$RELEASE_DIR/SKILL.md"
-cp -r src/templates/ "$RELEASE_DIR/templates/"
-mkdir -p "$RELEASE_DIR/.claude-plugin"
-cp "$PLUGIN_JSON" "$RELEASE_DIR/.claude-plugin/plugin.json"
+echo "Building release at $PLUGIN_ROOT/ ..."
+rm -rf "$SKILL_DIR"
+rm -rf "$PLUGIN_ROOT/templates"
+rm -rf "$PLUGIN_ROOT/.claude-plugin"
+mkdir -p "$SKILL_DIR/actions"
+cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md"
+cp -r src/templates/ "$PLUGIN_ROOT/templates/"
+mkdir -p "$PLUGIN_ROOT/.claude-plugin"
+cp "$PLUGIN_JSON" "$PLUGIN_ROOT/.claude-plugin/plugin.json"
 
 total_actions=0
 total_requirements=0
@@ -222,7 +226,7 @@ for action in "${action_list[@]}"; do
   done
 
   # Write compiled action file
-  outfile="$RELEASE_DIR/actions/$action.md"
+  outfile="$SKILL_DIR/actions/$action.md"
   {
     echo "---"
     echo "compiled-at: $COMPILED_AT"
@@ -258,7 +262,7 @@ echo "=== Compilation Summary ==="
 echo "Actions compiled: $total_actions"
 echo "Total requirements: $total_requirements"
 echo "Warnings: $warnings"
-echo "Release directory: $RELEASE_DIR/"
+echo "Plugin root: $PLUGIN_ROOT/"
 echo ""
 
 if [[ "$warnings" -gt 0 ]]; then
