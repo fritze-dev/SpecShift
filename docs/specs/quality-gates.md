@@ -7,7 +7,7 @@ lastModified: 2026-04-13
 ---
 ## Purpose
 
-Provides `specshift propose` for pre-implementation quality checks across six dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `review.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
+Provides `specshift propose` for pre-implementation quality checks across eight dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `review.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **AND** all requirements have scenarios, no gaps are detected, all assumptions have visible text, and no REVIEW markers remain
 - **WHEN** the user invokes `specshift propose add-user-auth`
 - **THEN** the system reads constitution.md, all change artifacts, and existing specs
-- **AND** produces `preflight.md` covering all six dimensions
+- **AND** produces `preflight.md` covering all eight dimensions
 - **AND** the verdict is "PASS"
 - **AND** the summary shows 0 blockers, 0 warnings
 
@@ -461,7 +461,7 @@ If no template files were modified in the change, this check SHALL be skipped si
 - **Diff includes only artifact files**: When a change only modifies specs or planning artifacts (no code files), diff-based checks still apply — task-diff mapping verifies spec edits correspond to tasks, and scope checks verify no unrelated specs were modified.
 - **Template-version field missing from modified template**: If a modified template under `src/templates/` has no `template-version` field, preflight and finalize SHALL flag it as BLOCKED — the field is required by the Smart Template Format requirement.
 - **No merge base for template-version comparison**: If no merge base is available, preflight and finalize SHALL skip the template-version freshness check and note "No merge base available — template-version check skipped."
-- **Template file renamed or moved**: If a template file was renamed (deleted at old path, created at new path), the new file SHALL have `template-version: 1` and the check applies to the new path only.
+- **Template file renamed or moved**: If a template file was renamed or moved (deleted at old path, created at new path), preflight and finalize SHALL compare the file at the new path against the base-branch template at the previous path and SHALL require the new file's `template-version` to be greater than the previous file's `template-version`; a rename or move alone does not reset the version to `1`.
 
 ## Assumptions
 

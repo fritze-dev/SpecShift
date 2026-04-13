@@ -84,9 +84,9 @@
   - Verify: Template-version check is skipped with note "No merge base available — template-version check skipped"
 
 - [ ] **Edge: Template file renamed or moved**
-  - Setup: Template deleted at old path, created at new path
+  - Setup: Existing template is renamed or moved from an old path to a new path under `src/templates/`
   - Action: Run preflight
-  - Verify: New file has `template-version: 1`; check applies to new path only
+  - Verify: Renamed/moved template is compared against the base-branch file at the previous path; `template-version` is carried forward and must be incremented if the template content changed
 
 ## Traceability Summary
 

@@ -136,4 +136,4 @@ When scanning completed changes for design decisions, the system checks `has_dec
 - If no merge base is available (orphan branch, first commit), diff-based checks are skipped with a note. Template-version freshness and finalize validation are also skipped.
 - If `docs/capabilities/` does not exist, all specs are reported as missing capability docs without erroring.
 - If a modified template under `src/templates/` has no `template-version` field, preflight and finalize flag it as BLOCKED.
-- If a template file is renamed (deleted at old path, created at new path), the new file should have `template-version: 1`.
+- If a template file is renamed or moved, preflight compares it to the base-branch file at the previous path, and `template-version` continues monotonically rather than resetting to `1`.
