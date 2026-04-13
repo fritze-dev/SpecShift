@@ -43,11 +43,10 @@ COMPILED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 echo "Building release at $PLUGIN_ROOT/ ..."
 rm -rf "$SKILL_DIR"
-rm -rf "$PLUGIN_ROOT/templates"
 rm -rf "$PLUGIN_ROOT/.claude-plugin"
 mkdir -p "$SKILL_DIR/actions"
 cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md"
-cp -r src/templates/ "$PLUGIN_ROOT/templates/"
+cp -r src/templates/ "$SKILL_DIR/templates/"
 mkdir -p "$PLUGIN_ROOT/.claude-plugin"
 cp "$PLUGIN_JSON" "$PLUGIN_ROOT/.claude-plugin/plugin.json"
 

@@ -2,5 +2,4 @@
 /.claude/*
 !/.claude/settings.json
 !/.claude/skills/
-!/.claude/templates/
 !/.claude/.claude-plugin/
