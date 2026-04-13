@@ -79,7 +79,7 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 
 When the content of any Smart Template file under `src/templates/` is modified (excluding whitespace-only changes), the plugin maintainer SHALL increment the `template-version` field in that file's YAML frontmatter before the change is merged. This ensures that `specshift init` template merge detection correctly identifies updated templates and prompts consumers to update or merge.
 
-The `template-version` field SHALL be incremented by exactly 1 for each change that modifies the template's content. Multiple content changes within a single change (PR) SHALL result in a single increment — the version tracks releases, not individual edits.
+The `template-version` field SHALL be incremented for each change that modifies the template's content. Multiple content changes within a single change (PR) SHALL result in a single increment — the version tracks releases, not individual edits. The enforcement checks (preflight and finalize) verify that the value is higher than the base branch version.
 
 **User Story:** As a consumer project maintainer I want template-version to always reflect content changes, so that `specshift init` correctly detects when my local templates need updating after a plugin release.
 

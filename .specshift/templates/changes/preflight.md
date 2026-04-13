@@ -39,9 +39,13 @@ instruction: |
 
 ## H. Template-Version Freshness
 <!-- For changes that modify files under src/templates/:
-     1. Identify all template files changed in this branch vs. the base branch.
-     2. For each changed template, read its template-version field.
-     3. Compare against the base branch value of template-version.
-     4. If content changed but template-version was NOT incremented: BLOCKED.
-     5. If no src/templates/ files changed: report "No template changes detected — skipped."
-     6. If no merge base is available: skip and note "No merge base available — template-version check skipped." -->
+     1. Identify all template files changed in this branch vs. the base branch (added, modified, renamed, or deleted).
+     2. If no src/templates/ files changed: report "No template changes detected — skipped."
+     3. If no merge base is available: skip and note "No merge base available — template-version check skipped."
+     4. For each changed template:
+        - Modified (same path): read template-version and compare against the base branch value.
+        - Newly added (no base-branch file): must have template-version: 1. Any other value: BLOCKED.
+        - Renamed/moved: compare against the base-branch file at the previous path.
+        - Deleted: no version increment required; exclude from checks.
+     5. If content changed but template-version was NOT incremented relative to the base: BLOCKED.
+     6. If content is unchanged (rename-only, whitespace-only): no increment required. -->

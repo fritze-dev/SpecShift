@@ -413,7 +413,7 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 
 The `specshift finalize` action SHALL validate that all modified Smart Templates under `src/templates/` have their `template-version` field incremented before running skill compilation. This serves as a safety net — preflight catches the issue early, but finalize provides a last-chance gate before the release directory is built.
 
-The finalize action SHALL compare the current branch's template files against the base branch (main). For each template file with content changes, the system SHALL verify that `template-version` is higher than the base branch value. If any template has content changes without a version bump, finalize SHALL report the issue and stop before compilation, requesting the maintainer to fix the versions.
+The finalize action SHALL compare the current branch's template files against the merge-base revision (the same base used for diff-based validation). For each template file with content changes, the system SHALL verify that `template-version` is higher than the base branch value. If any template has content changes without a version bump, finalize SHALL report the issue and halt — template-version validation failures are a hard stop that SHALL NOT be subject to the general "continue on error" policy for other finalize steps.
 
 If no template files were modified in the change, this check SHALL be skipped silently.
 

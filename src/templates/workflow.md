@@ -74,7 +74,7 @@ Post-approval finalization, executed sequentially:
 1. Changelog: incremental entries from completed change
 2. Docs: regenerate affected capability docs, ADRs, README
 3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
-4. Template-version validation: for each file under `src/templates/` modified in this change, verify that its `template-version` field was incremented compared to the base branch. If any template has content changes without a version bump, stop and request the maintainer to fix the versions before proceeding. If no template files were modified, skip this check silently.
+4. Template-version validation (HARD STOP): for each file under `src/templates/` modified in this change, verify that its `template-version` field was incremented compared to the base branch. If any template has content changes without a version bump, stop immediately and request the maintainer to fix the versions — do NOT proceed to compilation. If no template files were modified, skip this check silently.
 5. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/`
-On error in one step: continue with next, report failures at end.
+On error in steps 1-3: continue with next, report failures at end. Step 4 is a hard stop — do not continue if it fails.
 Check review.md exists with verdict PASS before proceeding.
