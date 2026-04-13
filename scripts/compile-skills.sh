@@ -140,7 +140,7 @@ echo ""
 
 if [[ "$warnings" -gt 0 ]]; then
   echo "Done with $warnings warning(s)."
-  exit 0
+  exit 1
 else
   echo "Done."
 fi

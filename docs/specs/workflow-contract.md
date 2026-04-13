@@ -77,7 +77,7 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 
 ### Requirement: Inline Action Definitions
 
-WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links SHALL live in separate source files at `src/actions/<action>.md` (one file per action, with clickable relative links to spec files). These links are consumed by the AOT compiler to produce compiled requirement files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the sub-agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
+WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links SHALL live in separate source files at `src/actions/<action>.md` (one file per action, with clickable relative links to spec files). These links are consumed by the AOT compiler to produce compiled requirement files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the executing agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
 
 For built-in actions, the router SHALL read the `### Instruction` from WORKFLOW.md (project-specific, JIT) and the compiled requirements file at `actions/<action>.md` (pre-extracted, AOT). The instruction serves as the primary directive; the requirements provide behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links or compiled files.
 
@@ -98,7 +98,7 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 - **AND** SHALL read the compiled requirements from `actions/apply.md` (relative to the skill directory)
 - **AND** SHALL use the instruction as primary directive, bounded by the requirements as behavioral context
 
-#### Scenario: Router executes custom action as sub-agent
+#### Scenario: Router executes custom action directly
 - **GIVEN** a WORKFLOW.md with `actions: [init, propose, apply, qa-review, finalize]`
 - **AND** a `## Action: qa-review` body section with `### Instruction`
 - **WHEN** a user invokes `specshift qa-review`
@@ -191,8 +191,8 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **Custom action without body section**: If a custom action is listed in the `actions` array but has no corresponding `## Action: <name>` body section in WORKFLOW.md, the router SHALL report the missing instruction and stop.
 - **Custom action with init skip**: Custom actions SHALL go through change context detection (like apply/finalize), not skip it like init. If a custom action does not need change context, the instruction text should handle that.
 - **Compiled file has no requirements section**: If a compiled file contains only the instruction (no requirements), the router SHALL proceed with the instruction only — this is valid for actions with no requirement links.
+
 ## Assumptions
 
 - Claude natively parses YAML frontmatter from markdown files when instructed to read and interpret them. <!-- ASSUMPTION: Claude YAML frontmatter parsing -->
-- The Agent tool is available in the execution environment and supports spawning sub-agents with custom prompts and bounded context. <!-- ASSUMPTION: Agent tool availability -->
-- Sub-agents spawned via the Agent tool can read and write files in the same working directory as the router. <!-- ASSUMPTION: Sub-agent file access -->
+- The execution environment supports reading files relative to the skill directory (for compiled action files) and relative to the project root (for WORKFLOW.md and change artifacts). <!-- ASSUMPTION: File access paths -->

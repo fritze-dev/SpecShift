@@ -1,5 +1,7 @@
 # Implementation Tasks: AOT Prompt Compilation
 
+> **Note:** This task list reflects the initial design. During implementation, the approach was simplified: compiled files contain requirements only (no frontmatter, no instructions), requirement links moved from SKILL.md to `src/actions/*.md`, plugin root became `.claude/` (not `.claude/skills/specshift/`), and missing compiled files produce a graceful fallback instead of a hard error. See review.md for the final state.
+
 ## 1. Foundation
 
 - [ ] 1.1. Create `scripts/compile-skills.sh` — the AOT compiler script:
