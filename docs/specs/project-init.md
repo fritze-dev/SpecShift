@@ -87,6 +87,8 @@ The merge detection SHALL apply to all Smart Templates including docs templates 
 
 For CONSTITUTION.md, the merge operates at **section level**: the system SHALL compare the template's section headings (e.g., `## Tech Stack`, `## Architecture Rules`, `## Standard Tasks`) against the existing CONSTITUTION.md. Missing sections from a newer template version SHALL be offered to the user for interactive generation (the agent reads the codebase and proposes content for the new section, as bootstrap does). Existing sections with user content SHALL be preserved. The generated CONSTITUTION.md SHALL include a `template-version` field in YAML frontmatter to track which template version generated its structure.
 
+For CLAUDE.md, the merge operates at **section level with WARNING-only reporting**: the system SHALL compare the bootstrap template's section headings (e.g., `## Workflow`, `## Knowledge Management`) against the existing CLAUDE.md. Missing standard sections SHALL be reported as WARNING (e.g., "CLAUDE.md missing standard section: Knowledge Management"). The system SHALL NOT modify the existing CLAUDE.md — user edits are authoritative. This check ensures that standard agent directives are not silently lost when CLAUDE.md is manually edited or created before the plugin is installed.
+
 **User Story:** As a user who has customized my templates I want plugin updates to preserve my customizations, so that re-running `specshift init` after a plugin update does not silently destroy my changes.
 
 #### Scenario: Unchanged template updated silently
@@ -280,17 +282,25 @@ The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstra
 - **THEN** the system SHALL generate `CLAUDE.md` at the project root
 - **AND** it SHALL contain a `## Workflow` section and a `## Knowledge Management` section
 
-#### Scenario: CLAUDE.md skipped when already exists
-- **GIVEN** a project with an existing `CLAUDE.md` file
+#### Scenario: CLAUDE.md skipped when already exists but checked for missing sections
+- **GIVEN** a project with an existing `CLAUDE.md` file containing all standard sections
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL NOT overwrite `CLAUDE.md`
-- **AND** SHALL report "CLAUDE.md already exists — skipped"
+- **AND** SHALL check CLAUDE.md against the bootstrap template's section headings
+- **AND** SHALL report "CLAUDE.md already exists — skipped (all standard sections present)"
 
 #### Scenario: CLAUDE.md includes project-specific rules
 - **GIVEN** a project with specific conventions discovered during the codebase scan
 - **WHEN** the init command generates CLAUDE.md
 - **THEN** the generated file SHALL include project-specific agent rules beyond the standard sections
 - **AND** uncertain items SHALL be marked with `<!-- REVIEW -->` for user resolution
+
+#### Scenario: CLAUDE.md missing standard section detected on re-init
+- **GIVEN** a project with an existing `CLAUDE.md` file that contains a `## Workflow` section but lacks a `## Knowledge Management` section
+- **WHEN** the user runs `specshift init`
+- **THEN** the system SHALL NOT overwrite or modify `CLAUDE.md`
+- **AND** SHALL report WARNING: "CLAUDE.md missing standard section: Knowledge Management"
+- **AND** SHALL suggest the user add the missing section manually
 
 ### Requirement: Initial Change Creation
 After generating the constitution, the `specshift init` command SHALL create an initial change workspace and hand off to the standard pipeline. The initial change SHALL be named according to the project context (e.g., `initial-spec`). The init command SHALL then inform the user to continue with the standard pipeline.
