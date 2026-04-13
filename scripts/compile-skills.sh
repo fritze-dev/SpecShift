@@ -55,6 +55,7 @@ extract_requirement() {
   local output=""
 
   while IFS= read -r line; do
+    line="${line%$'\r'}"
     if [[ "$found" == false ]]; then
       if [[ "$line" == "### Requirement: $req_name" || "$line" == "### Requirement: $req_name ("* ]]; then
         found=true
@@ -92,11 +93,12 @@ for action_file in "$ACTIONS_SRC"/*.md; do
 
   # Parse requirement links from this action file
   while IFS= read -r line; do
+    line="${line%$'\r'}"
     if [[ "$line" =~ ^-\ \[(.+)\]\((.+)\) ]]; then
       req_name="${BASH_REMATCH[1]}"
       req_path="${BASH_REMATCH[2]}"
-      # Resolve relative path (../../docs/specs/...) to repo-root-relative
-      file_path=$(echo "${req_path%%#*}" | sed 's|^\.\./\.\./||')
+      # Resolve to repo-root-relative path (tolerates any prefix before docs/)
+      file_path=$(echo "${req_path%%#*}" | sed 's|^.*docs/specs/|docs/specs/|')
 
       ((link_count++)) || true
 
