@@ -4,7 +4,7 @@ branch: aot-prompt-compilation
 worktree: .claude/worktrees/aot-prompt-compilation
 capabilities:
   new: []
-  modified: [artifact-pipeline, workflow-contract]
+  modified: [release-workflow, workflow-contract]
   removed: []
 ---
 ## Why
@@ -28,8 +28,8 @@ The router's JIT requirement resolution loads entire spec files to extract indiv
 
 ### Modified Capabilities
 
-- `artifact-pipeline`: Add "AOT Skill Compilation" as a finalize sub-step. Define the compilation trigger, extraction algorithm, compiled file format, and staleness handling.
-- `workflow-contract`: Router dispatch for built-in actions reads compiled action files instead of resolving spec anchor links. Custom actions remain JIT. Define the compiled action file contract and dev sync utility.
+- `release-workflow`: Add "AOT Skill Compilation" (build step, extraction, validation, release directory), "Compiled Action File Contract" (format, git persistence), and "Dev Sync Script" (standalone build utility). Update marketplace source configuration for the new release directory path.
+- `workflow-contract`: Router dispatch for built-in actions reads compiled action files instead of resolving spec anchor links. Custom actions remain JIT. Hard error on missing compiled files.
 
 ### Removed Capabilities
 
@@ -38,7 +38,7 @@ The router's JIT requirement resolution loads entire spec files to extract indiv
 ### Consolidation Check
 
 1. **Existing specs reviewed**: artifact-pipeline, workflow-contract, release-workflow, three-layer-architecture, change-workspace, task-implementation, quality-gates, human-approval-gate, documentation, project-init, constitution-management, spec-format, test-generation, roadmap-tracking
-2. **Overlap assessment**: Considered a new `aot-compilation` spec. The compilation mechanism is tightly coupled to two existing domains: (a) the finalize pipeline step belongs in `artifact-pipeline`, (b) the router dispatch change and compiled file contract belong in `workflow-contract`. Both specs will gain 2-3 requirements each, keeping them within healthy size (~350-400 lines). A standalone spec would have only 3-4 requirements and would cross-reference both existing specs heavily.
+2. **Overlap assessment**: Considered a new `aot-compilation` spec and placement in `artifact-pipeline`. The compilation mechanism, release artifact format, and build tooling are release concerns — they belong in `release-workflow` alongside version bumping, changelog generation, and distribution configuration. The router dispatch behavior change (reading compiled files) is a workflow concern — it stays in `workflow-contract`.
 3. **Merge assessment**: N/A — no new capabilities proposed.
 
 ## Impact
