@@ -1,6 +1,6 @@
 ---
 status: active
-branch: copilot/add-specshift-propose-flow
+branch: fix-loop-tiered-reentry
 capabilities:
   new: []
   modified: [human-approval-gate]
