@@ -2,7 +2,7 @@
 title: "Project Init"
 capability: "project-init"
 description: "One-command project initialization with template merge, codebase scanning, constitution generation, CLAUDE.md bootstrap, Claude Code Web settings generation, and health checks"
-lastUpdated: "2026-04-11"
+lastUpdated: "2026-04-13"
 ---
 
 # Project Init
@@ -23,6 +23,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 - **CLAUDE.md bootstrap** -- generates CLAUDE.md from a plugin template containing Workflow and Knowledge Management sections, adapted with project-specific rules from the codebase scan
 - **Version-aware template merge** -- uses `template-version` fields to detect user customizations and merge plugin updates instead of overwriting
 - **Constitution section-level merge** -- detects missing sections from newer template versions and offers to generate content for them based on the codebase
+- **CLAUDE.md section-level check** -- during re-init, compares CLAUDE.md against bootstrap template section headings and reports missing standard sections as WARNING without modifying the file
 - **Codebase scanning** -- analyzes tech stack, frameworks, languages, file structure, and coding conventions to populate the constitution with project-specific values
 - **Constitution generation** -- produces Tech Stack, Architecture Rules, Code Style, Constraints, Conventions, and Standard Tasks sections from scan results
 - **Environment checks** -- detects GitHub tooling availability, git version (2.5+ for worktree support), and `.gitignore` configuration
@@ -45,7 +46,7 @@ On first run (no existing CONSTITUTION.md), the system scans the entire project 
 
 ### Template Merge on Re-Init
 
-When re-running init after a plugin update, the system compares `template-version` fields between local and plugin templates. Unchanged templates are updated silently. User-customized templates are preserved with a notification. Templates with both local customizations and plugin updates prompt for manual merge resolution. For CONSTITUTION.md, the merge operates at section level -- missing sections from newer template versions are offered for interactive generation.
+When re-running init after a plugin update, the system compares `template-version` fields between local and plugin templates. Unchanged templates are updated silently. User-customized templates are preserved with a notification. Templates with both local customizations and plugin updates prompt for manual merge resolution. For CONSTITUTION.md, the merge operates at section level -- missing sections from newer template versions are offered for interactive generation. For CLAUDE.md, the system checks section headings against the bootstrap template and reports missing standard sections as WARNING without modifying the file -- user edits to CLAUDE.md are authoritative.
 
 ### Legacy Migration
 
