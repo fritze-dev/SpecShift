@@ -7,6 +7,7 @@ set -euo pipefail
 # Run from the repository root: bash scripts/compile-skills.sh
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
+REQUIREMENTS_MANIFEST="src/action-requirements.md"
 WORKFLOW=".specshift/WORKFLOW.md"
 PLUGIN_JSON="src/.claude-plugin/plugin.json"
 PLUGIN_ROOT=".claude"
@@ -16,6 +17,11 @@ SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
 
 if [[ ! -f "$SKILL_SRC" ]]; then
   echo "Error: $SKILL_SRC not found. Run this script from the repository root." >&2
+  exit 1
+fi
+
+if [[ ! -f "$REQUIREMENTS_MANIFEST" ]]; then
+  echo "Error: $REQUIREMENTS_MANIFEST not found." >&2
   exit 1
 fi
 
@@ -56,16 +62,12 @@ parse_actions() {
   local in_requirements=false
 
   while IFS= read -r line; do
-    if [[ "$line" =~ ^###\ Action:\ ([a-z]+)\ —\ Requirements ]]; then
+    if [[ "$line" =~ ^##\ Action:\ ([a-z]+)\ —\ Requirements ]]; then
       current_action="${BASH_REMATCH[1]}"
       in_requirements=true
       echo "ACTION:$current_action"
-    elif [[ "$in_requirements" == true && "$line" =~ ^###\  ]]; then
-      # Next heading at same level — end of this action's requirements
-      in_requirements=false
-      current_action=""
     elif [[ "$in_requirements" == true && "$line" =~ ^##\  ]]; then
-      # Higher-level heading — end of all requirements
+      # Next heading at same level — end of this action's requirements
       in_requirements=false
       current_action=""
     elif [[ "$in_requirements" == true && "$line" =~ ^-\ \[(.+)\]\((.+)\) ]]; then
@@ -75,7 +77,7 @@ parse_actions() {
       local file_path="${req_path%%#*}"
       echo "LINK:$current_action|$req_name|$file_path"
     fi
-  done < "$SKILL_SRC"
+  done < "$REQUIREMENTS_MANIFEST"
 }
 
 # --- Extract requirement block from spec file ---

@@ -1,5 +1,5 @@
 ---
-compiled-at: 2026-04-13T15:25:05Z
+compiled-at: 2026-04-13T15:42:25Z
 specshift-version: 0.1.1-beta
 sources:
   - docs/specs/task-implementation.md
