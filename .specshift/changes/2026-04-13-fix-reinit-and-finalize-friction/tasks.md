@@ -21,9 +21,9 @@ Spec edits already completed during propose phase (specs stage).
 - [x] 3.6. Metric Check: `.specshift/CONSTITUTION.md` template sync says `src/templates/` is authoritative — PASS
 - [x] 3.7. Metric Check: `CLAUDE.md` contains File Ownership section — PASS
 - [x] 3.8. Auto-Verify: generate review.md using the review template — Verdict: PASS
-- [ ] 3.9. User Testing: **Stop here!** Ask the user for manual approval.
-- [ ] 3.10. Fix Loop: On verify issues or bug reports → fix → re-verify.
-- [ ] 3.11. Final Verify: regenerate review.md after all fixes. Skip if 3.10 was not entered.
+- [x] 3.9. User Testing: User reviewed, identified wrong target files and plugin-specific logic in consumer templates
+- [x] 3.10. Fix Loop: Corrected approach — reverted .specshift/ and release-workflow changes, made consumer templates agnostic, updated specs and all artifacts
+- [x] 3.11. Final Verify: all 7 metrics PASS, out-of-scope files confirmed unchanged
 - [ ] 3.12. Approval: Only finish on explicit **"Approved"** by the user.
 
 ## 4. Standard Tasks (Post-Implementation)
