@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: fix-loop-tiered-reentry
 capabilities:
   new: []

@@ -3,6 +3,20 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-13 — Fix Loop Tiered Re-entry
+
+### Changed
+- Fix Loop now classifies corrections into three tiers before applying fixes: **Tweak** (fix in place), **Design Pivot** (update design + re-implement), **Scope Change** (update specs + design + full re-implementation)
+- Concrete detection signals added for tier classification (e.g., "correction touches files outside design.md", "completed task needs revert")
+- Artifact staleness rule: Design Pivot and Scope Change corrections must update all stale change artifacts before re-implementing
+- Step 3.4 in tasks template restructured for readability (sub-bullets per tier)
+- Template versions bumped: `workflow.md` and `changes/tasks.md` from v1 to v2
+
+### Added
+- Tier 3 (Scope Change) Gherkin scenario in human-approval-gate spec
+- "Tier escalation within fix loop" edge case — handling when a Tweak reveals a deeper problem
+- "Ambiguous tier classification" edge case — defaults to higher tier to ensure artifact freshness
+
 ## 2026-04-13 — AOT Prompt Compilation
 
 ### Added

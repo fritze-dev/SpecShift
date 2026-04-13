@@ -1,9 +1,8 @@
 ---
 order: 10
 category: development
-status: draft
-change: 2026-04-13-fix-loop-tiered-reentry
-version: 3
+status: stable
+version: 4
 lastModified: 2026-04-13
 ---
 ## Purpose
