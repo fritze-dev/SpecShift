@@ -30,8 +30,8 @@ Spec edits already completed during propose phase (specs stage).
 
 ## 4. Standard Tasks (Post-Implementation)
 
-- [ ] 4.1. Run `specshift finalize` (generates changelog and updates docs)
-- [ ] 4.2. Bump version
+- [x] 4.1. Run `specshift finalize` (generates changelog and updates docs)
+- [x] 4.2. Bump version (0.1.0-beta → 0.1.1-beta)
 - [ ] 4.3. Commit and push to remote
 - [ ] 4.4. Update PR: mark ready for review, update body with change summary and issue references (Closes #10, Closes #11)
 
