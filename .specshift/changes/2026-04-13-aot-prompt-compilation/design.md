@@ -14,43 +14,55 @@ Affected layers: Layer 3 (Router dispatch in SKILL.md) and the finalize pipeline
 ### Compilation Flow
 
 ```
-docs/specs/*.md ─────────────────┐
+src/skills/specshift/SKILL.md ───┐
+  (source + requirement links)   │
                                  │
-src/skills/specshift/SKILL.md ───┼──→ scripts/compile-skills.sh ──→ src/skills/specshift/actions/
-  (requirement link lists)       │                                    ├── propose.md
-                                 │                                    ├── apply.md
-.specshift/WORKFLOW.md ──────────┘                                    ├── finalize.md
-  (action instructions)                                               └── init.md
+src/templates/ ──────────────────┤
+  (source templates)             │
+                                 ├──→ scripts/compile-skills.sh ──→ .claude/skills/specshift/
+docs/specs/*.md ─────────────────┤                                    ├── SKILL.md (copied)
+  (requirement blocks)           │                                    ├── templates/ (copied)
+                                 │                                    └── actions/
+.specshift/WORKFLOW.md ──────────┘                                        ├── propose.md (compiled)
+  (action instructions)                                                   ├── apply.md (compiled)
+                                                                          ├── finalize.md (compiled)
+                                                                          └── init.md (compiled)
 ```
+
+**`src/`** = authoritative source (hand-edited). **`.claude/skills/specshift/`** = release artifact (generated). Claude Code auto-discovers the skill from `.claude/skills/`.
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/skills/specshift/SKILL.md` | Step 4: read compiled files instead of resolving links. Annotate link sections with `<!-- AOT-COMPILER-INPUT -->`. Update Step 5 dispatch language. |
+| `src/skills/specshift/SKILL.md` | Step 4: read compiled files from `actions/` subdirectory instead of resolving links. Annotate link sections with `<!-- AOT-COMPILER-INPUT -->`. Update Step 5 dispatch language. |
 | `.specshift/WORKFLOW.md` | Add compile step to finalize instruction (step 4). |
 | `src/templates/workflow.md` | Same finalize instruction update. |
-| `.specshift/CONSTITUTION.md` | Add architecture rule for compiled files; add dev convention for compile script. |
-| `CLAUDE.md` | Add file ownership note for `src/skills/specshift/actions/`. |
+| `.specshift/CONSTITUTION.md` | Add architecture rule for release directory and compiled files; add dev convention for compile script. |
+| `CLAUDE.md` | Add file ownership note for `.claude/skills/specshift/` as generated release directory. |
+| `.claude-plugin/marketplace.json` | Update `source` to point to `.claude/skills/specshift` instead of `./src`. |
 
 ### Files Created
 
 | File | Purpose |
 |------|---------|
-| `scripts/compile-skills.sh` | Standalone compilation script (~100-150 lines bash) |
-| `src/skills/specshift/actions/propose.md` | Compiled: instruction + 8 requirement blocks |
-| `src/skills/specshift/actions/apply.md` | Compiled: instruction + 10 requirement blocks |
-| `src/skills/specshift/actions/finalize.md` | Compiled: instruction + 10 requirement blocks |
-| `src/skills/specshift/actions/init.md` | Compiled: instruction + 8 requirement blocks |
+| `scripts/compile-skills.sh` | Standalone compilation script (~100-150 lines bash). Copies source + compiles actions. |
+| `.claude/skills/specshift/SKILL.md` | Copied from `src/skills/specshift/SKILL.md` |
+| `.claude/skills/specshift/templates/` | Copied from `src/templates/` |
+| `.claude/skills/specshift/actions/propose.md` | Compiled: instruction + 8 requirement blocks |
+| `.claude/skills/specshift/actions/apply.md` | Compiled: instruction + 10 requirement blocks |
+| `.claude/skills/specshift/actions/finalize.md` | Compiled: instruction + 10 requirement blocks |
+| `.claude/skills/specshift/actions/init.md` | Compiled: instruction + 8 requirement blocks |
 
 ### Compiler Algorithm (compile-skills.sh)
 
-1. **Parse SKILL.md**: Extract text between `<!-- AOT-COMPILER-INPUT -->` and `<!-- /AOT-COMPILER-INPUT -->` markers for each `### Action: <name> — Requirements` section. Parse each markdown link to get (requirement_name, spec_file_path).
-2. **Extract requirement blocks**: For each link, read the spec file, find the `### Requirement: <Name>` heading (match by link display text), extract everything until the next `### ` or `## ` heading.
-3. **Read instructions**: For each action, read `.specshift/WORKFLOW.md`, extract `## Action: <name> ### Instruction` content.
-4. **Read version**: Parse `version` from `src/.claude-plugin/plugin.json`.
-5. **Assemble + write**: Generate each `actions/<action>.md` with frontmatter + instruction + requirements.
-6. **Report**: Print summary (actions compiled, requirements per action, warnings).
+1. **Copy source files**: Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md`. Copy `src/templates/` → `.claude/skills/specshift/templates/`. This creates the release directory structure.
+2. **Parse SKILL.md**: Extract text between `<!-- AOT-COMPILER-INPUT -->` and `<!-- /AOT-COMPILER-INPUT -->` markers for each `### Action: <name> — Requirements` section. Parse each markdown link to get (requirement_name, spec_file_path).
+3. **Extract requirement blocks**: For each link, read the spec file, find the `### Requirement: <Name>` heading (match by link display text), extract everything until the next `### ` or `## ` heading.
+4. **Read instructions**: For each action, read `.specshift/WORKFLOW.md`, extract `## Action: <name> ### Instruction` content.
+5. **Read version**: Parse `version` from `src/.claude-plugin/plugin.json`.
+6. **Assemble + write**: Generate each `.claude/skills/specshift/actions/<action>.md` with frontmatter + instruction + requirements.
+7. **Report**: Print summary (actions compiled, requirements per action, warnings).
 
 ### Router Change (SKILL.md Step 4)
 
@@ -70,7 +82,7 @@ Fallback: If compiled file is missing, fall back to JIT resolution (read WORKFLO
 ## Goals & Success Metrics
 
 - **Token reduction**: Compiled propose action file < 300 lines (vs ~695 lines loaded by JIT). PASS/FAIL by line count comparison.
-- **Self-contained distribution**: Running `specshift propose` in a consumer project (no `docs/specs/` directory) succeeds using compiled files. PASS/FAIL by test execution.
+- **Self-contained release**: `.claude/skills/specshift/` contains everything needed at runtime (SKILL.md, templates, compiled actions). No `docs/specs/` access needed. PASS/FAIL by running propose in a project that only has `.claude/skills/specshift/`.
 - **Compilation correctness**: Running `bash scripts/compile-skills.sh` produces 4 non-empty action files. Each file contains all linked requirements (count matches link count in SKILL.md). PASS/FAIL by count comparison.
 - **Backwards compatibility**: Existing `specshift <action>` commands work identically after the change. No consumer action required. PASS/FAIL by running propose/apply/finalize cycle.
 
@@ -92,13 +104,14 @@ Fallback: If compiled file is missing, fall back to JIT resolution (read WORKFLO
 | `<!-- AOT-COMPILER-INPUT -->` markers in SKILL.md | Clear boundary between runtime instructions and compiler input; parseable by script | YAML frontmatter in SKILL.md (SKILL.md doesn't have structured frontmatter for this), separate manifest file |
 | Fallback to JIT if compiled file missing | Graceful degradation during development and for edge cases | Hard error if compiled file missing (too strict for dev workflow) |
 | Custom actions remain JIT | No spec requirements to compile; instruction text is self-contained in WORKFLOW.md | Compile custom action instructions too (no benefit, adds complexity) |
+| Release directory in `.claude/skills/specshift/` | Claude Code auto-discovers the skill; no plugin install needed; self-contained (SKILL.md + templates + compiled actions) | Keep output in `src/` (requires plugin install, no auto-discovery) |
 
 ## Risks & Trade-offs
 
 - **Stale compiled files during development** → Mitigation: dev sync script (`scripts/compile-skills.sh`); finalize always recompiles; constitution convention reminds developers to run script after spec edits.
 - **Bash markdown parsing fragility** → Mitigation: specs follow a very consistent format (`### Requirement:` blocks); compiler validates non-empty output; warnings on parse failures.
 - **Two compilation entry points** (script + finalize) → Mitigation: finalize instruction delegates to the same script; single implementation.
-- **Increased file count in `src/`** (+4 compiled files) → Acceptable trade-off for token savings and distribution simplicity.
+- **Increased file count in `.claude/`** (SKILL.md + templates + 4 compiled files) → Acceptable trade-off for token savings, auto-discovery, and self-contained distribution.
 
 ## Open Questions
 

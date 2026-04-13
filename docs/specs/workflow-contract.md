@@ -181,7 +181,7 @@ The system SHALL provide a single router skill that handles all user-facing comm
 
 ### Requirement: Compiled Action File Contract
 
-Each built-in action (propose, apply, finalize, init) SHALL have a corresponding compiled action file at `src/skills/specshift/actions/<action>.md`. The compiled file SHALL use markdown-with-YAML-frontmatter format containing:
+The `.claude/skills/specshift/` directory SHALL serve as the self-contained release artifact. It is built by the compiler from `src/` source files and compiled spec extracts, and SHALL contain: the router (`SKILL.md`, copied from `src/skills/specshift/`), templates (copied from `src/templates/`), and compiled action files. Each built-in action (propose, apply, finalize, init) SHALL have a corresponding compiled action file at `.claude/skills/specshift/actions/<action>.md`. The compiled file SHALL use markdown-with-YAML-frontmatter format containing:
 
 **YAML frontmatter**:
 - `compiled-at` (ISO 8601 timestamp of compilation)
@@ -198,7 +198,7 @@ Compiled action files are generated artifacts produced by the AOT compiler (`scr
 
 #### Scenario: Compiled action file contains instruction and requirements
 
-- **GIVEN** a compiled action file `src/skills/specshift/actions/propose.md`
+- **GIVEN** a compiled action file `.claude/skills/specshift/actions/propose.md`
 - **WHEN** its content is inspected
 - **THEN** it SHALL contain YAML frontmatter with `compiled-at`, `specshift-version`, and `sources`
 - **AND** SHALL contain `## Instruction` with the propose action's instruction text
@@ -225,8 +225,9 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 
 1. Read requirement link sections from `src/skills/specshift/SKILL.md` (between `<!-- AOT-COMPILER-INPUT -->` markers)
 2. For each built-in action, extract the requirement links, resolve them against `docs/specs/` files, and read the action instruction from `.specshift/WORKFLOW.md`
-3. Write compiled action files to `src/skills/specshift/actions/`
-4. Print a summary: number of actions compiled, total requirements extracted, any warnings
+3. Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md` and `src/templates/` → `.claude/skills/specshift/templates/`
+4. Write compiled action files to `.claude/skills/specshift/actions/`
+5. Print a summary: number of actions compiled, total requirements extracted, any warnings
 
 The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) — no external runtime dependencies (no Node.js, Python, etc.). This constraint matches the project's tech stack (Markdown, YAML, Bash).
 
@@ -236,7 +237,7 @@ The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) —
 
 - **GIVEN** the developer runs `bash scripts/compile-skills.sh` from the repository root
 - **WHEN** the script completes
-- **THEN** it SHALL have written 4 compiled action files (propose.md, apply.md, finalize.md, init.md) to `src/skills/specshift/actions/`
+- **THEN** it SHALL have written 4 compiled action files (propose.md, apply.md, finalize.md, init.md) to `.claude/skills/specshift/actions/`
 - **AND** SHALL print a summary of actions compiled and requirements extracted
 
 #### Scenario: Dev script uses no external runtimes

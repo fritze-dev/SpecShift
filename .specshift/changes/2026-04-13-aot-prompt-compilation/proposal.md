@@ -13,10 +13,11 @@ The router's JIT requirement resolution loads entire spec files to extract indiv
 
 ## What Changes
 
-- **AOT compilation step in finalize**: After changelog/docs/version-bump, a compiler extracts requirement blocks from `docs/specs/` and bakes them into per-action markdown files under `src/skills/specshift/actions/`.
+- **AOT compilation step in finalize**: After changelog/docs/version-bump, a compiler copies source files from `src/` and extracts requirement blocks from `docs/specs/` into a self-contained release directory at `.claude/skills/specshift/`.
+- **Release directory**: `.claude/skills/specshift/` contains the router (SKILL.md, copied from `src/`), templates (copied from `src/templates/`), and compiled action files (`actions/*.md`). Claude Code auto-discovers the skill — no plugin installation needed.
 - **Router reads compiled files**: SKILL.md Step 4 reads `actions/<action>.md` for built-in actions instead of resolving requirement anchor links at runtime. Custom actions remain JIT (read from WORKFLOW.md directly).
 - **Requirement links become compiler input**: The existing requirement link lists in SKILL.md (lines 46-93) are annotated as compiler input, no longer resolved at runtime.
-- **Dev sync script**: A bash script (`scripts/compile-skills.sh`) enables quick local recompilation without running full finalize.
+- **Dev sync script**: A bash script (`scripts/compile-skills.sh`) enables quick local rebuild of the release directory without running full finalize.
 - **Compiled action file format**: Each file contains YAML frontmatter (compiled-at, version, sources), the action instruction from WORKFLOW.md, and pre-extracted requirement blocks.
 
 ## Capabilities
@@ -42,11 +43,11 @@ The router's JIT requirement resolution loads entire spec files to extract indiv
 
 ## Impact
 
-- **Affected code**: `src/skills/specshift/SKILL.md` (router dispatch), `src/skills/specshift/actions/*.md` (new compiled files), `.specshift/WORKFLOW.md` (finalize instruction), `scripts/compile-skills.sh` (new), `.specshift/CONSTITUTION.md` (architecture rules update)
+- **Affected code**: `src/skills/specshift/SKILL.md` (router dispatch), `.claude/skills/specshift/` (new release directory), `.specshift/WORKFLOW.md` (finalize instruction), `scripts/compile-skills.sh` (new), `.specshift/CONSTITUTION.md` (architecture rules update), `.claude-plugin/marketplace.json` (source path update)
 - **Performance**: ~60% token reduction per action at runtime; single file read instead of multi-file resolution
-- **Distribution**: No change to consumer installation — compiled files are added to `src/`, which is already the distribution boundary
+- **Distribution**: Release directory shifts from `src/` to `.claude/skills/specshift/`. Consumers get auto-discovered skills without plugin installation.
 
 ## Scope & Boundaries
 
-- **In scope**: Compilation step in finalize, router dispatch change, compiled action file format, dev sync script, constitution/WORKFLOW.md updates
+- **In scope**: Compilation step in finalize, release directory at `.claude/skills/specshift/`, router dispatch change, compiled action file format, dev sync script, marketplace.json source update, constitution/WORKFLOW.md updates
 - **Out of scope**: Changing the markdown spec format itself; modifying Smart Templates; changing the `specshift <action>` UX; altering how custom actions work

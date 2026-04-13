@@ -336,10 +336,11 @@ The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compi
 1. **Parse requirement links**: Read the built-in action requirement link sections from `src/skills/specshift/SKILL.md` (annotated with `<!-- AOT-COMPILER-INPUT -->`). Each section lists markdown anchor links in the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`.
 2. **Extract requirement blocks**: For each link, read the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
 3. **Read action instruction**: For each built-in action, read the `### Instruction` content from the corresponding `## Action: <name>` section in `.specshift/WORKFLOW.md`.
-4. **Assemble compiled action file**: Write a markdown file to `src/skills/specshift/actions/<action>.md` containing YAML frontmatter (`compiled-at` timestamp, `specshift-version` from plugin.json, `sources` list of spec files used) followed by `## Instruction` (from WORKFLOW.md) and `## Requirements` (concatenated extracted blocks).
-5. **Validate output**: Each compiled file SHALL be non-empty. Unresolvable requirement links SHALL produce a warning (logged to the user) but SHALL NOT block compilation. Missing spec files SHALL be skipped with a warning.
+4. **Copy source files**: Copy `src/skills/specshift/SKILL.md` and `src/templates/` into `.claude/skills/specshift/` and `.claude/skills/specshift/templates/` respectively, creating the self-contained release directory.
+5. **Assemble compiled action file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing YAML frontmatter (`compiled-at` timestamp, `specshift-version` from plugin.json, `sources` list of spec files used) followed by `## Instruction` (from WORKFLOW.md) and `## Requirements` (concatenated extracted blocks).
+6. **Validate output**: Each compiled file SHALL be non-empty. Unresolvable requirement links SHALL produce a warning (logged to the user) but SHALL NOT block compilation. Missing spec files SHALL be skipped with a warning.
 
-The compilation step SHALL also be available as a standalone script (`scripts/compile-skills.sh`) for local development without running the full finalize pipeline. The WORKFLOW.md finalize instruction SHALL reference this compilation step.
+The compilation step SHALL also be available as a standalone script (`scripts/compile-skills.sh`) for local development without running the full finalize pipeline. The WORKFLOW.md finalize instruction SHALL reference this compilation step. The `.claude/skills/specshift/` directory is the release artifact — it contains the router, compiled action files, and templates as a self-contained unit. `src/` remains the authoritative source for hand-edited files.
 
 **User Story:** As a plugin maintainer I want requirements pre-compiled into focused action files during finalize, so that runtime token usage is minimized and consumers do not need access to the framework's internal spec files.
 
@@ -347,7 +348,9 @@ The compilation step SHALL also be available as a standalone script (`scripts/co
 
 - **GIVEN** a completed change with review.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
-- **THEN** it SHALL generate compiled action files for each built-in action (propose, apply, finalize, init) at `src/skills/specshift/actions/<action>.md`
+- **THEN** it SHALL generate compiled action files for each built-in action (propose, apply, finalize, init) at `.claude/skills/specshift/actions/<action>.md`
+- **AND** SHALL copy `src/skills/specshift/SKILL.md` to `.claude/skills/specshift/SKILL.md`
+- **AND** SHALL copy `src/templates/` to `.claude/skills/specshift/templates/`
 - **AND** each file SHALL contain the action instruction and all referenced requirement blocks
 
 #### Scenario: Compiled file includes provenance frontmatter
@@ -368,7 +371,7 @@ The compilation step SHALL also be available as a standalone script (`scripts/co
 
 - **GIVEN** a developer has edited `docs/specs/artifact-pipeline.md`
 - **WHEN** the developer runs `bash scripts/compile-skills.sh`
-- **THEN** the script SHALL regenerate all compiled action files under `src/skills/specshift/actions/`
+- **THEN** the script SHALL regenerate the release directory at `.claude/skills/specshift/` (copied source files + compiled action files)
 - **AND** SHALL report a summary of actions compiled and requirements extracted
 
 ## Edge Cases
