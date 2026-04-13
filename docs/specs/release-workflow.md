@@ -320,30 +320,30 @@ Files not needed by consumers — documentation, CI workflows, specs, changelog,
 - **AND** `.claude-plugin/plugin.json` (copy of `src/.claude-plugin/plugin.json`)
 - **AND** `actions/` with compiled action files for each built-in action
 
-#### Scenario: Plugin root resolves to release directory
+#### Scenario: Plugin root resolves to .claude directory
 
 - **GIVEN** a plugin installed from the marketplace
 - **WHEN** a skill references `${CLAUDE_PLUGIN_ROOT}`
-- **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `.claude/skills/specshift/` directory
-- **AND** `${CLAUDE_PLUGIN_ROOT}/templates/` SHALL contain the Smart Templates
-- **AND** `${CLAUDE_PLUGIN_ROOT}/actions/` SHALL contain the compiled action files
+- **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `.claude/` directory
+- **AND** `${CLAUDE_PLUGIN_ROOT}/skills/specshift/templates/` SHALL contain the Smart Templates
+- **AND** `${CLAUDE_PLUGIN_ROOT}/skills/specshift/actions/` SHALL contain the compiled requirement files
 
 ### Requirement: Marketplace Source Configuration
 
-The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude/skills/specshift"` to point to the release directory. The marketplace SHALL NOT point to `src/` directly — consumers receive the compiled release artifact, not the raw source. This path SHALL resolve correctly for both local filesystem marketplaces and GitHub-based marketplaces. The plugin version is determined by `.claude-plugin/plugin.json` inside the release directory (copied there by the compiler from `src/.claude-plugin/plugin.json`).
+The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude"` to point to the plugin root. The `.claude/` directory follows the standard Claude Code plugin layout: `.claude-plugin/plugin.json` (manifest), `skills/` (skill definitions), and `templates/` (Smart Templates). The marketplace SHALL NOT point to `src/` directly — consumers receive the compiled release artifact, not the raw source. This path SHALL resolve correctly for both local filesystem marketplaces and GitHub-based marketplaces. The plugin version is determined by `.claude/.claude-plugin/plugin.json` (copied there by the compiler from `src/.claude-plugin/plugin.json`).
 
 **User Story:** As a plugin consumer I want the marketplace to deliver a self-contained skill with pre-compiled requirements, so that I can use the workflow immediately without needing the framework's internal spec files.
 
-#### Scenario: Marketplace points to release directory
+#### Scenario: Marketplace points to plugin root
 
-- **GIVEN** `.claude-plugin/marketplace.json` with `source: "./.claude/skills/specshift"`
+- **GIVEN** `.claude-plugin/marketplace.json` with `source: "./.claude"`
 - **WHEN** a consumer installs the plugin
 - **THEN** the consumer's plugin cache SHALL contain the release directory contents (SKILL.md, templates, compiled actions, plugin.json)
 - **AND** SHALL NOT contain `docs/specs/`, `src/`, CI workflows, or changelog
 
 #### Scenario: Version detection via release directory
 
-- **GIVEN** the compiler has copied `src/.claude-plugin/plugin.json` (version `1.0.4`) to `.claude/skills/specshift/.claude-plugin/plugin.json`
+- **GIVEN** the compiler has copied `src/.claude-plugin/plugin.json` (version `1.0.4`) to `.claude/.claude-plugin/plugin.json`
 - **WHEN** a consumer runs `claude plugin update`
 - **THEN** the system SHALL detect version `1.0.4` from the release directory's `plugin.json`
 
@@ -370,16 +370,17 @@ The repository SHALL maintain a clear three-way separation: plugin source (`src/
 
 The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compilation step after changelog generation, documentation updates, and version bump. The compilation step SHALL:
 
-1. **Copy source files**: Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md` and `src/templates/` → `.claude/skills/specshift/templates/`, creating the self-contained release directory.
-2. **Parse requirement links**: Read the `### Action: <name> — Requirements` sections from `src/skills/specshift/SKILL.md`. Each section lists markdown anchor links in the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`.
-3. **Extract requirement blocks**: For each link, read the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
-4. **Read action instruction**: For each built-in action, read the `### Instruction` content from the corresponding `## Action: <name>` section in `.specshift/WORKFLOW.md`.
-5. **Assemble compiled action file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing YAML frontmatter (`compiled-at` timestamp, `specshift-version` from plugin.json, `sources` list of spec files used) followed by `## Instruction` (from WORKFLOW.md) and `## Requirements` (concatenated extracted blocks).
-6. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links parsed from SKILL.md for each action. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
+1. **Copy source files**: Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md`, `src/templates/` → `.claude/skills/specshift/templates/`, and `src/.claude-plugin/plugin.json` → `.claude/.claude-plugin/plugin.json`.
+2. **Parse requirement links**: For each file in `src/actions/*.md`, parse the markdown anchor links in the format `[Requirement Name](../../docs/specs/<spec>.md#requirement-<slug>)`.
+3. **Extract requirement blocks**: For each link, resolve the relative path to the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
+4. **Assemble compiled requirements file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing `# Requirements` followed by the concatenated extracted requirement blocks. No frontmatter, no instruction text — compiled files contain only requirements.
+5. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links in the source action file. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
 
 The compilation scope SHALL be limited to the 4 built-in actions (propose, apply, finalize, init). Custom actions defined in WORKFLOW.md SHALL NOT be compiled — they use JIT resolution at runtime, reading their instruction text directly from the `## Action: <name>` section in the consumer's local WORKFLOW.md. Rationale: built-in actions have spec-backed requirements that benefit from pre-extraction; custom actions are self-contained instructions without spec requirement links.
 
-The `.claude/skills/specshift/` directory is the release artifact — it contains the router, compiled action files, and templates as a self-contained unit. It SHALL be committed to Git so that consumers and new team members can use the workflow without running a build step. The `.gitignore` SHALL whitelist this directory (e.g., `!/.claude/skills/`). `src/` remains the authoritative source for hand-edited files.
+At runtime, the router reads **instructions** from the project's `.specshift/WORKFLOW.md` (JIT, project-specific) and **requirements** from the compiled action files (AOT, plugin-level). This separation ensures projects can customize action behavior via their WORKFLOW.md while the requirements remain consistent across all consumers.
+
+The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`). It SHALL be committed to Git so that consumers and new team members can use the workflow without running a build step. The `.gitignore` SHALL whitelist `.claude/skills/`, `.claude/templates/`, and `.claude/.claude-plugin/`. `src/` remains the authoritative source for hand-edited files.
 
 **User Story:** As a plugin maintainer I want requirements pre-compiled into focused action files during finalize, so that runtime token usage is minimized and consumers do not need access to the framework's internal spec files.
 
@@ -387,20 +388,13 @@ The `.claude/skills/specshift/` directory is the release artifact — it contain
 
 - **GIVEN** a completed change with review.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
-- **THEN** it SHALL copy `src/skills/specshift/SKILL.md` to `.claude/skills/specshift/SKILL.md`
-- **AND** SHALL copy `src/templates/` to `.claude/skills/specshift/templates/`
-- **AND** SHALL generate compiled action files for each built-in action (propose, apply, finalize, init) at `.claude/skills/specshift/actions/<action>.md`
-- **AND** each compiled file SHALL contain the action instruction and all referenced requirement blocks
-
-#### Scenario: Compiled file includes provenance frontmatter
-
-- **GIVEN** the compilation step runs with plugin version `0.2.0-beta`
-- **WHEN** a compiled action file is written
-- **THEN** it SHALL include YAML frontmatter with `compiled-at` (ISO 8601 timestamp), `specshift-version: 0.2.0-beta`, and `sources` (list of spec file paths that contributed requirement blocks)
+- **THEN** it SHALL copy source files to the release directory (`.claude/`)
+- **AND** SHALL generate compiled requirements files for each built-in action at `.claude/skills/specshift/actions/<action>.md`
+- **AND** each compiled file SHALL contain only the extracted requirement blocks
 
 #### Scenario: Count validation detects missing requirements
 
-- **GIVEN** SKILL.md lists 8 requirement links for the propose action
+- **GIVEN** `src/actions/propose.md` lists 8 requirement links
 - **AND** one link references a spec file that does not exist
 - **WHEN** the compilation step processes the propose action
 - **THEN** it SHALL extract 7 requirement blocks
@@ -409,39 +403,32 @@ The `.claude/skills/specshift/` directory is the release artifact — it contain
 
 ### Requirement: Compiled Action File Contract
 
-Each built-in action (propose, apply, finalize, init) SHALL have a corresponding compiled action file at `.claude/skills/specshift/actions/<action>.md`. The compiled file SHALL use markdown-with-YAML-frontmatter format containing:
+Each built-in action (propose, apply, finalize, init) SHALL have a corresponding source file at `src/actions/<action>.md` containing requirement links, and a compiled output file at `.claude/skills/specshift/actions/<action>.md` containing the extracted requirement blocks. The compiled file SHALL contain:
 
-**YAML frontmatter**:
-- `compiled-at` (ISO 8601 timestamp of compilation)
-- `specshift-version` (version string from `src/.claude-plugin/plugin.json`)
-- `sources` (array of spec file paths that contributed requirement blocks)
+- `# Requirements` heading
+- Concatenated requirement blocks, each as `### Requirement: <Name>` with normative description, optional user story, and Gherkin scenarios
 
-**Markdown body**:
-- `## Instruction` — the action's procedural instruction text, extracted from `.specshift/WORKFLOW.md` `## Action: <name> ### Instruction`
-- `## Requirements` — concatenated requirement blocks, each as `### Requirement: <Name>` with description, optional user story, and Gherkin scenarios
+Compiled action files contain **requirements only** — no frontmatter, no instruction text. Instructions are project-specific and read from `.specshift/WORKFLOW.md` at runtime. The `src/actions/*.md` files serve as the compilation manifest — they define which requirements belong to which action via clickable relative links to spec files.
 
-Compiled action files are generated artifacts produced by the AOT compiler. They SHALL NOT be hand-edited. The `### Action: <name> — Requirements` sections in SKILL.md serve as the compilation manifest — they define which requirements belong to which action.
+**User Story:** As a plugin consumer I want pre-compiled requirement files shipped with the plugin, so that the router loads focused context from a single file instead of resolving links against spec files I don't have.
 
-**User Story:** As a plugin consumer I want pre-compiled action files shipped with the plugin, so that the router loads focused context from a single file instead of resolving links against spec files I don't have.
-
-#### Scenario: Compiled action file contains instruction and requirements
+#### Scenario: Compiled file contains only requirements
 
 - **GIVEN** a compiled action file `.claude/skills/specshift/actions/propose.md`
 - **WHEN** its content is inspected
-- **THEN** it SHALL contain YAML frontmatter with `compiled-at`, `specshift-version`, and `sources`
-- **AND** SHALL contain `## Instruction` with the propose action's instruction text
-- **AND** SHALL contain `## Requirements` with one `### Requirement:` block per linked requirement
+- **THEN** it SHALL begin with `# Requirements`
+- **AND** SHALL contain one `### Requirement:` block per linked requirement from `src/actions/propose.md`
+- **AND** SHALL NOT contain frontmatter, instruction text, or metadata
 
 #### Scenario: Compiled file with no requirement links
 
-- **GIVEN** a built-in action with no requirement links in SKILL.md
+- **GIVEN** a built-in action source file `src/actions/<action>.md` with no requirement links
 - **WHEN** the compilation step generates the action file
-- **THEN** the compiled file SHALL contain only the `## Instruction` section
-- **AND** SHALL omit the `## Requirements` section
+- **THEN** the compiled file SHALL contain only the `# Requirements` heading with no blocks
 
 ### Requirement: Dev Sync Script
 
-The project SHALL provide a standalone bash script at `scripts/compile-skills.sh` that performs the same AOT compilation as the finalize step. The script SHALL be runnable from the repository root without requiring the full finalize pipeline. The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) — no external runtime dependencies. The finalize instruction SHALL delegate to this same script, ensuring a single compilation implementation.
+The project SHALL provide a standalone bash script at `scripts/compile-skills.sh` that performs the same AOT compilation as the finalize step. The script SHALL be runnable from the repository root without requiring the full finalize pipeline. The script SHALL loop over each `src/actions/*.md` file, extract requirement links, resolve them against `docs/specs/`, and write the compiled output. The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) — no external runtime dependencies. The finalize instruction SHALL delegate to this same script, ensuring a single compilation implementation.
 
 **User Story:** As a plugin developer I want a quick script to rebuild the release directory after editing specs, so that I can test changes locally without running the full finalize pipeline.
 
@@ -449,8 +436,8 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 
 - **GIVEN** the developer runs `bash scripts/compile-skills.sh` from the repository root
 - **WHEN** the script completes
-- **THEN** it SHALL have copied source files to `.claude/skills/specshift/`
-- **AND** SHALL have written 4 compiled action files (propose.md, apply.md, finalize.md, init.md) to `.claude/skills/specshift/actions/`
+- **THEN** it SHALL have copied source files to the release directory (`.claude/`)
+- **AND** SHALL have written compiled requirements files to `.claude/skills/specshift/actions/`
 - **AND** SHALL print a summary of actions compiled and requirements extracted
 
 #### Scenario: Dev script uses no external runtimes
@@ -467,10 +454,9 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 
 ## Edge Cases
 
-- **AOT compilation with no requirement links**: If a built-in action has no requirement links in SKILL.md, the compiled file SHALL contain only the instruction section.
-- **AOT compilation when WORKFLOW.md instruction is missing**: If the `## Action: <name>` section does not exist in WORKFLOW.md, the compilation SHALL skip that action and log a warning.
+- **AOT compilation with no requirement links**: If a source action file has no links, the compiled file SHALL contain only the `# Requirements` heading.
 - **Stale compiled files**: If specs are edited without recompilation, the compiled action files contain outdated requirements. Finalize always recompiles; developers can run the dev sync script manually.
-- **`.claude/` gitignore conflict**: The `.gitignore` typically ignores `.claude/*`. The release directory MUST be whitelisted via `!/.claude/skills/`.
+- **`.claude/` gitignore conflict**: The `.gitignore` typically ignores `.claude/*`. The release directory MUST be whitelisted via `!/.claude/skills/`, `!/.claude/templates/`, and `!/.claude/.claude-plugin/`.
 
 ## Assumptions
 
