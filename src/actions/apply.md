@@ -10,3 +10,4 @@
 - [QA Loop with Mandatory Approval](../../docs/specs/human-approval-gate.md#requirement-qa-loop-with-mandatory-approval)
 - [Fix Loop](../../docs/specs/human-approval-gate.md#requirement-fix-loop)
 - [Active vs Completed Change Detection](../../docs/specs/change-workspace.md#requirement-active-vs-completed-change-detection)
+- [Template-Version Bump Discipline](../../docs/specs/workflow-contract.md#requirement-template-version-bump-discipline)

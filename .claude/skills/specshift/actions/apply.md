@@ -632,3 +632,35 @@ Actions that operate on active changes (propose, apply) SHALL filter to active c
 - **GIVEN** a change at `.specshift/changes/2026-04-01-add-auth/` with research.md and proposal.md (`status: active`) but no tasks.md
 - **WHEN** `specshift propose` lists available changes
 - **THEN** the change is shown as available for artifact generation
+
+### Requirement: Template-Version Bump Discipline
+
+When the content of any Smart Template file under `src/templates/` is modified (excluding whitespace-only changes), the plugin maintainer SHALL increment the `template-version` field in that file's YAML frontmatter before the change is merged. This ensures that `specshift init` template merge detection correctly identifies updated templates and prompts consumers to update or merge.
+
+The `template-version` field SHALL be incremented for each change that modifies the template's content. Multiple content changes within a single change (PR) SHALL result in a single increment — the version tracks releases, not individual edits. The enforcement check (finalize) verifies that the value is higher than the base branch version.
+
+**User Story:** As a consumer project maintainer I want template-version to always reflect content changes, so that `specshift init` correctly detects when my local templates need updating after a plugin release.
+
+#### Scenario: Template content change requires version bump
+
+- **GIVEN** a Smart Template `src/templates/changes/tasks.md` with `template-version: 2`
+- **WHEN** a plugin maintainer modifies the template's content (instruction text, section structure, or markdown body)
+- **THEN** the maintainer SHALL increment `template-version` to 3 before the change is merged
+
+#### Scenario: Whitespace-only change does not require version bump
+
+- **GIVEN** a Smart Template `src/templates/workflow.md` with `template-version: 2`
+- **WHEN** a plugin maintainer makes only whitespace changes (trailing spaces, blank lines) without altering meaningful content
+- **THEN** the `template-version` field SHALL NOT be required to change
+
+#### Scenario: Multiple templates changed in one PR
+
+- **GIVEN** a change that modifies content in both `src/templates/changes/tasks.md` (version 2) and `src/templates/changes/design.md` (version 1)
+- **WHEN** the change is prepared for merge
+- **THEN** `tasks.md` SHALL have `template-version: 3` and `design.md` SHALL have `template-version: 2`
+
+#### Scenario: New template file gets initial version
+
+- **GIVEN** a new Smart Template file is created at `src/templates/changes/new-artifact.md`
+- **WHEN** the template is added to the plugin
+- **THEN** it SHALL have `template-version: 1` in its YAML frontmatter
