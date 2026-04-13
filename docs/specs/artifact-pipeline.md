@@ -2,8 +2,8 @@
 order: 4
 category: change-workflow
 status: stable
-version: 3
-lastModified: 2026-04-11
+version: 4
+lastModified: 2026-04-13
 ---
 ## Purpose
 
@@ -329,6 +329,48 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **WHEN** the action processes the input
 - **THEN** it SHALL ask the user what they want to build
 
+### Requirement: AOT Skill Compilation
+
+The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compilation step after changelog generation, documentation updates, and version bump. The compilation step SHALL:
+
+1. **Parse requirement links**: Read the built-in action requirement link sections from `src/skills/specshift/SKILL.md` (annotated with `<!-- AOT-COMPILER-INPUT -->`). Each section lists markdown anchor links in the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`.
+2. **Extract requirement blocks**: For each link, read the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
+3. **Read action instruction**: For each built-in action, read the `### Instruction` content from the corresponding `## Action: <name>` section in `.specshift/WORKFLOW.md`.
+4. **Assemble compiled action file**: Write a markdown file to `src/skills/specshift/actions/<action>.md` containing YAML frontmatter (`compiled-at` timestamp, `specshift-version` from plugin.json, `sources` list of spec files used) followed by `## Instruction` (from WORKFLOW.md) and `## Requirements` (concatenated extracted blocks).
+5. **Validate output**: Each compiled file SHALL be non-empty. Unresolvable requirement links SHALL produce a warning (logged to the user) but SHALL NOT block compilation. Missing spec files SHALL be skipped with a warning.
+
+The compilation step SHALL also be available as a standalone script (`scripts/compile-skills.sh`) for local development without running the full finalize pipeline. The WORKFLOW.md finalize instruction SHALL reference this compilation step.
+
+**User Story:** As a plugin maintainer I want requirements pre-compiled into focused action files during finalize, so that runtime token usage is minimized and consumers do not need access to the framework's internal spec files.
+
+#### Scenario: Finalize triggers AOT compilation
+
+- **GIVEN** a completed change with review.md verdict PASS
+- **WHEN** `specshift finalize` executes the compilation step
+- **THEN** it SHALL generate compiled action files for each built-in action (propose, apply, finalize, init) at `src/skills/specshift/actions/<action>.md`
+- **AND** each file SHALL contain the action instruction and all referenced requirement blocks
+
+#### Scenario: Compiled file includes provenance frontmatter
+
+- **GIVEN** the compilation step runs with plugin version `0.2.0-beta`
+- **WHEN** a compiled action file is written
+- **THEN** it SHALL include YAML frontmatter with `compiled-at` (ISO 8601 timestamp), `specshift-version: 0.2.0-beta`, and `sources` (list of spec file paths that contributed requirement blocks)
+
+#### Scenario: Unresolvable requirement link produces warning
+
+- **GIVEN** a requirement link in SKILL.md references `docs/specs/missing.md#requirement-foo`
+- **AND** `docs/specs/missing.md` does not exist
+- **WHEN** the compilation step processes this link
+- **THEN** it SHALL log a warning naming the unresolvable link
+- **AND** SHALL continue compilation for remaining links
+
+#### Scenario: Dev sync script compiles without full finalize
+
+- **GIVEN** a developer has edited `docs/specs/artifact-pipeline.md`
+- **WHEN** the developer runs `bash scripts/compile-skills.sh`
+- **THEN** the script SHALL regenerate all compiled action files under `src/skills/specshift/actions/`
+- **AND** SHALL report a summary of actions compiled and requirements extracted
+
 ## Edge Cases
 
 - If an artifact file exists but is empty (0 bytes), the system SHALL treat it as incomplete.
@@ -348,6 +390,9 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **Auto-continue transitions:** The skill's post-artifact commit logic runs after each artifact individually.
 - **Worktree config with invalid path_pattern**: If `path_pattern` does not contain `{change}`, the system SHALL report an error during `specshift propose`.
 - **Worktree config with empty path_pattern**: SHALL default to `.claude/worktrees/{change}`.
+- **AOT compilation with no requirement links**: If a built-in action has no requirement links in SKILL.md, the compiled file SHALL contain only the instruction section (no requirements section).
+- **AOT compilation when WORKFLOW.md instruction is missing**: If the `## Action: <name>` section does not exist in WORKFLOW.md, the compilation SHALL skip that action and log a warning.
+- **Stale compiled files**: If specs are edited without recompilation, the compiled action files contain outdated requirements. Finalize always recompiles; developers can run the dev sync script manually.
 
 ## Assumptions
 

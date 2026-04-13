@@ -2,8 +2,8 @@
 order: 3
 category: reference
 status: stable
-version: 5
-lastModified: 2026-04-10
+version: 6
+lastModified: 2026-04-13
 ---
 ## Purpose
 
@@ -77,9 +77,9 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 
 ### Requirement: Inline Action Definitions
 
-WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links (clickable markdown links to specific spec requirements using the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`) SHALL live in the SKILL.md file, NOT in WORKFLOW.md. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the sub-agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
+WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links (clickable markdown links to specific spec requirements using the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`) SHALL live in the SKILL.md file as compiler input (annotated with `<!-- AOT-COMPILER-INPUT -->`), NOT in WORKFLOW.md. These links are consumed by the AOT compiler to produce compiled action files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the sub-agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
 
-For built-in actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and the requirement links from the SKILL.md, load the referenced requirement sections from specs, and spawn a sub-agent via the Agent tool with the instruction text as primary directive and the extracted requirements as behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links.
+For built-in actions, the router SHALL read the compiled action file at `actions/<action>.md` (relative to the skill directory), which contains the pre-extracted instruction and requirement blocks. The router SHALL spawn a sub-agent with the instruction text as primary directive and the pre-extracted requirements as behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links or compiled files.
 
 The system SHALL provide 4 built-in actions: `init` (project initialization and health check), `propose` (pipeline traversal for artifact generation), `apply` (task implementation with review.md generation), and `finalize` (post-approval changelog, docs, and version-bump). Consumer projects MAY define additional custom actions by adding them to the `actions` array and providing corresponding `## Action: <name>` body sections.
 
@@ -91,13 +91,12 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 - **THEN** it SHALL contain `### Instruction` with procedural guidance text
 - **AND** it SHALL NOT contain requirement links (those live in the SKILL.md)
 
-#### Scenario: Router executes built-in action as sub-agent
+#### Scenario: Router executes built-in action via compiled action file
 - **GIVEN** a user invokes `specshift apply`
-- **WHEN** the router reads `## Action: apply` from WORKFLOW.md body and requirement links from the SKILL.md
-- **THEN** it SHALL parse the requirement links from the SKILL.md
-- **AND** SHALL load each linked requirement section from the target spec files
-- **AND** SHALL read the `### Instruction` from the WORKFLOW.md body section
-- **AND** SHALL spawn a sub-agent with `### Instruction` text as primary directive and extracted requirements as behavioral context
+- **WHEN** the router processes the command
+- **THEN** it SHALL read the compiled action file at `actions/apply.md` (relative to the skill directory)
+- **AND** the compiled file SHALL contain the pre-extracted instruction and requirement blocks
+- **AND** the router SHALL spawn a sub-agent with the instruction as primary directive and requirements as behavioral context
 - **AND** the sub-agent SHALL NOT receive the router's full conversation history
 
 #### Scenario: Router executes custom action as sub-agent
@@ -121,7 +120,7 @@ The system SHALL provide a single router skill that handles all user-facing comm
 1. **Intent recognition**: Determine which command was invoked and validate it against the `actions` array
 2. **Change context detection** (for all actions except `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches, fall back to worktree convention if inside a worktree
 3. **WORKFLOW.md loading**: Read frontmatter for `templates_dir`, `pipeline`, and `actions`
-4. **Dispatch**: For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — read action definition from WORKFLOW.md, spawn sub-agent with instruction + requirement links. For custom actions — read action definition from WORKFLOW.md, execute instruction directly with change context (no requirement links, agent decides execution mode).
+4. **Dispatch**: For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — read compiled action file at `actions/<action>.md`, spawn sub-agent with pre-extracted instruction + requirements. For custom actions — read action definition from WORKFLOW.md, execute instruction directly with change context (no compiled files, agent decides execution mode).
 
 **User Story:** As a developer I want a single entry point that handles built-in and custom actions with shared logic, so that change detection and context loading happen once and consumer projects can extend the workflow.
 
@@ -138,10 +137,11 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **AND** SHALL traverse the `pipeline` array, generating artifacts in sequence
 - **AND** SHALL support checkpoint/resume (skip completed artifacts)
 
-#### Scenario: Router dispatches apply to sub-agent
+#### Scenario: Router dispatches apply via compiled action file
 - **GIVEN** the user invokes `specshift apply`
-- **WHEN** the router detects the change and reads `actions.apply`
-- **THEN** it SHALL spawn a sub-agent with the apply instruction and referenced specs
+- **AND** the compiled action file `actions/apply.md` exists in the skill directory
+- **WHEN** the router detects the change and reads the compiled file
+- **THEN** it SHALL spawn a sub-agent with the pre-extracted instruction and requirement blocks from the compiled file
 
 #### Scenario: Init runs without change context
 - **GIVEN** the user invokes `specshift init`
@@ -179,6 +179,72 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **THEN** the router SHALL report that `deploy` is not a recognized action
 - **AND** SHALL list the available actions from the `actions` array
 
+### Requirement: Compiled Action File Contract
+
+Each built-in action (propose, apply, finalize, init) SHALL have a corresponding compiled action file at `src/skills/specshift/actions/<action>.md`. The compiled file SHALL use markdown-with-YAML-frontmatter format containing:
+
+**YAML frontmatter**:
+- `compiled-at` (ISO 8601 timestamp of compilation)
+- `specshift-version` (version string from `src/.claude-plugin/plugin.json`)
+- `sources` (array of spec file paths that contributed requirement blocks)
+
+**Markdown body**:
+- `## Instruction` — the action's procedural instruction text, extracted from `.specshift/WORKFLOW.md` `## Action: <name> ### Instruction`
+- `## Requirements` — concatenated requirement blocks, each as `### Requirement: <Name>` with description, optional user story, and Gherkin scenarios
+
+Compiled action files are generated artifacts produced by the AOT compiler (`scripts/compile-skills.sh` or the finalize compilation step). They SHALL NOT be hand-edited. The requirement link lists in SKILL.md (annotated with `<!-- AOT-COMPILER-INPUT -->`) serve as the compilation manifest — they define which requirements belong to which action.
+
+**User Story:** As a plugin consumer I want pre-compiled action files shipped with the plugin, so that the router loads focused context from a single file instead of resolving links against spec files I don't have.
+
+#### Scenario: Compiled action file contains instruction and requirements
+
+- **GIVEN** a compiled action file `src/skills/specshift/actions/propose.md`
+- **WHEN** its content is inspected
+- **THEN** it SHALL contain YAML frontmatter with `compiled-at`, `specshift-version`, and `sources`
+- **AND** SHALL contain `## Instruction` with the propose action's instruction text
+- **AND** SHALL contain `## Requirements` with one `### Requirement:` block per linked requirement
+
+#### Scenario: Router reads compiled file instead of resolving links
+
+- **GIVEN** a user invokes `specshift apply` in a consumer project without `docs/specs/` files
+- **AND** the compiled action file `actions/apply.md` exists in the skill directory
+- **WHEN** the router loads the action context
+- **THEN** it SHALL read the compiled file for instruction and requirements
+- **AND** SHALL NOT attempt to read `docs/specs/` files
+
+#### Scenario: Compiled file missing falls back to JIT
+
+- **GIVEN** the compiled action file `actions/apply.md` does not exist
+- **WHEN** the router attempts to load the action context
+- **THEN** it SHALL fall back to reading the `### Instruction` from WORKFLOW.md and resolving requirement links from SKILL.md against `docs/specs/` files
+- **AND** SHALL log a warning that compiled action files are missing
+
+### Requirement: Dev Sync Utility
+
+The project SHALL provide a standalone bash script at `scripts/compile-skills.sh` that performs the same AOT compilation as the finalize step. The script SHALL be runnable from the repository root without requiring the full finalize pipeline. The script SHALL:
+
+1. Read requirement link sections from `src/skills/specshift/SKILL.md` (between `<!-- AOT-COMPILER-INPUT -->` markers)
+2. For each built-in action, extract the requirement links, resolve them against `docs/specs/` files, and read the action instruction from `.specshift/WORKFLOW.md`
+3. Write compiled action files to `src/skills/specshift/actions/`
+4. Print a summary: number of actions compiled, total requirements extracted, any warnings
+
+The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) — no external runtime dependencies (no Node.js, Python, etc.). This constraint matches the project's tech stack (Markdown, YAML, Bash).
+
+**User Story:** As a plugin developer I want a quick script to recompile action files after editing specs, so that I can test changes locally without running the full finalize pipeline.
+
+#### Scenario: Dev script compiles all built-in actions
+
+- **GIVEN** the developer runs `bash scripts/compile-skills.sh` from the repository root
+- **WHEN** the script completes
+- **THEN** it SHALL have written 4 compiled action files (propose.md, apply.md, finalize.md, init.md) to `src/skills/specshift/actions/`
+- **AND** SHALL print a summary of actions compiled and requirements extracted
+
+#### Scenario: Dev script uses no external runtimes
+
+- **GIVEN** a developer machine with bash but without Node.js or Python installed
+- **WHEN** the developer runs `bash scripts/compile-skills.sh`
+- **THEN** the script SHALL complete successfully using only bash and POSIX utilities
+
 ## Edge Cases
 
 - **WORKFLOW.md missing**: Router SHALL report an error and suggest running `specshift init`.
@@ -191,9 +257,13 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **Action with missing spec**: If a spec listed in the SKILL.md's requirement links does not exist at the referenced path, the sub-agent SHALL proceed without it and note the missing spec.
 - **Custom action without body section**: If a custom action is listed in the `actions` array but has no corresponding `## Action: <name>` body section in WORKFLOW.md, the router SHALL report the missing instruction and stop.
 - **Custom action with init skip**: Custom actions SHALL go through change context detection (like apply/finalize), not skip it like init. If a custom action does not need change context, the instruction text should handle that.
+- **Compiled action file missing**: If a compiled action file does not exist for a built-in action, the router SHALL fall back to JIT resolution (reading WORKFLOW.md instruction + resolving SKILL.md requirement links against spec files) and log a warning.
+- **Compiled file has no requirements section**: If a compiled file contains only the instruction (no requirements), the router SHALL proceed with the instruction only — this is valid for actions with no requirement links.
+- **Dev script run outside repo root**: The script SHALL detect that it is not in the repo root (no `src/skills/specshift/SKILL.md` found) and exit with an error message.
 
 ## Assumptions
 
 - Claude natively parses YAML frontmatter from markdown files when instructed to read and interpret them. <!-- ASSUMPTION: Claude YAML frontmatter parsing -->
 - The Agent tool is available in the execution environment and supports spawning sub-agents with custom prompts and bounded context. <!-- ASSUMPTION: Agent tool availability -->
 - Sub-agents spawned via the Agent tool can read and write files in the same working directory as the router. <!-- ASSUMPTION: Sub-agent file access -->
+- Compiled action files are kept in sync with specs via the finalize compilation step and/or the dev sync script. Stale compiled files are a developer responsibility between finalize runs. <!-- ASSUMPTION: Compiled file freshness -->
