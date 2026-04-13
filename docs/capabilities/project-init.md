@@ -38,7 +38,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 
 ### Fresh Project Initialization
 
-When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template (which includes `plugin-version` baked in at compile time), creates a CONSTITUTION.md placeholder, and generates CLAUDE.md from the bootstrap template. If GitHub tooling is available and authenticated, it offers to enable worktree mode and configure the GitHub repository for rebase-merge. The command validates that all files are in place and reports a summary. If CLAUDE.md already exists, init skips generation and preserves the existing file.
+When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template, creates a CONSTITUTION.md placeholder, and generates CLAUDE.md from the bootstrap template. If GitHub tooling is available and authenticated, it offers to enable worktree mode and configure the GitHub repository for rebase-merge. The command validates that all files are in place and reports a summary. If CLAUDE.md already exists, init skips generation and preserves the existing file.
 
 ### Codebase Scanning and Constitution Generation
 

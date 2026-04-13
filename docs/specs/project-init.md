@@ -2,7 +2,7 @@
 order: 12
 category: setup
 status: stable
-version: 5
+version: 4
 lastModified: 2026-04-13
 ---
 ## Purpose
