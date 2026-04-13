@@ -7,7 +7,7 @@ set -euo pipefail
 # Run from the repository root: bash scripts/compile-skills.sh
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
-REQUIREMENTS_MANIFEST="src/action-requirements.md"
+ACTIONS_SRC="src/actions"
 WORKFLOW=".specshift/WORKFLOW.md"
 PLUGIN_JSON="src/.claude-plugin/plugin.json"
 PLUGIN_ROOT=".claude"
@@ -20,8 +20,8 @@ if [[ ! -f "$SKILL_SRC" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$REQUIREMENTS_MANIFEST" ]]; then
-  echo "Error: $REQUIREMENTS_MANIFEST not found." >&2
+if [[ ! -d "$ACTIONS_SRC" ]]; then
+  echo "Error: $ACTIONS_SRC/ not found." >&2
   exit 1
 fi
 
@@ -54,31 +54,6 @@ total_actions=0
 total_requirements=0
 warnings=0
 
-# --- Parse action sections from SKILL.md ---
-
-parse_actions() {
-  local current_action=""
-  local in_requirements=false
-
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^##\ Action:\ ([a-z]+)\ —\ Requirements ]]; then
-      current_action="${BASH_REMATCH[1]}"
-      in_requirements=true
-      echo "ACTION:$current_action"
-    elif [[ "$in_requirements" == true && "$line" =~ ^##\  ]]; then
-      # Next heading at same level — end of this action's requirements
-      in_requirements=false
-      current_action=""
-    elif [[ "$in_requirements" == true && "$line" =~ ^-\ \[(.+)\]\((.+)\) ]]; then
-      local req_name="${BASH_REMATCH[1]}"
-      local req_path="${BASH_REMATCH[2]}"
-      # Split path from anchor
-      local file_path="${req_path%%#*}"
-      echo "LINK:$current_action|$req_name|$file_path"
-    fi
-  done < "$REQUIREMENTS_MANIFEST"
-}
-
 # --- Extract requirement block from spec file ---
 
 extract_requirement() {
@@ -96,13 +71,11 @@ extract_requirement() {
 
   while IFS= read -r line; do
     if [[ "$found" == false ]]; then
-      # Match exact heading or heading with parenthetical suffix
       if [[ "$line" == "### Requirement: $req_name" || "$line" == "### Requirement: $req_name ("* ]]; then
         found=true
         output="$line"
       fi
     else
-      # Stop at next ### or ## heading
       if [[ "$line" =~ ^###\  ]] || [[ "$line" =~ ^##\  ]]; then
         break
       fi
@@ -136,11 +109,9 @@ extract_instruction() {
       if [[ "$line" == "### Instruction" ]]; then
         found_instruction=true
       elif [[ "$line" =~ ^##\  ]]; then
-        # Hit another top-level section without finding ### Instruction
         break
       fi
     else
-      # Collecting instruction content — stop at next ## heading
       if [[ "$line" =~ ^##\  ]]; then
         break
       fi
@@ -154,34 +125,15 @@ extract_instruction() {
     return 1
   fi
 
-  # Trim leading blank lines
   echo "$output" | sed '/./,$!d'
 }
 
-# --- Main compilation ---
+# --- Main: loop over src/actions/*.md ---
 
-declare -A action_links  # action -> list of "name|file" pairs
-declare -A action_order  # preserve discovery order
-action_list=()
+for action_file in "$ACTIONS_SRC"/*.md; do
+  [[ -f "$action_file" ]] || continue
 
-while IFS= read -r parsed_line; do
-  if [[ "$parsed_line" =~ ^ACTION:(.+) ]]; then
-    action="${BASH_REMATCH[1]}"
-    action_links[$action]=""
-    action_list+=("$action")
-  elif [[ "$parsed_line" =~ ^LINK:([^|]+)\|([^|]+)\|(.+) ]]; then
-    action="${BASH_REMATCH[1]}"
-    req_name="${BASH_REMATCH[2]}"
-    file_path="${BASH_REMATCH[3]}"
-    if [[ -n "${action_links[$action]:-}" ]]; then
-      action_links[$action]="${action_links[$action]}"$'\n'"$req_name|$file_path"
-    else
-      action_links[$action]="$req_name|$file_path"
-    fi
-  fi
-done < <(parse_actions)
-
-for action in "${action_list[@]}"; do
+  action=$(basename "$action_file" .md)
   echo ""
   echo "Compiling action: $action ..."
 
@@ -190,8 +142,14 @@ for action in "${action_list[@]}"; do
   sources=()
   requirements_content=""
 
-  if [[ -n "${action_links[$action]:-}" ]]; then
-    while IFS='|' read -r req_name file_path; do
+  # Parse requirement links from this action file
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^-\ \[(.+)\]\((.+)\) ]]; then
+      req_name="${BASH_REMATCH[1]}"
+      req_path="${BASH_REMATCH[2]}"
+      # Resolve relative path (../../docs/specs/...) to repo-root-relative
+      file_path=$(echo "${req_path%%#*}" | sed 's|^\.\./\.\./||')
+
       ((link_count++)) || true
 
       # Track unique source files
@@ -206,13 +164,11 @@ for action in "${action_list[@]}"; do
         sources+=("$file_path")
       fi
 
-      block=$(extract_requirement "$file_path" "$req_name") || {
-        continue
-      }
+      block=$(extract_requirement "$file_path" "$req_name") || continue
       ((extracted_count++)) || true
       requirements_content="$requirements_content"$'\n\n'"$block"
-    done <<< "${action_links[$action]}"
-  fi
+    fi
+  done < "$action_file"
 
   # Extract instruction
   instruction=$(extract_instruction "$action") || {
