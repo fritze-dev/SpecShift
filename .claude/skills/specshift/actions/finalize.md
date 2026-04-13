@@ -1,12 +1,3 @@
----
-compiled-at: 2026-04-13T16:00:02Z
-specshift-version: 0.1.1-beta
-sources:
-  - docs/specs/release-workflow.md
-  - docs/specs/documentation.md
-  - docs/specs/change-workspace.md
----
-
 ## Instruction
 
 Post-approval finalization, executed sequentially:

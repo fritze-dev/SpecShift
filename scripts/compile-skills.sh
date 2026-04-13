@@ -30,15 +30,6 @@ if [[ ! -f "$WORKFLOW" ]]; then
   exit 1
 fi
 
-# --- Read version ---
-
-VERSION="unknown"
-if [[ -f "$PLUGIN_JSON" ]]; then
-  VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
-fi
-
-COMPILED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
 # --- Copy source files ---
 
 echo "Building release at $PLUGIN_ROOT/ ..."
@@ -139,7 +130,6 @@ for action_file in "$ACTIONS_SRC"/*.md; do
 
   link_count=0
   extracted_count=0
-  sources=()
   requirements_content=""
 
   # Parse requirement links from this action file
@@ -151,18 +141,6 @@ for action_file in "$ACTIONS_SRC"/*.md; do
       file_path=$(echo "${req_path%%#*}" | sed 's|^\.\./\.\./||')
 
       ((link_count++)) || true
-
-      # Track unique source files
-      already_tracked=false
-      for s in "${sources[@]:-}"; do
-        if [[ "$s" == "$file_path" ]]; then
-          already_tracked=true
-          break
-        fi
-      done
-      if [[ "$already_tracked" == false ]]; then
-        sources+=("$file_path")
-      fi
 
       block=$(extract_requirement "$file_path" "$req_name") || continue
       ((extracted_count++)) || true
@@ -176,21 +154,9 @@ for action_file in "$ACTIONS_SRC"/*.md; do
     continue
   }
 
-  # Build sources YAML array
-  sources_yaml=""
-  for s in "${sources[@]:-}"; do
-    sources_yaml="$sources_yaml"$'\n'"  - $s"
-  done
-
   # Write compiled action file
   outfile="$SKILL_DIR/actions/$action.md"
   {
-    echo "---"
-    echo "compiled-at: $COMPILED_AT"
-    echo "specshift-version: $VERSION"
-    echo "sources:$sources_yaml"
-    echo "---"
-    echo ""
     echo "## Instruction"
     echo ""
     echo "$instruction"

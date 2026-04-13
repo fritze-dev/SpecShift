@@ -1,12 +1,3 @@
----
-compiled-at: 2026-04-13T16:00:02Z
-specshift-version: 0.1.1-beta
-sources:
-  - docs/specs/project-init.md
-  - docs/specs/constitution-management.md
-  - docs/specs/quality-gates.md
----
-
 ## Instruction
 
 Project initialization and health check.

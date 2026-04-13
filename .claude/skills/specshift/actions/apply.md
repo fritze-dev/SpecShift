@@ -1,14 +1,3 @@
----
-compiled-at: 2026-04-13T16:00:02Z
-specshift-version: 0.1.1-beta
-sources:
-  - docs/specs/task-implementation.md
-  - docs/specs/artifact-pipeline.md
-  - docs/specs/quality-gates.md
-  - docs/specs/human-approval-gate.md
-  - docs/specs/change-workspace.md
----
-
 ## Instruction
 
 Implement tasks from tasks.md, then generate review.md.

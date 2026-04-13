@@ -1,11 +1,3 @@
----
-compiled-at: 2026-04-13T16:00:02Z
-specshift-version: 0.1.1-beta
-sources:
-  - docs/specs/artifact-pipeline.md
-  - docs/specs/change-workspace.md
----
-
 ## Instruction
 
 Create change workspace if needed, then traverse the pipeline generating artifacts.
