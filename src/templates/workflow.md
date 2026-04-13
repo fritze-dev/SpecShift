@@ -73,6 +73,6 @@ After review.md PASS, commit and push implementation. When auto_approve is false
 Post-approval finalization, executed sequentially:
 1. Changelog: incremental entries from completed change
 2. Docs: regenerate affected capability docs, ADRs, README
-3. Version-bump: if src/.claude-plugin/plugin.json exists, increment patch and sync .claude-plugin/marketplace.json; otherwise skip silently
+3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
 On error in one step: continue with next, report failures at end.
 Check review.md exists with verdict PASS before proceeding.

@@ -8,6 +8,11 @@ instruction: |
   Generate project-specific rules from codebase analysis.
   Fill in each section based on what you discover in the code.
   Use REVIEW markers for items needing user confirmation.
+  Version-bump detection: scan for version files (package.json, pyproject.toml,
+  Cargo.toml, plugin.json, setup.cfg, version.txt, etc.). If found, generate a
+  version-bump convention in the Conventions section describing which file(s) to
+  bump and how (e.g., "increment patch in package.json"). If no version file is
+  found, omit the version-bump convention — finalize will skip the step.
 ---
 # Project Constitution
 
@@ -29,8 +34,9 @@ instruction: |
 
 ## Conventions
 (Naming, commits, branching, file organization.
- Note: the finalize version-bump step only runs when src/.claude-plugin/plugin.json exists.
- Consumer projects without plugin manifests skip version-bump silently.)
+ If the codebase has a version file, include a version-bump convention
+ describing which file to bump and how. Finalize step 3 follows this
+ convention — if none exists, version-bump is skipped.)
 
 ## Standard Tasks
 
