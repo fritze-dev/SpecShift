@@ -5,7 +5,7 @@ branch: fix-reinit-and-finalize-friction
 worktree: .claude/worktrees/fix-reinit-and-finalize-friction
 capabilities:
   new: []
-  modified: [project-init, release-workflow]
+  modified: [project-init]
   removed: []
 ---
 -->
@@ -18,10 +18,10 @@ Two friction issues discovered during dogfooding: (1) CLAUDE.md standard section
 - Add CLAUDE.md section-level checking to the Template Merge on Re-Init requirement — report missing standard sections as WARNING without modifying user content
 - Update the "CLAUDE.md skipped when already exists" scenario to include section checking
 - Add new scenario for missing standard section detection
-- Add `## Edge Cases` section to release-workflow spec (porting from capability doc)
-- Conditionalize finalize version-bump step in `src/templates/workflow.md` and `.specshift/WORKFLOW.md`
-- Add consumer-project skip clause to version-bump convention in `.specshift/CONSTITUTION.md`
-- Fix template synchronization convention direction (`src/templates/` is authoritative, not `.specshift/`)
+- Make consumer finalize version-bump constitution-driven in `src/templates/workflow.md` — follows the version-bump convention from the project's constitution, skips if none defined
+- Add version-bump detection instructions to consumer constitution template (`src/templates/constitution.md`) — init scans for version files and auto-generates a matching convention
+- Add version file detection to project-init spec's First-Run Codebase Scan and Constitution Generation requirements
+- Fix template synchronization convention direction in `.specshift/CONSTITUTION.md` (`src/templates/` is authoritative, not `.specshift/`)
 - Add `## File Ownership` section to CLAUDE.md documenting `src/` vs `.specshift/` vs `docs/` distinction
 
 ## Capabilities
@@ -32,8 +32,7 @@ N/A — no new specs proposed.
 
 ### Modified Capabilities
 
-- `project-init`: Add CLAUDE.md section-level check to Template Merge on Re-Init requirement; update CLAUDE.md Bootstrap scenarios
-- `release-workflow`: Add Edge Cases section with consumer-project skip behavior
+- `project-init`: Add CLAUDE.md section-level check to Template Merge on Re-Init requirement; update CLAUDE.md Bootstrap scenarios; add version file detection to Codebase Scan and Constitution Generation requirements
 
 ### Removed Capabilities
 
@@ -42,26 +41,27 @@ N/A
 ### Consolidation Check
 
 1. Existing specs reviewed: project-init, release-workflow, artifact-pipeline, change-workspace, constitution-management, documentation, human-approval-gate, quality-gates, spec-format, task-implementation, test-generation, three-layer-architecture, workflow-contract, roadmap-tracking
-2. Overlap assessment: Both changes modify existing specs — no new specs needed. CLAUDE.md checking extends project-init's existing Template Merge requirement. Edge cases extend release-workflow's existing version-bump requirements.
+2. Overlap assessment: Changes modify project-init spec only — no new specs needed. CLAUDE.md checking extends project-init's existing Template Merge requirement. Version file detection extends project-init's existing Codebase Scan and Constitution Generation requirements. Consumer version-bump is handled via constitution template + workflow template, not spec changes.
 3. Merge assessment: N/A — no new capabilities proposed.
 
 ## Impact
 
-- `docs/specs/project-init.md` — 3 edits (new paragraph, updated scenario, new scenario)
-- `docs/specs/release-workflow.md` — new Edge Cases section
-- `src/templates/workflow.md` — conditional version-bump in finalize instruction
-- `.specshift/WORKFLOW.md` — mirror conditional version-bump
-- `.specshift/CONSTITUTION.md` — consumer skip clause + fix sync direction
+- `docs/specs/project-init.md` — CLAUDE.md section check paragraph + scenario; version file detection in Codebase Scan + Constitution Generation
+- `src/templates/workflow.md` — constitution-driven version-bump in finalize instruction
+- `src/templates/constitution.md` — version-bump detection instructions in frontmatter + Conventions section
+- `.specshift/CONSTITUTION.md` — fix template sync direction
 - `CLAUDE.md` — new File Ownership section
 
 ## Scope & Boundaries
 
 **In scope:**
-- Spec-level requirement changes for project-init and release-workflow
-- WORKFLOW.md and CONSTITUTION.md instruction/convention updates
+- Spec-level requirement changes for project-init (CLAUDE.md check, version file detection, constitution generation)
+- Consumer template updates (`src/templates/workflow.md`, `src/templates/constitution.md`)
+- `.specshift/CONSTITUTION.md` template sync direction fix
 - CLAUDE.md file ownership documentation
 
 **Out of scope:**
-- Consumer constitution template (`src/templates/constitution.md`) — placeholder skeleton, no version-bump convention
+- `docs/specs/release-workflow.md` — no spec changes needed; consumer version-bump is handled via constitution-driven templates
+- `.specshift/WORKFLOW.md` — project instance stays unconditional (this project has its own version-bump convention)
 - Capability docs — regenerated by `specshift finalize`
 - Any executable code changes (this project is Markdown/YAML artifacts)
