@@ -490,9 +490,59 @@ The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verif
 
 ### Requirement: Fix Loop
 
-Verify issues SHALL be resolved via a code fix or a spec update before re-verification. When verification finds CRITICAL or WARNING issues, the user SHALL address each issue by either (a) fixing the code to match the spec, or (b) updating the spec or design to match the intended implementation. After fixes are applied, the system SHALL regenerate `review.md` to confirm resolution. The system SHALL support iterative fix-verify cycles until all CRITICAL issues are resolved and the user is satisfied with remaining warnings. The bidirectional feedback principle applies: when implementation reveals that a spec or design is wrong, updating the spec is a valid resolution path.
+Verify issues and user correction requests SHALL be resolved via a tiered re-entry process before re-verification. Before applying any fix, the system SHALL classify the correction into one of three tiers and apply the matching re-entry depth:
 
-**User Story:** As a developer I want a structured fix-verify loop, so that every verification issue is explicitly resolved -- either by fixing the code or by updating the spec -- before the change is considered complete.
+**Tier 1 — Tweak**: The correction changes a value, line, or detail *within* the current approach (wrong value, typo, missing line, formatting error). Re-entry depth: fix in place, then regenerate `review.md`.
+
+**Tier 2 — Design Pivot**: The correction changes *which files are modified* or *which approach/abstraction is used*, but requirements are still correct (wrong file edited, wrong architectural pattern, wrong abstraction level). Re-entry depth: update `design.md` to reflect the corrected approach, discard and re-generate the affected task sections in `tasks.md`, re-implement from the updated design, then regenerate `review.md`.
+
+**Tier 3 — Scope Change**: The correction changes *which requirements apply* or *who the target audience is* (wrong capability scope, missing requirement, wrong consumer model). Re-entry depth: update `docs/specs/<capability>.md` and `proposal.md` to reflect the corrected scope, update `design.md`, re-generate affected tasks, re-implement fully, then regenerate `review.md`.
+
+**Detection signals** — the system SHALL check these before classifying a correction:
+- A completed task needs to be reverted or undone → Design Pivot or Scope Change
+- A success metric from `design.md` no longer applies to the corrected implementation → Design Pivot or Scope Change
+- A design decision in `design.md` is factually reversed by the correction → Design Pivot
+- The correction touches files outside those listed in `design.md` Architecture & Components → Design Pivot
+- The correction reveals that a listed requirement does not apply to the correct audience → Scope Change
+- More than two incremental fix commits on the same issue → probable Design Pivot or Scope Change
+
+**Artifact staleness rule**: For Tier 2 and Tier 3 corrections, ALL stale change artifacts SHALL be updated before re-implementing. A stale artifact is any change file (design.md, tasks.md, preflight.md, review.md) that still describes the original (wrong) approach. The system SHALL NOT leave stale artifacts in the change directory that contradict the corrected implementation.
+
+The bidirectional feedback principle applies at all tiers: updating a spec or design to match the intended implementation is always a valid resolution path.
+
+After all fixes are applied at the appropriate re-entry depth, the system SHALL regenerate `review.md` to confirm resolution. The system SHALL support iterative fix-verify cycles until all CRITICAL issues are resolved and the user is satisfied with remaining warnings.
+
+**User Story:** As a developer I want a structured fix-verify loop with explicit re-entry tiers, so that approach changes trigger artifact updates and clean re-implementation instead of patch commits on top of a wrong design.
+
+#### Scenario: Classify correction as Tweak — fix in place
+
+- **GIVEN** a review correction that changes a wrong value in an edited file (e.g., wrong version string, missing newline)
+- **AND** the approach and affected files remain the same
+- **WHEN** the system classifies the correction
+- **THEN** it SHALL identify this as Tier 1 — Tweak
+- **AND** SHALL fix the value in place
+- **AND** SHALL regenerate `review.md` after the fix
+
+#### Scenario: Classify correction as Design Pivot — update design and re-implement
+
+- **GIVEN** a review correction that points out the wrong file was edited (e.g., `CONSTITUTION.md` was changed instead of `src/templates/constitution.md`)
+- **AND** the requirements are still correct, only the implementation target changed
+- **WHEN** the system checks detection signals and finds "correction touches files outside those listed in design.md Architecture & Components"
+- **THEN** it SHALL identify this as Tier 2 — Design Pivot
+- **AND** SHALL update `design.md` Architecture & Components to reflect the correct file targets
+- **AND** SHALL discard and re-generate the affected task sections
+- **AND** SHALL re-implement the affected tasks from the corrected design
+- **AND** SHALL regenerate `review.md` after re-implementation
+
+#### Scenario: Design Pivot updates all stale artifacts
+
+- **GIVEN** a Design Pivot correction has occurred
+- **AND** the existing `review.md` in the change directory still shows PASS against the original (wrong) approach
+- **WHEN** the system applies the Tier 2 re-entry
+- **THEN** it SHALL update `design.md` to reflect the corrected approach
+- **AND** SHALL update `tasks.md` affected sections to remove old tasks and add corrected ones
+- **AND** SHALL delete `review.md` (stale) before re-implementing
+- **AND** SHALL generate a new `review.md` from the corrected implementation
 
 #### Scenario: Fix code to resolve critical issue
 

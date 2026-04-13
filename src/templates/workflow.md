@@ -59,8 +59,8 @@ Implement tasks from tasks.md, then generate review.md.
 QA loop: implement → generate review.md → fix if FAIL → regenerate review.md → until PASS.
 Delete existing review.md before starting implementation.
 When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause and auto-continue to finalize.
-Fix loop: after any fix, regenerate review.md before presenting to user.
-Artifact freshness: update preflight/design if fix resolves flagged issues.
+Fix loop: before applying any fix, classify the correction — Tweak (wrong value/typo/missing line → fix in place), Design Pivot (wrong files/approach/abstraction → update design.md + discard affected tasks → re-implement), or Scope Change (wrong requirements/target audience → update specs + design → full re-implementation). After any fix, regenerate review.md before presenting to user.
+Artifact staleness: for Design Pivot or Scope Change corrections, update ALL stale change artifacts (design.md, tasks.md affected sections, preflight.md if needed) before re-implementing. A stale artifact is one that still describes the original wrong approach. Specs must match implementation before proceeding.
 Standard Tasks (post-implementation section) are NOT part of apply.
 Constitution standard tasks: pre-merge executed during post-apply, post-merge remain as reminders.
 Before committing, mark all standard task checkboxes as complete except post-merge.
