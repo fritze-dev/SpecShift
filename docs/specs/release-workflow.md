@@ -370,7 +370,7 @@ The repository SHALL maintain a clear separation between plugin source files (in
 The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compilation step after changelog generation, documentation updates, and version bump. The compilation step SHALL:
 
 1. **Copy source files**: Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md` and `src/templates/` → `.claude/skills/specshift/templates/`, creating the self-contained release directory.
-2. **Parse requirement links**: Read the built-in action requirement link sections from `src/skills/specshift/SKILL.md` (annotated with `<!-- AOT-COMPILER-INPUT -->`). Each section lists markdown anchor links in the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`.
+2. **Parse requirement links**: Read the `### Action: <name> — Requirements` sections from `src/skills/specshift/SKILL.md`. Each section lists markdown anchor links in the format `[Requirement Name](docs/specs/<spec>.md#requirement-<slug>)`.
 3. **Extract requirement blocks**: For each link, read the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
 4. **Read action instruction**: For each built-in action, read the `### Instruction` content from the corresponding `## Action: <name>` section in `.specshift/WORKFLOW.md`.
 5. **Assemble compiled action file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing YAML frontmatter (`compiled-at` timestamp, `specshift-version` from plugin.json, `sources` list of spec files used) followed by `## Instruction` (from WORKFLOW.md) and `## Requirements` (concatenated extracted blocks).
@@ -419,7 +419,7 @@ Each built-in action (propose, apply, finalize, init) SHALL have a corresponding
 - `## Instruction` — the action's procedural instruction text, extracted from `.specshift/WORKFLOW.md` `## Action: <name> ### Instruction`
 - `## Requirements` — concatenated requirement blocks, each as `### Requirement: <Name>` with description, optional user story, and Gherkin scenarios
 
-Compiled action files are generated artifacts produced by the AOT compiler. They SHALL NOT be hand-edited. The requirement link lists in SKILL.md (annotated with `<!-- AOT-COMPILER-INPUT -->`) serve as the compilation manifest — they define which requirements belong to which action.
+Compiled action files are generated artifacts produced by the AOT compiler. They SHALL NOT be hand-edited. The `### Action: <name> — Requirements` sections in SKILL.md serve as the compilation manifest — they define which requirements belong to which action.
 
 **User Story:** As a plugin consumer I want pre-compiled action files shipped with the plugin, so that the router loads focused context from a single file instead of resolving links against spec files I don't have.
 

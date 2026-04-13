@@ -35,7 +35,7 @@ docs/specs/*.md ─────────────────┤          
 
 | Datei | Änderung |
 |-------|----------|
-| `src/skills/specshift/SKILL.md` | Schritt 4: Liest kompilierte Dateien aus `actions/` statt Links aufzulösen. Markierung der Link-Sektionen mit `<!-- AOT-COMPILER-INPUT -->`. Entfernung der JIT-Logik für Standard-Aktionen. |
+| `src/skills/specshift/SKILL.md` | Schritt 4: Liest kompilierte Dateien aus `actions/` statt Links aufzulösen. Entfernung der JIT-Logik für Standard-Aktionen. Die bestehenden `### Action: <name> — Requirements` Sektionen dienen als Compiler-Input. |
 | `.specshift/WORKFLOW.md` | Ergänzung des Compilation-Steps in der finalize Instruction. |
 | `.specshift/CONSTITUTION.md` | Neue Architektur-Regel: `.claude/skills/specshift/` ist das offizielle Release-Verzeichnis und MUSS in Git eingecheckt werden. |
 | `.gitignore` | Sicherstellen, dass `.claude/skills/specshift/` nicht ignoriert wird (Whitelist: `!/.claude/skills/`). |
@@ -56,7 +56,7 @@ docs/specs/*.md ─────────────────┤          
 ### Compiler Algorithmus (scripts/compile-skills.sh)
 
 1. **Struktur kopieren**: `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md` kopieren. `src/templates/` nach `.claude/skills/specshift/templates/` spiegeln.
-2. **SKILL.md parsen**: Text zwischen `<!-- AOT-COMPILER-INPUT -->` Markern extrahieren, um die Mapping-Liste (Aktion → Specs) zu erhalten.
+2. **SKILL.md parsen**: Die `### Action: <name> — Requirements` Sektionen finden und die Mapping-Liste (Aktion → Spec-Links) daraus extrahieren.
 3. **Extraktion**: Für jeden Link die Ziel-Spec in `docs/specs/` lesen und exakt den Block unter `### Requirement: <Name>` extrahieren (bis zum nächsten Heading gleicher oder höherer Ebene).
 4. **Instructions lesen**: Die `### Instruction` Texte aus der `.specshift/WORKFLOW.md` für die jeweilige Aktion extrahieren.
 5. **Version lesen**: `version` aus `src/.claude-plugin/plugin.json` parsen.
