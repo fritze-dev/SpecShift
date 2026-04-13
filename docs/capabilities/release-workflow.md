@@ -2,7 +2,7 @@
 title: "Release Workflow"
 capability: "release-workflow"
 description: "Version management, automated releases, plugin distribution, changelog generation, and consumer update process."
-lastUpdated: "2026-04-13"
+lastUpdated: "2026-04-08"
 ---
 # Release Workflow
 
