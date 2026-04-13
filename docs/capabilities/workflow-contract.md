@@ -52,7 +52,7 @@ Custom actions listed in the `actions` array have their `## Action: <name>` sect
 
 ### Template-Version Bump Discipline
 
-When a plugin maintainer modifies the content of any Smart Template under `src/templates/`, the `template-version` field in that file's YAML frontmatter must be incremented before merge. Whitespace-only changes do not require a version bump. When multiple templates change in one PR, each independently gets its version incremented by 1. New template files start at `template-version: 1`. This discipline is enforced by preflight (dimension H, BLOCKED severity) and finalize (validation before compilation).
+When a plugin maintainer modifies the content of any Smart Template under `src/templates/`, the `template-version` field in that file's YAML frontmatter must be incremented before merge. Whitespace-only changes do not require a version bump. When multiple templates change in one PR, each independently gets its version incremented by 1. New template files start at `template-version: 1`. This discipline is enforced by finalize (validation before compilation).
 
 ### Router Validates Actions Dynamically
 

@@ -7,13 +7,13 @@ lastModified: 2026-04-13
 ---
 ## Purpose
 
-Provides `specshift propose` for pre-implementation quality checks across eight dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `review.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
+Provides `specshift propose` for pre-implementation quality checks across seven dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `review.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
 
 ## Requirements
 
 ### Requirement: Preflight Quality Check
 
-The system SHALL run a mandatory quality review before task creation when the user invokes `specshift propose`. The preflight check SHALL cover eight dimensions: (A) Traceability Matrix -- mapping each capability from the proposal's frontmatter `capabilities` field (falling back to parsing the Capabilities section if frontmatter is absent) to its corresponding spec at `docs/specs/<capability>.md` and verifying that the spec has been updated to reflect the proposed changes, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, (F) Marker Audit -- auditing all assumption and review markers from spec.md and design.md, (G) Draft Spec Validation -- verifying that all specs with `status: draft` have a `change` value matching the current change directory name, and (H) Template-Version Freshness -- for changes that modify files under `src/templates/`, verifying that each modified template's `template-version` field has been incremented. Specs with `status: draft` belonging to a different change SHALL be flagged as BLOCKED. Specs with `status: draft` and no `change` field SHALL be flagged as WARNING. The Marker Audit SHALL:
+The system SHALL run a mandatory quality review before task creation when the user invokes `specshift propose`. The preflight check SHALL cover seven dimensions: (A) Traceability Matrix -- mapping each capability from the proposal's frontmatter `capabilities` field (falling back to parsing the Capabilities section if frontmatter is absent) to its corresponding spec at `docs/specs/<capability>.md` and verifying that the spec has been updated to reflect the proposed changes, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, (F) Marker Audit -- auditing all assumption and review markers from spec.md and design.md, and (G) Draft Spec Validation -- verifying that all specs with `status: draft` have a `change` value matching the current change directory name. Specs with `status: draft` belonging to a different change SHALL be flagged as BLOCKED. Specs with `status: draft` and no `change` field SHALL be flagged as WARNING. The Marker Audit SHALL:
 1. Collect all `<!-- ASSUMPTION: ... -->` tags and verify each has an accompanying visible list item. Assumptions written entirely inside HTML comments (no visible text) SHALL be flagged as format violations.
 2. Rate each valid assumption as Acceptable Risk, Needs Clarification, or Blocking.
 3. Scan for any remaining `<!-- REVIEW -->` or `<!-- REVIEW: ... -->` markers. Any REVIEW marker found SHALL be rated as Blocking, because REVIEW markers must be resolved before implementation.
@@ -30,7 +30,7 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **AND** all requirements have scenarios, no gaps are detected, all assumptions have visible text, and no REVIEW markers remain
 - **WHEN** the user invokes `specshift propose add-user-auth`
 - **THEN** the system reads constitution.md, all change artifacts, and existing specs
-- **AND** produces `preflight.md` covering all eight dimensions
+- **AND** produces `preflight.md` covering all seven dimensions
 - **AND** the verdict is "PASS"
 - **AND** the summary shows 0 blockers, 0 warnings
 
@@ -81,27 +81,6 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **GIVEN** a spec with `status: draft` but no `change` field
 - **WHEN** the user invokes `specshift propose`
 - **THEN** the Draft Spec Validation SHALL flag it as WARNING: "Draft spec with no change owner"
-
-#### Scenario: Preflight detects unbumped template-version
-
-- **GIVEN** a change that modifies the content of `src/templates/changes/tasks.md`
-- **AND** the file's `template-version` field has not been incremented from its value on the base branch
-- **WHEN** the user invokes `specshift propose`
-- **THEN** the Template-Version Freshness dimension SHALL flag the file as BLOCKED: "Template src/templates/changes/tasks.md content changed but template-version not incremented (still N)"
-- **AND** SHALL recommend incrementing the `template-version` field
-
-#### Scenario: Preflight passes when template-version is bumped
-
-- **GIVEN** a change that modifies content in `src/templates/changes/tasks.md`
-- **AND** the `template-version` field has been incremented (e.g., from 2 to 3)
-- **WHEN** the user invokes `specshift propose`
-- **THEN** the Template-Version Freshness dimension SHALL report no issues for this file
-
-#### Scenario: Preflight skips template-version check when no templates changed
-
-- **GIVEN** a change that does not modify any files under `src/templates/`
-- **WHEN** the user invokes `specshift propose`
-- **THEN** the Template-Version Freshness dimension SHALL report "No template changes detected — skipped"
 
 #### Scenario: Required artifacts missing
 
@@ -459,9 +438,9 @@ If no template files were modified in the change, this check SHALL be skipped si
 - **Task description too generic for diff matching**: If a task description is too vague to produce meaningful file path matches (e.g., "Clean up code"), the system SHALL skip that task's diff mapping and note it as inconclusive rather than raising a false warning.
 - **Change artifacts in diff**: Files under `.specshift/changes/` and `docs/specs/` are expected in the diff for any change and SHALL be excluded from unintended change detection (they are always traceable to the change itself).
 - **Diff includes only artifact files**: When a change only modifies specs or planning artifacts (no code files), diff-based checks still apply — task-diff mapping verifies spec edits correspond to tasks, and scope checks verify no unrelated specs were modified.
-- **Template-version field missing from modified template**: If a modified template under `src/templates/` has no `template-version` field, preflight and finalize SHALL flag it as BLOCKED — the field is required by the Smart Template Format requirement.
-- **No merge base for template-version comparison**: If no merge base is available, preflight and finalize SHALL skip the template-version freshness check and note "No merge base available — template-version check skipped."
-- **Template file renamed or moved**: If a template file was renamed or moved (deleted at old path, created at new path), preflight and finalize SHALL compare the file at the new path against the base-branch template at the previous path and SHALL require the new file's `template-version` to be greater than the previous file's `template-version`; a rename or move alone does not reset the version to `1`.
+- **Template-version field missing from modified template**: If a modified template under `src/templates/` has no `template-version` field, finalize SHALL flag it as BLOCKED — the field is required by the Smart Template Format requirement.
+- **No merge base for template-version comparison**: If no merge base is available, finalize SHALL skip the template-version freshness check and note "No merge base available — template-version check skipped."
+- **Template file renamed or moved**: If a template file was renamed or moved (deleted at old path, created at new path), finalize SHALL compare the file at the new path against the base-branch template at the previous path and SHALL require the new file's `template-version` to be greater than the previous file's `template-version`; a rename or move alone does not reset the version to `1`.
 
 ## Assumptions
 

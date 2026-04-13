@@ -7,9 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 - Template-Version Bump Discipline requirement in workflow-contract spec — plugin maintainers SHALL increment `template-version` when Smart Template content changes
-- Preflight dimension (H) Template-Version Freshness — detects unbumped template-version fields when `src/templates/` files have content changes (BLOCKED severity)
 - Finalize template-version validation — safety net check before skill compilation stops if template-versions are unbumped
-- Section H added to preflight template with step-by-step detection instructions
 - Finalize instruction updated with template-version validation step (step 4) before compilation
 
 ### Fixed
