@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Template-Version Enforcement in Compilation
+
+### Added
+- Template-version validation in `scripts/compile-skills.sh` — compilation now fails if a template under `src/templates/` was modified (vs `main`) without bumping its `template-version` field
+- "Template-version discipline" convention in `.specshift/CONSTITUTION.md` documenting the enforcement rule
+
+### Changed
+- Finalize instruction in `.specshift/WORKFLOW.md` updated to mention template-version enforcement during compilation
+
+### Fixed
+- Template-version bumps are no longer reliant on manual memory — the compilation step centrally enforces the requirement (Closes #17)
+
 ## 2026-04-13 — Plugin Version Check
 
 ### Added
