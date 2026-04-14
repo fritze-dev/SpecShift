@@ -6,14 +6,14 @@ N/A — no shared infrastructure needed.
 
 ## 2. Implementation
 
-- [ ] 2.1. Add `## Planning` section to CLAUDE.md between `## Workflow` and `## Knowledge Management`, with scope commitment instruction
+- [x] 2.1. Add `## Planning` section to CLAUDE.md between `## Workflow` and `## Knowledge Management`, with scope commitment instruction
 
 ## 3. QA Loop & Human Approval
-- [ ] 3.1. Metric Check:
-  - [ ] CLAUDE.md contains a `## Planning` section with scope commitment instructions — PASS / FAIL
-  - [ ] Instruction requires visible scope summary (in-scope, out-of-scope, non-goals) — PASS / FAIL
-  - [ ] Instruction requires user confirmation of scope before proceeding — PASS / FAIL
-- [ ] 3.2. Auto-Verify: generate review.md using the review template.
+- [x] 3.1. Metric Check:
+  - [x] CLAUDE.md contains a `## Planning` section with scope commitment instructions — PASS
+  - [x] Instruction requires visible scope summary (in-scope, out-of-scope, non-goals) — PASS
+  - [x] Instruction requires user confirmation of scope before proceeding — PASS
+- [x] 3.2. Auto-Verify: generate review.md using the review template.
 - [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.4. Fix Loop: Classify each correction before fixing. Update all stale artifacts before re-implementing. Specs must match code before proceeding.
   - **Tweak**: wrong value/typo → fix in place
