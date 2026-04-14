@@ -1,13 +1,13 @@
 ---
 title: "Task Implementation"
 capability: "task-implementation"
-description: "Sequential task execution with progress tracking, review.md generation, and standard tasks separation"
+description: "Sequential task execution with progress tracking, audit.md generation, and standard tasks separation"
 lastUpdated: "2026-04-10"
 ---
 
 # Task Implementation
 
-Works through your task checklist systematically via `specshift apply`, implementing each item, tracking progress with clear counts, generating a review.md verification artifact, and pausing whenever a blocker or ambiguity is encountered.
+Works through your task checklist systematically via `specshift apply`, implementing each item, tracking progress with clear counts, generating an audit.md verification artifact, and pausing whenever a blocker or ambiguity is encountered.
 
 ## Purpose
 
@@ -15,7 +15,7 @@ Manually implementing a long task list is tedious and error-prone -- items get s
 
 ## Rationale
 
-Tasks are implemented sequentially in the order listed because the task list represents the recommended implementation sequence, and each task may depend on changes made by earlier ones. The system reads all context files (proposal, specs, design, tasks) from the change directory and the apply instruction from WORKFLOW.md before starting, ensuring every implementation decision is grounded in the approved design. After implementation, the QA loop's Metric Check and Auto-Verify steps run automatically without pausing, producing a `review.md` artifact in the change directory. This persistent artifact replaces the previous transient verify report, making verification results PR-visible and not skippable. The first human gate is User Testing.
+Tasks are implemented sequentially in the order listed because the task list represents the recommended implementation sequence, and each task may depend on changes made by earlier ones. The system reads all context files (proposal, specs, design, tasks) from the change directory and the apply instruction from WORKFLOW.md before starting, ensuring every implementation decision is grounded in the approved design. After implementation, the QA loop's Metric Check and Auto-Verify steps run automatically without pausing, producing an `audit.md` artifact in the change directory. This persistent artifact replaces the previous transient verify report, making verification results PR-visible and not skippable. The first human gate is User Testing.
 
 ## Features
 
@@ -24,7 +24,7 @@ Tasks are implemented sequentially in the order listed because the task list rep
 - **Resume from where you left off** -- skips already-completed tasks and starts from the first pending one
 - **Pause on blockers** -- stops and asks for clarification when a task is ambiguous, a design issue is discovered, or a technical constraint prevents progress
 - **Direct spec editing** -- specs at `docs/specs/` can be modified during implementation when task requirements include spec changes
-- **review.md generation** -- after all tasks complete, the QA loop automatically generates `review.md` in the change directory as a persistent verification artifact
+- **audit.md generation** -- after all tasks complete, the QA loop automatically generates `audit.md` in the change directory as a persistent verification artifact
 - **Standard tasks separation** -- post-implementation steps (changelog, docs, version bump, push) are tracked as checkboxes but not executed by apply. Pre-merge extras run during the post-apply workflow. Post-merge reminders appear as plain bullets.
 - **Parallelizable task markers** -- tasks marked with `[P]` indicate they can be done in parallel. The marker is informational only.
 - **Automated QA steps** -- Metric Check and Auto-Verify run without pausing. The first human gate is User Testing.
@@ -47,9 +47,9 @@ The system pauses immediately when it encounters an ambiguous task (presenting t
 
 Progress is displayed as "N/M tasks complete" at every key moment: when a session starts, after each task is finished, when a pause occurs, and in the final summary. When all tasks are done, the system displays the completion count.
 
-### QA Loop and review.md Generation
+### QA Loop and audit.md Generation
 
-When all implementation tasks are complete, the QA Loop's Metric Check and Auto-Verify steps run automatically without pausing. The system generates `review.md` in the change directory using the review template -- this is a persistent, PR-visible verification artifact. The first point where the system stops and waits for your input is User Testing.
+When all implementation tasks are complete, the QA Loop's Metric Check and Auto-Verify steps run automatically without pausing. The system generates `audit.md` in the change directory using the audit template -- this is a persistent, PR-visible verification artifact. The first point where the system stops and waits for your input is User Testing.
 
 ### Spec Edits During Implementation
 

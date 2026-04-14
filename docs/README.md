@@ -60,7 +60,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 | Capability | Description |
 |---|---|
 | [Constitution Management](capabilities/constitution-management.md) | Constitution lifecycle, codebase observation, and global context |
-| [Quality Gates](capabilities/quality-gates.md) | Preflight checks, review.md verification, and docs drift detection |
+| [Quality Gates](capabilities/quality-gates.md) | Preflight checks, audit.md verification, and docs drift detection |
 | [Task Implementation](capabilities/task-implementation.md) | Sequential task execution with progress tracking |
 | [Test Generation](capabilities/test-generation.md) | Automated test stubs and manual test plans from Gherkin scenarios |
 | [Human Approval Gate](capabilities/human-approval-gate.md) | QA loop with tiered fix-verify cycles and mandatory approval |

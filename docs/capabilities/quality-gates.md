@@ -1,30 +1,30 @@
 ---
 title: "Quality Gates"
 capability: "quality-gates"
-description: "Preflight checks during propose, review.md verification during apply, and docs drift detection during init"
+description: "Preflight checks during propose, audit.md verification during apply, and docs drift detection during init"
 lastUpdated: "2026-04-10"
 ---
 
 # Quality Gates
 
-Three quality gates guard every change: preflight checks your specs and design during `specshift propose` before tasks are created, review.md verification checks your implementation during `specshift apply` after coding is done, and documentation drift detection runs during `specshift init` as a project health check.
+Three quality gates guard every change: preflight checks your specs and design during `specshift propose` before tasks are created, audit.md verification checks your implementation during `specshift apply` after coding is done, and documentation drift detection runs during `specshift init` as a project health check.
 
 ## Purpose
 
-Starting implementation on incomplete or contradictory specs wastes effort and produces code that does not match requirements. Similarly, finishing implementation without checking it against the specs risks shipping gaps and divergences. And generated documentation can silently drift from specs after manual edits or hotfixes. Quality gates address all three risks -- preflight catches problems before code is written, review.md catches problems before the change is merged, and docs drift detection catches documentation staleness.
+Starting implementation on incomplete or contradictory specs wastes effort and produces code that does not match requirements. Similarly, finishing implementation without checking it against the specs risks shipping gaps and divergences. And generated documentation can silently drift from specs after manual edits or hotfixes. Quality gates address all three risks -- preflight catches problems before code is written, audit.md catches problems before the change is merged, and docs drift detection catches documentation staleness.
 
 ## Rationale
 
-Preflight covers seven distinct dimensions (traceability, gaps, side effects, constitution compliance, duplication, marker audit, and draft spec validation) because each catches a different category of problem expensive to fix during implementation. Verify now produces a `review.md` artifact in the change directory rather than a transient report -- this makes verification results persistent, PR-visible, and not skippable (file existence is checked). Verify assesses two dimensions -- Implementation (Completeness + Correctness) and Scope (Coherence + Side-Effects) -- using the branch diff as the primary evidence source. The verify completion step flips spec `draft` to `stable`, bumps `version`, and sets `lastModified`. Documentation drift verification moved from a standalone command to an init health check, consolidating project-level checks under a single entry point. All gates are stateless and report findings without auto-fixing (except mechanically fixable WARNINGs in verify).
+Preflight covers seven distinct dimensions (traceability, gaps, side effects, constitution compliance, duplication, marker audit, and draft spec validation) because each catches a different category of problem expensive to fix during implementation. Verify now produces an `audit.md` artifact in the change directory rather than a transient report -- this makes verification results persistent, PR-visible, and not skippable (file existence is checked). Verify assesses two dimensions -- Implementation (Completeness + Correctness) and Scope (Coherence + Side-Effects) -- using the branch diff as the primary evidence source. The verify completion step flips spec `draft` to `stable`, bumps `version`, and sets `lastModified`. Documentation drift verification moved from a standalone command to an init health check, consolidating project-level checks under a single entry point. All gates are stateless and report findings without auto-fixing (except mechanically fixable WARNINGs in verify).
 
-> **Workflow sequence**: Preflight runs during `specshift propose` after the design phase and before task creation. Verify runs during `specshift apply` as part of the QA loop (generating review.md). Docs drift detection runs during `specshift init` as a project health check.
+> **Workflow sequence**: Preflight runs during `specshift propose` after the design phase and before task creation. Verify runs during `specshift apply` as part of the QA loop (generating audit.md). Docs drift detection runs during `specshift init` as a project health check.
 
 ## Features
 
 - **Preflight Quality Check** (`specshift propose`): Mandatory review across multiple dimensions before tasks are created, producing `preflight.md` with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED.
 - **Draft Spec Validation**: Preflight verifies that all specs with `status: draft` belong to the current change. Foreign drafts are BLOCKED; orphaned drafts are WARNING.
 - **Mandatory Pause on Warnings**: When preflight returns PASS WITH WARNINGS, the system pauses and requires explicit acknowledgment before task creation.
-- **Post-Implementation Verification** (`specshift apply`): Verification that produces `review.md` in the change directory -- a persistent artifact assessing Implementation and Scope dimensions using the branch diff as primary evidence, with issues classified as CRITICAL, WARNING, or SUGGESTION.
+- **Post-Implementation Verification** (`specshift apply`): Verification that produces `audit.md` in the change directory -- a persistent artifact assessing Implementation and Scope dimensions using the branch diff as primary evidence, with issues classified as CRITICAL, WARNING, or SUGGESTION.
 - **Draft Spec Gate in Verify**: Verify checks all specs modified by the change for `status: draft`. Any remaining drafts produce a CRITICAL issue.
 - **Verify Completion (Draft-to-Stable Flip)**: When verify passes and the change is approved, spec tracking fields are finalized: `status` flips to `stable`, `change` is removed, `version` increments, `lastModified` is set. The proposal's `status` is set to `completed`.
 - **Seven Preflight Dimensions**: Traceability Matrix, Gap Analysis, Side-Effect Analysis, Constitution Check, Duplication and Consistency, Marker Audit, and Draft Spec Validation.
@@ -64,11 +64,11 @@ Draft specs whose `change` field matches the current change are confirmed valid.
 
 When no blockers are found but minor gaps are detected, the verdict is "PASS WITH WARNINGS." The system pauses and asks you to acknowledge each warning before proceeding.
 
-### Verify: review.md During Apply (`specshift apply`)
+### Verify: audit.md During Apply (`specshift apply`)
 
 #### Verify Gates on Draft Spec Status
 
-When affected specs remain in draft status, the review.md report includes a CRITICAL issue requiring finalization before merge.
+When affected specs remain in draft status, the audit.md report includes a CRITICAL issue requiring finalization before merge.
 
 #### Verify Completion Flips Draft to Stable
 

@@ -72,10 +72,10 @@ Guidelines:
 ## Behavior
 
 <!-- For capabilities that involve multiple workflow phases
-     (e.g., quality-gates covers preflight during propose and review.md during apply),
+     (e.g., quality-gates covers preflight during propose and audit.md during apply),
      add a brief workflow sequence note at the TOP of this section:
      "Run specshift propose for pre-implementation checks (preflight).
-      Run specshift apply for post-implementation verification (review.md)."
+      Run specshift apply for post-implementation verification (audit.md)."
 -->
 
 <!-- For multi-command capabilities, include the command name in behavior subsection
