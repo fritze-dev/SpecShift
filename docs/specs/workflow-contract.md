@@ -1,9 +1,10 @@
 ---
 order: 3
 category: reference
-status: stable
+status: draft
 version: 8
 lastModified: 2026-04-14
+change: 2026-04-14-add-release-action
 ---
 ## Purpose
 
@@ -21,7 +22,8 @@ The system SHALL support an `.specshift/WORKFLOW.md` file as the pipeline orches
 - `pipeline` (ordered array of artifact step IDs — each generates a file)
 - `actions` (array of action names, e.g., `[init, propose, apply, finalize]` — each has a corresponding `## Action: <name>` body section)
 - `worktree` (optional object with `enabled`, `path_pattern`, `auto_cleanup`)
-- `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
+- `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize→release flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
+- `release` (optional object — configuration for the `release` custom action's PR review-to-merge lifecycle; see "Release Action Configuration" requirement)
 - `plugin-version` (string, machine-managed — stamped by `specshift init` from the plugin's `plugin.json` version field. Used by the router for version mismatch detection. Consumers SHALL NOT edit this field manually.)
 - `docs_language` (optional, defaults to English)
 
@@ -165,13 +167,21 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **AND** SHALL execute the instruction directly (agent decides execution mode)
 - **AND** SHALL NOT look for compiled requirement files
 
-#### Scenario: Router auto-dispatches propose→apply→finalize when auto_approve is true
+#### Scenario: Router auto-dispatches propose→apply→finalize→release when auto_approve is true
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
 - **AND** the user invokes `specshift propose my-feature`
 - **WHEN** propose completes successfully (all pipeline artifacts generated)
 - **THEN** the router SHALL automatically dispatch apply without pausing
 - **AND** when apply completes with review.md verdict PASS, SHALL automatically dispatch finalize
+- **AND** when finalize completes successfully AND `release` is listed in the `actions` array, SHALL automatically dispatch release
 - **AND** SHALL only pause if a FAIL verdict, BLOCKED preflight, or genuine clarification question occurs
+
+#### Scenario: Router skips release auto-dispatch when release not in actions
+- **GIVEN** `auto_approve: true` in WORKFLOW.md
+- **AND** `actions: [init, propose, apply, finalize]` (no `release`)
+- **WHEN** finalize completes successfully
+- **THEN** the router SHALL NOT attempt to dispatch release
+- **AND** SHALL stop after finalize (current behavior preserved)
 
 #### Scenario: Router pauses at each transition when auto_approve is false
 - **GIVEN** `auto_approve: false` in WORKFLOW.md
@@ -212,6 +222,50 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **WHEN** a user invokes `specshift deploy`
 - **THEN** the router SHALL report that `deploy` is not a recognized action
 - **AND** SHALL list the available actions from the `actions` array
+
+### Requirement: Release Action Configuration
+
+WORKFLOW.md frontmatter SHALL support an optional `release` configuration object for the `release` custom action. The `release` object SHALL contain:
+- `request_review` (optional, defaults to `false`) — controls whether the release action requests an external review when marking the PR ready. Values: `false` (no reviewer assigned), `copilot` (request Copilot review using available GitHub tooling), `true` (request review from the repository's default reviewers using available GitHub tooling). If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
+
+The `release` action itself is a custom action defined via `## Action: release` in the WORKFLOW.md body. Its behavior (re-entrant PR state machine, review comment processing, self-review via built-in tools, merge with user confirmation) is specified in the instruction text. This requirement covers only the frontmatter configuration surface.
+
+When `auto_approve` is `true` and `release` is listed in the `actions` array, the router SHALL auto-dispatch from finalize to release after finalize completes successfully. The release action SHALL always pause for explicit user confirmation before merging, regardless of the `auto_approve` setting — `auto_approve` controls only the dispatch (whether release is started automatically), not the merge itself.
+
+**User Story:** As a consumer project maintainer I want configurable PR review automation, so that I can choose between no reviewer, Copilot review, or default reviewers without modifying the action instruction text.
+
+#### Scenario: Release configuration with request_review false (default)
+- **GIVEN** WORKFLOW.md contains `release: { request_review: false }`
+- **AND** `release` is in the `actions` array
+- **WHEN** the release action runs
+- **THEN** it SHALL mark the PR ready for review and update the PR body
+- **AND** SHALL NOT request a reviewer
+- **AND** SHALL process any review comments that exist or arrive
+
+#### Scenario: Release configuration with request_review copilot
+- **GIVEN** WORKFLOW.md contains `release: { request_review: copilot }`
+- **WHEN** the release action runs
+- **THEN** it SHALL request a Copilot review using available GitHub tooling
+- **AND** if the request fails, SHALL log a warning and continue
+
+#### Scenario: Release configuration with request_review true
+- **GIVEN** WORKFLOW.md contains `release: { request_review: true }`
+- **WHEN** the release action runs
+- **THEN** it SHALL request a review from the repository's default reviewers using available GitHub tooling
+
+#### Scenario: Release action always requires user confirmation for merge
+- **GIVEN** `auto_approve: true` in WORKFLOW.md
+- **AND** the PR is approved with all checks passing
+- **WHEN** the release action reaches the merge phase
+- **THEN** it SHALL pause and ask the user for explicit confirmation before merging
+- **AND** SHALL only merge after the user confirms
+
+#### Scenario: Release action is re-entrant across sessions
+- **GIVEN** the release action was started in a previous session that ended
+- **AND** review comments were partially processed
+- **WHEN** the user invokes `specshift release` in a new session
+- **THEN** the action SHALL read the current PR state from GitHub
+- **AND** SHALL continue processing from the current state (not restart from scratch)
 
 ## Edge Cases
 
