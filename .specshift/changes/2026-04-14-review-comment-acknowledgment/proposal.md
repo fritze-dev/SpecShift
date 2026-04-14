@@ -1,5 +1,5 @@
 <!--
-status: active
+status: completed
 branch: claude/add-user-authentication-e4jWD
 capabilities:
   new: []
