@@ -21,7 +21,7 @@ Preflight covers seven distinct dimensions (traceability, gaps, side effects, co
 
 ## Features
 
-- **Preflight Quality Check** (`specshift propose`): Mandatory review across seven dimensions before tasks are created, producing `preflight.md` with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED.
+- **Preflight Quality Check** (`specshift propose`): Mandatory review across multiple dimensions before tasks are created, producing `preflight.md` with a verdict of PASS, PASS WITH WARNINGS, or BLOCKED.
 - **Draft Spec Validation**: Preflight verifies that all specs with `status: draft` belong to the current change. Foreign drafts are BLOCKED; orphaned drafts are WARNING.
 - **Mandatory Pause on Warnings**: When preflight returns PASS WITH WARNINGS, the system pauses and requires explicit acknowledgment before task creation.
 - **Post-Implementation Verification** (`specshift apply`): Verification that produces `review.md` in the change directory -- a persistent artifact assessing Implementation and Scope dimensions using the branch diff as primary evidence, with issues classified as CRITICAL, WARNING, or SUGGESTION.
