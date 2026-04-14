@@ -61,7 +61,7 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 
 1. Read all change artifacts (if change exists).
 2. Execute the action using the `### Instruction` (from Load Configuration) as your primary directive, bounded by the strict requirements extracted in `actions/propose.md`.
-3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/<id>.md`, check artifact status, generate if ready
+3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/changes/<id>.md`, check artifact status, generate if ready
 4. **After each artifact**, commit and push:
    - Stage the change artifacts and specs
    - Commit with message `WIP: <change-name> — <artifact-id>`
