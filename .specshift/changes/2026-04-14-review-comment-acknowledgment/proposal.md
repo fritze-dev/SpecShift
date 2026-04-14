@@ -14,6 +14,7 @@ During PR #22, review comments were addressed with code fixes but never replied 
 
 - Add a **"Review comment acknowledgment"** convention to `## Conventions` in `.specshift/CONSTITUTION.md` requiring agents to reply to each PR review comment (fixed, declined with reason, or not applicable) and resolve committed threads
 - Add a **Pre-Merge checkbox** to `## Standard Tasks` making review comment response an actionable checklist item
+- Fix **template path instruction** in `src/skills/specshift/SKILL.md`: change `<templates_dir>/<id>.md` to `<templates_dir>/changes/<id>.md` to match actual directory structure
 
 ## Capabilities
 
@@ -36,15 +37,15 @@ N/A — no new specs proposed. Reviewed `docs/specs/constitution-management.md` 
 ## Impact
 
 - `.specshift/CONSTITUTION.md` — two additions (convention + checkbox)
-- No code, templates, specs, or workflow changes
+- `src/skills/specshift/SKILL.md` — fix template path in propose pipeline traversal instruction
 
 ## Scope & Boundaries
 
 **In scope:**
 - Convention text for review comment acknowledgment
 - Pre-Merge standard task checkbox
+- Fix template path instruction in SKILL.md
 
 **Out of scope:**
 - Workflow action for automated review response
 - Tooling or automation to enforce the convention
-- Changes to the specshift pipeline
