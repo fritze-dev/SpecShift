@@ -3,6 +3,22 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Add Release Action
+
+### Added
+- New `release` custom action for automated PR review-to-merge lifecycle — processes review comments, runs self-review, and merges with user confirmation
+- `release` configuration block in WORKFLOW.md frontmatter (`request_review: false | copilot | true`) for configurable reviewer assignment
+- Conditional `finalize → release` auto-dispatch in router when `auto_approve: true` and `release` is in the actions array
+- `release` added to default consumer template actions array
+
+### Changed
+- Consumer workflow template version bumped from 4 to 5
+- Workflow diagram updated to include Release step
+
+### Specs
+- `workflow-contract.md` v9: added Release Action Configuration requirement with 5 scenarios (config variants, user confirmation, re-entrancy)
+- Updated auto-dispatch scenario to include finalize→release chain
+
 ## 2026-04-14 — Fix SpecShift Skill Flow Triggering
 
 ### Fixed

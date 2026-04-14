@@ -1,6 +1,6 @@
 ---
 template-version: 5
-plugin-version: 0.1.8-beta
+plugin-version: 0.1.9-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
 

@@ -19,14 +19,15 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 
 ## Features
 
-- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (7 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (7 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, `release`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **Release action configuration** -- optional `release` object in WORKFLOW.md frontmatter with `request_review` field (`false` by default, `copilot` for Copilot review, `true` for repo default reviewers). The release action automates the PR review-to-merge lifecycle: processing review comments, running self-review, and merging with user confirmation
 - **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, baked into the compiled workflow template at compile time. The router compares the project's `plugin-version` against the compiled template's version on every action (except init) and displays an advisory warning on mismatch
 - **Smart Template format** -- each template carries `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields in YAML frontmatter, with the output structure as the markdown body
 - **Inline action definitions** -- `actions` array in frontmatter lists action names (built-in and custom); each action has a `## Action: <name>` body section with `### Instruction` for procedural guidance
 - **Custom actions** -- consumer projects define additional actions by adding names to the `actions` array and writing corresponding `## Action: <name>` body sections with self-contained instructions; no plugin modification required
 - **Router dispatch pattern** -- single router handles all commands (built-in and custom) in 5 steps: Load Configuration (WORKFLOW.md read once), Identify Action, Plugin Version Check, Change Context Detection, Dispatch; validates actions against the `actions` array with fallback to built-in list
 - **Template versioning** -- `template-version` (integer, monotonically increasing) enables version-aware merge during `specshift init`
-- **Auto-approve default** -- `auto_approve` defaults to `true` when absent or uncommented; the full pipeline runs end-to-end without pausing: propose skips the design checkpoint, auto-dispatches apply; apply skips the user testing pause on PASS, auto-dispatches finalize. Set to `false` to pause at every checkpoint (design review, user testing gate, approval).
+- **Auto-approve default** -- `auto_approve` defaults to `true` when absent or uncommented; the full pipeline runs end-to-end without pausing: propose skips the design checkpoint, auto-dispatches apply; apply skips the user testing pause on PASS, auto-dispatches finalize; finalize auto-dispatches release when `release` is in the actions array. Set to `false` to pause at every checkpoint (design review, user testing gate, approval).
 
 ## Behavior
 
@@ -36,7 +37,7 @@ The router reads WORKFLOW.md's YAML frontmatter to determine the template direct
 
 ### Auto-Approve Controls Checkpoint Behavior
 
-The `auto_approve` field in WORKFLOW.md frontmatter defaults to `true`. When `true`, the full pipeline runs end-to-end without pausing on success paths: propose skips the design review checkpoint and auto-dispatches apply; apply skips the user testing pause when review.md verdict is PASS and auto-dispatches finalize. When explicitly set to `false`, the pipeline pauses at each checkpoint: design review (user alignment), user testing gate (manual approval), and post-apply approval. FAIL or BLOCKED verdicts always stop regardless of `auto_approve`.
+The `auto_approve` field in WORKFLOW.md frontmatter defaults to `true`. When `true`, the full pipeline runs end-to-end without pausing on success paths: propose skips the design review checkpoint and auto-dispatches apply; apply skips the user testing pause when review.md verdict is PASS and auto-dispatches finalize; finalize auto-dispatches release when `release` is in the actions array. When explicitly set to `false`, the pipeline pauses at each checkpoint: design review (user alignment), user testing gate (manual approval), and post-apply approval. FAIL or BLOCKED verdicts always stop regardless of `auto_approve`. The release action always pauses for user confirmation before merging, regardless of `auto_approve` -- auto-approve controls the dispatch (whether release starts automatically), not the merge itself.
 
 ### Smart Templates Are Self-Describing
 
