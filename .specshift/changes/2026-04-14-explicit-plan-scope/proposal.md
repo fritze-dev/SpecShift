@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: explicit-plan-scope
 worktree: .claude/worktrees/explicit-plan-scope
 capabilities:

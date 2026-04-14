@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Explicit Plan-Mode Scope Commitment
+
+### Added
+- `## Planning` section in CLAUDE.md — plan mode discussions must conclude with an explicit scope summary (in-scope, out-of-scope, non-goals) confirmed by the user before proceeding to `specshift propose`
+
 ## 2026-04-14 — Fix SpecShift Skill Flow Triggering
 
 ### Fixed

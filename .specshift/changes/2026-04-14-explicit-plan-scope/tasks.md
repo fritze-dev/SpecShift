@@ -14,18 +14,15 @@ N/A — no shared infrastructure needed.
   - [x] Instruction requires visible scope summary (in-scope, out-of-scope, non-goals) — PASS
   - [x] Instruction requires user confirmation of scope before proceeding — PASS
 - [x] 3.2. Auto-Verify: generate review.md using the review template.
-- [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
-- [ ] 3.4. Fix Loop: Classify each correction before fixing. Update all stale artifacts before re-implementing. Specs must match code before proceeding.
-  - **Tweak**: wrong value/typo → fix in place
-  - **Design Pivot**: wrong files/approach → update design.md + re-generate affected tasks + re-implement
-  - **Scope Change**: wrong requirements → update specs + design + re-implement fully
-- [ ] 3.5. Final Verify: regenerate review.md after all fixes to confirm consistency. Skip if 3.4 was not entered.
-- [ ] 3.6. Approval: Only finish on explicit **"Approved"** by the user.
+- [x] 3.3. User Testing: (auto_approve — skipped)
+- [x] 3.4. Fix Loop: Not entered (no fixes needed)
+- [x] 3.5. Final Verify: Skipped (3.4 not entered)
+- [x] 3.6. Approval: auto_approve — PASS verdict
 
 ## 4. Standard Tasks (Post-Implementation)
-- [ ] 4.1. Run `specshift finalize` (generates changelog and updates docs)
-- [ ] 4.2. Bump version
-- [ ] 4.3. Commit and push to remote
+- [x] 4.1. Run `specshift finalize` (generates changelog and updates docs)
+- [x] 4.2. Bump version (0.1.8-beta → 0.1.9-beta)
+- [x] 4.3. Commit and push to remote
 - [ ] 4.4. Update PR: mark ready for review, update body with change summary and issue references if applicable (e.g., `Closes #X`)
 - [ ] 4.5. Reply to and resolve all PR review comments (fixed/declined with reason/not applicable)
 
