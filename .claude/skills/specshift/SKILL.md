@@ -87,6 +87,11 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 2. Execute the action using the `### Instruction` (from Load Configuration) bounded by the strict requirements in `actions/finalize.md`.
 3. **Auto-dispatch to release**: If `auto_approve` is `true` and finalize completed successfully, and `release` is listed in the `actions` array (from Load Configuration), automatically dispatch by running `specshift release` using the same change context. If `release` is not in the `actions` array, stop after finalize.
 
+### `release` — PR Review-to-Merge Lifecycle
+
+1. Read change artifacts for context (proposal, review.md, PR state via available GitHub tooling)
+2. Execute the action using the `### Instruction` (from Load Configuration) as your primary directive, bounded by the strict requirements extracted in `actions/release.md`. Read the `release` configuration from WORKFLOW.md frontmatter for `request_review` settings.
+
 ### `init` — Project Setup
 
 1. If WORKFLOW.md missing: this IS the fresh install — proceed with default init behavior
@@ -94,7 +99,7 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 
 ### Custom Action — Direct Execution
 
-For any action not listed above (propose, apply, finalize, init):
+For any action not listed above (propose, apply, finalize, init, release):
 1. Read all change artifacts for context (all files in change directory)
 2. Use the `## Action: <name>` instruction (already loaded during Load Configuration)
 3. If the `## Action: <name>` section was not found during Load Configuration: report the error and stop

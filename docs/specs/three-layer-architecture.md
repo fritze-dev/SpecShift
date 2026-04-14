@@ -47,14 +47,14 @@ The system SHALL use `.specshift/WORKFLOW.md` (YAML frontmatter) combined with S
 - **THEN** it SHALL require the `tasks` artifact to be complete before implementation begins
 
 ### Requirement: Router + Actions Layer
-The system SHALL deliver all commands through a single router SKILL.md that dispatches to inline actions defined in WORKFLOW.md. The router SHALL provide 4 built-in actions with specialized dispatch logic: `init` (project setup and health checks), `propose` (workspace creation and full artifact pipeline), `apply` (task implementation with review.md QA output), and `finalize` (changelog, docs, version bump, commit). The router SHALL additionally support consumer-defined custom actions listed in the WORKFLOW.md `actions` array, reading their instruction from WORKFLOW.md and executing it directly (the agent decides whether to handle inline or spawn a sub-agent). The router SHALL be model-invocable (disable-model-invocation: false or absent).
+The system SHALL deliver all commands through a single router SKILL.md that dispatches to inline actions defined in WORKFLOW.md. The router SHALL provide 5 built-in actions with specialized dispatch logic: `init` (project setup and health checks), `propose` (workspace creation and full artifact pipeline), `apply` (task implementation with review.md QA output), `finalize` (changelog, docs, version bump, commit), and `release` (PR review-to-merge lifecycle). The router SHALL additionally support consumer-defined custom actions listed in the WORKFLOW.md `actions` array, reading their instruction from WORKFLOW.md and executing it directly (the agent decides whether to handle inline or spawn a sub-agent). The router SHALL be model-invocable (disable-model-invocation: false or absent).
 
 **User Story:** As a developer I want a single router that dispatches to built-in and custom actions, so that the command surface is extensible and all behavior is defined declaratively in WORKFLOW.md.
 
 #### Scenario: Router dispatches to built-in actions
 - **GIVEN** a fully installed plugin
 - **WHEN** the `skills/` directory is listed
-- **THEN** it SHALL contain a single router `SKILL.md` that dispatches to init, propose, apply, and finalize actions
+- **THEN** it SHALL contain a single router `SKILL.md` that dispatches to init, propose, apply, finalize, and release actions
 
 #### Scenario: Router dispatches to custom actions
 - **GIVEN** a consumer WORKFLOW.md with `actions: [init, propose, apply, qa-review, finalize]`
