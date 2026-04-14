@@ -7,4 +7,3 @@
 - [Documentation Drift Verification](../../docs/specs/project-init.md#requirement-documentation-drift-verification-health-check)
 - [Recovery Mode](../../docs/specs/project-init.md#requirement-recovery-mode-spec-drift-detection)
 - [Constitution Update](../../docs/specs/constitution-management.md#requirement-constitution-update)
-- [Preflight Quality Check](../../docs/specs/quality-gates.md#requirement-preflight-quality-check)
