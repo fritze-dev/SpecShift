@@ -15,7 +15,7 @@ Handles `specshift apply` for working through task checklists in tasks.md, with 
 
 The system SHALL work through pending task checkboxes in the change's `tasks.md` file when the user invokes `specshift apply`. For each task, the system SHALL read the task description, make the required code changes, and mark the task as complete by changing `- [ ]` to `- [x]` in the tasks file. The system SHALL read all context files (proposal, design, tasks) from the change directory and specs from `docs/specs/` for the capabilities listed in the proposal before beginning implementation. The system SHALL read the `apply.instruction` field from WORKFLOW.md for apply guidance. The system SHALL pause and request clarification if a task is ambiguous, if implementation reveals a design issue, or if a blocker is encountered. The system SHALL NOT guess when requirements are unclear.
 
-The QA Loop's Metric Check and Auto-Verify steps are **automated steps** — the system SHALL execute them without pausing for user confirmation. The first human gate in the QA Loop is User Testing. The system SHALL NOT pause or ask for permission before generating `review.md`; it SHALL generate the review artifact automatically after the metric check passes using the review template.
+The QA Loop's Metric Check and Auto-Verify steps are **automated steps** — the system SHALL execute them without pausing for user confirmation. The first human gate in the QA Loop is User Testing. The system SHALL NOT pause or ask for permission before generating `audit.md`; it SHALL generate the audit artifact automatically after the metric check passes using the audit template.
 
 **User Story:** As a developer I want the AI to systematically work through my task list and implement each item, so that I can focus on review and guidance rather than manual coding of each task.
 
@@ -44,7 +44,7 @@ The QA Loop's Metric Check and Auto-Verify steps are **automated steps** — the
 - **AND** the system reaches the QA Loop Metric Check
 - **WHEN** the metric check passes
 - **THEN** the system SHALL immediately proceed to Auto-Verify without pausing
-- **AND** SHALL generate `review.md` in the change directory automatically using the review template
+- **AND** SHALL generate `audit.md` in the change directory automatically using the audit template
 - **AND** SHALL only pause at User Testing to wait for human approval
 
 #### Scenario: Pause on ambiguous task

@@ -63,12 +63,12 @@ When the PR is in draft state, the review action SHALL mark it ready for review 
 
 ### Requirement: Review Request Dispatch
 
-After the PR is marked ready, the review action SHALL request a review based on the `release.request_review` configuration from WORKFLOW.md frontmatter (defined in the Release Action Configuration requirement of workflow-contract.md). If `copilot`: request a Copilot review using available GitHub tooling. If `true`: request a review from the repository's default reviewers. If `false` or absent: skip the review request. If reviews have already been requested or completed, the action SHALL NOT re-request. If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
+After the PR is marked ready, the review action SHALL request a review based on the `review.request_review` configuration from WORKFLOW.md frontmatter (defined in the Review Action Configuration requirement of workflow-contract.md). If `copilot`: request a Copilot review using available GitHub tooling. If `true`: request a review from the repository's default reviewers. If `false` or absent: skip the review request. If reviews have already been requested or completed, the action SHALL NOT re-request. If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
 
 **User Story:** As a project maintainer I want configurable reviewer assignment, so that I can choose the right review strategy for my project without editing action instructions.
 
 #### Scenario: Copilot review requested per configuration
-- **GIVEN** `release.request_review: copilot` in WORKFLOW.md
+- **GIVEN** `review.request_review: copilot` in WORKFLOW.md
 - **AND** no reviews have been requested yet
 - **WHEN** the review action runs
 - **THEN** it requests a Copilot review using available GitHub tooling
@@ -80,7 +80,7 @@ After the PR is marked ready, the review action SHALL request a review based on 
 - **AND** skips the review request step
 
 #### Scenario: Review request failure does not block
-- **GIVEN** `release.request_review: copilot`
+- **GIVEN** `review.request_review: copilot`
 - **AND** the Copilot review request fails (tool unavailable)
 - **WHEN** the review action runs
 - **THEN** it logs a warning with the failure reason
@@ -88,7 +88,7 @@ After the PR is marked ready, the review action SHALL request a review based on 
 
 ### Requirement: Review Comment Processing
 
-The release action SHALL process unresolved review comment threads on the PR. For each unresolved thread, the action SHALL: read the comment content, determine if the feedback is actionable within the current change scope, implement the fix if actionable, reply to the thread explaining the action taken, and resolve the thread. If a comment requires a fundamental change beyond the current scope (e.g., architectural redesign, new requirements), the action SHALL NOT attempt the fix; instead it SHALL inform the user and suggest starting a new `specshift propose` for the requested change. After processing all threads: the action SHALL commit and push the fixes, then run the built-in review skill for self-check to verify the fixes did not introduce regressions. If the self-review finds issues, the action SHALL fix them before proceeding.
+The review action SHALL process unresolved review comment threads on the PR. For each unresolved thread, the action SHALL: read the comment content, determine if the feedback is actionable within the current change scope, implement the fix if actionable, reply to the thread explaining the action taken, and resolve the thread. If a comment requires a fundamental change beyond the current scope (e.g., architectural redesign, new requirements), the action SHALL NOT attempt the fix; instead it SHALL inform the user and suggest starting a new `specshift propose` for the requested change. After processing all threads: the action SHALL commit and push the fixes, then run the built-in review skill for self-check to verify the fixes did not introduce regressions. If the self-review finds issues, the action SHALL fix them before proceeding.
 
 **User Story:** As a developer I want review comments automatically addressed and verified, so that the review-fix cycle is handled without manual intervention for straightforward feedback.
 
@@ -116,7 +116,7 @@ The release action SHALL process unresolved review comment threads on the PR. Fo
 
 ### Requirement: Review Cycle Safety Limit
 
-The release action SHALL support iterative review cycles: after processing comments and pushing fixes, if a reviewer posts new comments, the action SHALL return to comment processing. To prevent infinite loops, the action SHALL enforce a maximum of 3 review-fix cycles per invocation. After reaching the limit, the action SHALL pause and report the situation to the user, listing remaining unresolved threads. The user may then manually resolve remaining comments or re-invoke the review action. Each cycle consists of: processing all current unresolved threads, committing and pushing fixes, running self-review, and checking for new comments.
+The review action SHALL support iterative review cycles: after processing comments and pushing fixes, if a reviewer posts new comments, the action SHALL return to comment processing. To prevent infinite loops, the action SHALL enforce a maximum of 3 review-fix cycles per invocation. After reaching the limit, the action SHALL pause and report the situation to the user, listing remaining unresolved threads. The user may then manually resolve remaining comments or re-invoke the review action. Each cycle consists of: processing all current unresolved threads, committing and pushing fixes, running self-review, and checking for new comments.
 
 **User Story:** As a developer I want a safety limit on review cycles, so that AI reviewers that keep finding new issues do not cause an infinite loop.
 
@@ -144,7 +144,7 @@ The release action SHALL support iterative review cycles: after processing comme
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Release Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling. Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling. Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
