@@ -1,6 +1,6 @@
 ---
 id: claude
-template-version: 1
+template-version: 2
 description: CLAUDE.md bootstrap template with standard agent directives
 generates: CLAUDE.md
 requires: []
@@ -14,7 +14,7 @@ instruction: |
 
 ## Workflow
 
-All changes to this project MUST go through the spec-driven workflow (actions: propose, apply, finalize, init). Never edit specs, skills, templates, or docs directly — always create a change first.
+All changes to this project MUST go through the spec-driven workflow. Before editing ANY file (source code, specs, skills, templates, docs, or configuration), invoke the specshift skill with the appropriate action (propose, apply, finalize, init). Never edit files directly — always use `specshift propose` to plan changes and `specshift apply` to implement them.
 
 ## Knowledge Management
 

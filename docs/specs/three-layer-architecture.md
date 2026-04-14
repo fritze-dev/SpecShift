@@ -1,10 +1,9 @@
 ---
 order: 13
 category: reference
-status: draft
+status: stable
 version: 6
 lastModified: 2026-04-14
-change: 2026-04-14-fix-specshift-skill-flow
 ---
 ## Purpose
 

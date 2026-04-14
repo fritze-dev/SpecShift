@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: claude/fix-shiftspec-skill-flow-TazPC
 capabilities:
   new: []
