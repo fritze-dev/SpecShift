@@ -2,8 +2,8 @@
 order: 12
 category: setup
 status: stable
-version: 4
-lastModified: 2026-04-13
+version: 5
+lastModified: 2026-04-14
 ---
 ## Purpose
 
@@ -271,7 +271,7 @@ The `specshift init` command SHALL generate a `CONSTITUTION.md` file based on th
 - **THEN** the Code Style section SHALL reflect the 4-space indentation and camelCase convention, and the Conventions section SHALL reference the conventional commits format
 
 ### Requirement: CLAUDE.md Bootstrap
-The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` when no `CLAUDE.md` exists in the project root. The generated CLAUDE.md SHALL contain at minimum: (1) a `## Workflow` section directing all changes through the spec-driven workflow, and (2) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan, using REVIEW markers for uncertain items (same pattern as constitution generation). If `CLAUDE.md` already exists, init SHALL skip generation and report "CLAUDE.md already exists — skipped."
+The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` when no `CLAUDE.md` exists in the project root. The generated CLAUDE.md SHALL contain at minimum: (1) a `## Workflow` section directing all changes through the spec-driven workflow, (2) a `## Planning` section requiring explicit scope commitment before exiting plan mode, and (3) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan, using REVIEW markers for uncertain items (same pattern as constitution generation). If `CLAUDE.md` already exists, init SHALL skip generation and report "CLAUDE.md already exists — skipped."
 
 **User Story:** As a developer adopting the spec-driven workflow I want init to generate a CLAUDE.md with standard agent directives, so that every session respects the workflow and knowledge transparency rules without manual configuration.
 
@@ -280,7 +280,7 @@ The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstra
 - **AND** the plugin has a bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL generate `CLAUDE.md` at the project root
-- **AND** it SHALL contain a `## Workflow` section and a `## Knowledge Management` section
+- **AND** it SHALL contain a `## Workflow` section, a `## Planning` section, and a `## Knowledge Management` section
 
 #### Scenario: CLAUDE.md skipped when already exists but checked for missing sections
 - **GIVEN** a project with an existing `CLAUDE.md` file containing all standard sections
@@ -296,7 +296,7 @@ The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstra
 - **AND** uncertain items SHALL be marked with `<!-- REVIEW -->` for user resolution
 
 #### Scenario: CLAUDE.md missing standard section detected on re-init
-- **GIVEN** a project with an existing `CLAUDE.md` file that contains a `## Workflow` section but lacks a `## Knowledge Management` section
+- **GIVEN** a project with an existing `CLAUDE.md` file that contains a `## Workflow` section but lacks a `## Planning` section or `## Knowledge Management` section
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL NOT overwrite or modify `CLAUDE.md`
 - **AND** SHALL report WARNING: "CLAUDE.md missing standard section: Knowledge Management"

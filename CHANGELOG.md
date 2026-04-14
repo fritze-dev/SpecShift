@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## 2026-04-14 — Explicit Plan-Mode Scope Commitment
 
 ### Added
-- `## Planning` section in CLAUDE.md — plan mode discussions must conclude with an explicit scope summary (in-scope, out-of-scope, non-goals) confirmed by the user before proceeding to `specshift propose`
+- `## Planning` section in CLAUDE.md and consumer template — plan mode discussions must conclude with an explicit scope summary (in-scope, out-of-scope, non-goals) confirmed by the user before proceeding to `specshift propose`
+
+### Changed
+- Consumer CLAUDE.md template (`src/templates/claude.md`) now includes Planning section (template-version 2 → 3)
+
+### Specs
+- `project-init.md` v5: CLAUDE.md Bootstrap requirement updated to include Planning as a standard section
 
 ## 2026-04-14 — Fix SpecShift Skill Flow Triggering
 

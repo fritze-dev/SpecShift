@@ -4,7 +4,7 @@ branch: explicit-plan-scope
 worktree: .claude/worktrees/explicit-plan-scope
 capabilities:
   new: []
-  modified: []
+  modified: [project-init]
   removed: []
 ---
 ## Why
