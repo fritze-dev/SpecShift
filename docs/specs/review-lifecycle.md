@@ -7,82 +7,82 @@ lastModified: 2026-04-14
 ---
 ## Purpose
 
-Defines the `specshift release` action behavior: a re-entrant PR review-to-merge state machine that reads GitHub PR state, manages the draft-to-ready transition, processes review comments, runs self-review cycles with a safety limit, and executes the merge with mandatory user confirmation. Complements the Release Action Configuration requirement in workflow-contract.md (config surface) and the Post-Merge Worktree Cleanup requirement in change-workspace.md (cleanup after merge).
+Defines the `specshift review` action behavior: a re-entrant PR review-to-merge state machine that reads GitHub PR state, manages the draft-to-ready transition, processes review comments, runs self-review cycles with a safety limit, and executes the merge with mandatory user confirmation. Complements the Review Action Configuration requirement in workflow-contract.md (config surface) and the Post-Merge Worktree Cleanup requirement in change-workspace.md (cleanup after merge).
 
 ## Requirements
 
 ### Requirement: PR State Assessment and Re-Entrancy
 
-The `specshift release` action SHALL be re-entrant across sessions. On each invocation, the action SHALL identify the PR number from the current branch using available GitHub tooling (gh CLI, MCP tools, or API), then read the PR's current state including: draft status, requested reviews, review decisions (approved, changes-requested, commented), unresolved comment threads, and CI check status. The action SHALL report the assessed state before proceeding to the applicable phase. If no PR exists for the current branch, the action SHALL report the situation and stop. The action SHALL NOT store session-local state — all state SHALL be derived from the PR on GitHub and the local change artifacts.
+The `specshift review` action SHALL be re-entrant across sessions. On each invocation, the action SHALL identify the PR number from the current branch using available GitHub tooling (gh CLI, MCP tools, or API), then read the PR's current state including: draft status, requested reviews, review decisions (approved, changes-requested, commented), unresolved comment threads, and CI check status. The action SHALL report the assessed state before proceeding to the applicable phase. If no PR exists for the current branch, the action SHALL report the situation and stop. The action SHALL NOT store session-local state — all state SHALL be derived from the PR on GitHub and the local change artifacts.
 
-**User Story:** As a developer using Claude Code Web I want the release action to pick up where it left off in any session, so that ephemeral sessions do not block my PR from being merged.
+**User Story:** As a developer using Claude Code Web I want the review action to pick up where it left off in any session, so that ephemeral sessions do not block my PR from being merged.
 
 #### Scenario: Fresh invocation reads PR state from GitHub
 - **GIVEN** a branch with an open draft PR
-- **WHEN** `specshift release` is invoked
+- **WHEN** `specshift review` is invoked
 - **THEN** the action reads draft status, reviews, comments, and checks from GitHub using available tooling
 - **AND** reports the assessed state before proceeding
 
 #### Scenario: Re-entrant invocation continues from current state
-- **GIVEN** a previous release session ended after requesting a review
+- **GIVEN** a previous review session ended after requesting a review
 - **AND** new review comments have arrived on the PR
-- **WHEN** `specshift release` is invoked in a new session
+- **WHEN** `specshift review` is invoked in a new session
 - **THEN** the action reads current PR state
 - **AND** detects the new unresolved comments
 - **AND** proceeds to comment processing without restarting from draft transition
 
 #### Scenario: No PR exists for current branch
 - **GIVEN** the current branch has no associated pull request
-- **WHEN** `specshift release` is invoked
+- **WHEN** `specshift review` is invoked
 - **THEN** the action reports that no PR was found for the branch
 - **AND** suggests running `specshift finalize` first or creating a PR manually
 
 ### Requirement: Draft-to-Ready Transition
 
-When the PR is in draft state, the release action SHALL mark it ready for review using available GitHub tooling and update the PR body with a change summary derived from the change artifacts (proposal.md summary and issue references). If the proposal references a GitHub issue, the PR body SHALL include a closing reference (e.g., `Closes #X`). If the PR is already marked ready for review, the action SHALL skip this step and proceed to the next applicable phase.
+When the PR is in draft state, the review action SHALL mark it ready for review using available GitHub tooling and update the PR body with a change summary derived from the change artifacts (proposal.md summary and issue references). If the proposal references a GitHub issue, the PR body SHALL include a closing reference (e.g., `Closes #X`). If the PR is already marked ready for review, the action SHALL skip this step and proceed to the next applicable phase.
 
-**User Story:** As a developer I want the release action to automatically prepare my PR for review, so that I don't have to manually update the PR status and description.
+**User Story:** As a developer I want the review action to automatically prepare my PR for review, so that I don't have to manually update the PR status and description.
 
 #### Scenario: Draft PR marked ready with updated body
 - **GIVEN** a draft PR for the current branch
 - **AND** a proposal.md describing the change
-- **WHEN** the release action runs
+- **WHEN** the review action runs
 - **THEN** it marks the PR ready for review using available GitHub tooling
 - **AND** updates the PR body with a change summary from proposal.md
 
 #### Scenario: Already-ready PR skips transition
 - **GIVEN** a PR that is already marked ready for review
-- **WHEN** the release action runs
+- **WHEN** the review action runs
 - **THEN** it skips the draft-to-ready step
 - **AND** proceeds to the next applicable phase
 
 #### Scenario: PR body includes issue references
 - **GIVEN** a proposal.md that references issue #42
-- **WHEN** the release action updates the PR body
+- **WHEN** the review action updates the PR body
 - **THEN** the body includes a closing reference (e.g., `Closes #42`)
 
 ### Requirement: Review Request Dispatch
 
-After the PR is marked ready, the release action SHALL request a review based on the `release.request_review` configuration from WORKFLOW.md frontmatter (defined in the Release Action Configuration requirement of workflow-contract.md). If `copilot`: request a Copilot review using available GitHub tooling. If `true`: request a review from the repository's default reviewers. If `false` or absent: skip the review request. If reviews have already been requested or completed, the action SHALL NOT re-request. If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
+After the PR is marked ready, the review action SHALL request a review based on the `release.request_review` configuration from WORKFLOW.md frontmatter (defined in the Release Action Configuration requirement of workflow-contract.md). If `copilot`: request a Copilot review using available GitHub tooling. If `true`: request a review from the repository's default reviewers. If `false` or absent: skip the review request. If reviews have already been requested or completed, the action SHALL NOT re-request. If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
 
 **User Story:** As a project maintainer I want configurable reviewer assignment, so that I can choose the right review strategy for my project without editing action instructions.
 
 #### Scenario: Copilot review requested per configuration
 - **GIVEN** `release.request_review: copilot` in WORKFLOW.md
 - **AND** no reviews have been requested yet
-- **WHEN** the release action runs
+- **WHEN** the review action runs
 - **THEN** it requests a Copilot review using available GitHub tooling
 
 #### Scenario: Review already requested is not re-requested
 - **GIVEN** a review has already been requested from Copilot
-- **WHEN** the release action is re-invoked in a new session
+- **WHEN** the review action is re-invoked in a new session
 - **THEN** it detects the existing review request
 - **AND** skips the review request step
 
 #### Scenario: Review request failure does not block
 - **GIVEN** `release.request_review: copilot`
 - **AND** the Copilot review request fails (tool unavailable)
-- **WHEN** the release action runs
+- **WHEN** the review action runs
 - **THEN** it logs a warning with the failure reason
 - **AND** continues to the next step without blocking
 
@@ -94,7 +94,7 @@ The release action SHALL process unresolved review comment threads on the PR. Fo
 
 #### Scenario: Actionable review comment processed and resolved
 - **GIVEN** an unresolved review thread requesting a concrete code change
-- **WHEN** the release action processes the thread
+- **WHEN** the review action processes the thread
 - **THEN** it implements the requested change
 - **AND** replies to the thread explaining the fix
 - **AND** resolves the thread
@@ -102,13 +102,13 @@ The release action SHALL process unresolved review comment threads on the PR. Fo
 
 #### Scenario: Out-of-scope comment deferred to user
 - **GIVEN** an unresolved review thread requesting an architectural redesign
-- **WHEN** the release action evaluates the comment
+- **WHEN** the review action evaluates the comment
 - **THEN** it determines the change is out of scope
 - **AND** informs the user with a suggestion to run `specshift propose` for the requested change
 - **AND** does NOT resolve the thread
 
 #### Scenario: Self-review after fixes catches regression
-- **GIVEN** the release action has implemented fixes for review comments
+- **GIVEN** the review action has implemented fixes for review comments
 - **AND** committed and pushed the changes
 - **WHEN** the built-in review skill runs as self-check
 - **THEN** it detects a new issue introduced by the fixes
@@ -116,14 +116,14 @@ The release action SHALL process unresolved review comment threads on the PR. Fo
 
 ### Requirement: Review Cycle Safety Limit
 
-The release action SHALL support iterative review cycles: after processing comments and pushing fixes, if a reviewer posts new comments, the action SHALL return to comment processing. To prevent infinite loops, the action SHALL enforce a maximum of 3 review-fix cycles per invocation. After reaching the limit, the action SHALL pause and report the situation to the user, listing remaining unresolved threads. The user may then manually resolve remaining comments or re-invoke the release action. Each cycle consists of: processing all current unresolved threads, committing and pushing fixes, running self-review, and checking for new comments.
+The release action SHALL support iterative review cycles: after processing comments and pushing fixes, if a reviewer posts new comments, the action SHALL return to comment processing. To prevent infinite loops, the action SHALL enforce a maximum of 3 review-fix cycles per invocation. After reaching the limit, the action SHALL pause and report the situation to the user, listing remaining unresolved threads. The user may then manually resolve remaining comments or re-invoke the review action. Each cycle consists of: processing all current unresolved threads, committing and pushing fixes, running self-review, and checking for new comments.
 
 **User Story:** As a developer I want a safety limit on review cycles, so that AI reviewers that keep finding new issues do not cause an infinite loop.
 
 #### Scenario: Second review cycle processes new comments
 - **GIVEN** the first cycle resolved 3 threads and pushed fixes
 - **AND** the reviewer posts 2 new comments after the push
-- **WHEN** the release action detects the new comments
+- **WHEN** the review action detects the new comments
 - **THEN** it enters cycle 2
 - **AND** processes the 2 new threads
 
@@ -144,7 +144,7 @@ The release action SHALL support iterative review cycles: after processing comme
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain and CI checks are passing, the release action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the release action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Release Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling. Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Release Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling. Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
@@ -161,7 +161,7 @@ When no unresolved review threads remain and CI checks are passing, the release 
 - **AND** CI checks are still running
 - **WHEN** the action checks CI status
 - **THEN** it reports the pending checks
-- **AND** suggests waiting or re-invoking `specshift release` later
+- **AND** suggests waiting or re-invoking `specshift review` later
 
 #### Scenario: CI checks failing stops merge
 - **GIVEN** no unresolved review threads
@@ -174,7 +174,7 @@ When no unresolved review threads remain and CI checks are passing, the release 
 #### Scenario: Merge confirmation required even with auto_approve
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
 - **AND** PR is approved with all checks passing
-- **WHEN** the release action reaches the merge phase
+- **WHEN** the review action reaches the merge phase
 - **THEN** it SHALL pause and ask for explicit user confirmation
 - **AND** SHALL only merge after the user confirms
 

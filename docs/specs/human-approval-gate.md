@@ -7,15 +7,15 @@ lastModified: 2026-04-13
 ---
 ## Purpose
 
-Defines the QA loop with mandatory explicit human approval before finalizing, including success metric validation, fix-verify cycles, and bidirectional feedback between code and specs. The QA loop now produces a `review.md` artifact in the change directory (replacing the previous transient verify report) as the approval gate.
+Defines the QA loop with mandatory explicit human approval before finalizing, including success metric validation, fix-verify cycles, and bidirectional feedback between code and specs. The QA loop now produces a `audit.md` artifact in the change directory (replacing the previous transient verify report) as the approval gate.
 
 ## Requirements
 
 ### Requirement: QA Loop with Mandatory Approval
 
-The system SHALL require explicit human approval before a change can proceed to the post-apply workflow, unless `auto_approve: true` is set in WORKFLOW.md and the review.md verdict is PASS (no CRITICAL or WARNING issues). When auto_approve is true and review passes cleanly, the system SHALL auto-approve and proceed without pausing. The QA loop consists of: (1) generating `review.md` in the change directory using the review template to produce a persisted verification report, (2) presenting findings to the user, and (3) waiting for an explicit "Approved" response. The system SHALL NOT proceed without receiving explicit human approval. Approval SHALL only be requested after verification has been run and all CRITICAL issues have been resolved. The tasks.md template SHALL include a QA Loop section with an explicit human approval checkbox that MUST be checked before proceeding. Every Success Metric from design.md SHALL be carried over as a PASS/FAIL checkbox in the QA Loop section.
+The system SHALL require explicit human approval before a change can proceed to the post-apply workflow, unless `auto_approve: true` is set in WORKFLOW.md and the audit.md verdict is PASS (no CRITICAL or WARNING issues). When auto_approve is true and review passes cleanly, the system SHALL auto-approve and proceed without pausing. The QA loop consists of: (1) generating `audit.md` in the change directory using the review template to produce a persisted verification report, (2) presenting findings to the user, and (3) waiting for an explicit "Approved" response. The system SHALL NOT proceed without receiving explicit human approval. Approval SHALL only be requested after verification has been run and all CRITICAL issues have been resolved. The tasks.md template SHALL include a QA Loop section with an explicit human approval checkbox that MUST be checked before proceeding. Every Success Metric from design.md SHALL be carried over as a PASS/FAIL checkbox in the QA Loop section.
 
-Approval SHALL be gated by a final verification pass. After the Fix Loop completes (all CRITICAL issues resolved, code and specs in sync), a final `review.md` SHALL be regenerated (Final Verify step) before the user is asked for approval. This ensures that all changes made during the Fix Loop — including spec updates, design changes, and code fixes — are verified as consistent before finalizing. If the Fix Loop was not entered (first verify was clean), the Final Verify step can be marked complete immediately.
+Approval SHALL be gated by a final verification pass. After the Fix Loop completes (all CRITICAL issues resolved, code and specs in sync), a final `audit.md` SHALL be regenerated (Final Verify step) before the user is asked for approval. This ensures that all changes made during the Fix Loop — including spec updates, design changes, and code fixes — are verified as consistent before finalizing. If the Fix Loop was not entered (first verify was clean), the Final Verify step can be marked complete immediately.
 
 The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verify, User Testing, Fix Loop, Final Verify, and Approval. The exact step numbering is a template concern defined in the tasks Smart Template. Implementation changes are committed and pushed before User Testing via the `apply.instruction` in WORKFLOW.md (not as a template step).
 
@@ -24,7 +24,7 @@ The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verif
 #### Scenario: Approval after clean verification
 
 - **GIVEN** a change "add-user-auth" has been implemented and all tasks are complete
-- **AND** apply generates `review.md` which shows no CRITICAL or WARNING issues
+- **AND** apply generates `audit.md` which shows no CRITICAL or WARNING issues
 - **AND** all success metric checkboxes in the QA Loop section are marked PASS
 - **WHEN** the system presents the verification report
 - **THEN** the system asks for explicit approval
@@ -60,14 +60,14 @@ The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verif
 - **GIVEN** a change where Auto-Verify found CRITICAL issues
 - **AND** the developer completed the Fix Loop, fixing all issues
 - **WHEN** the Fix Loop is complete
-- **THEN** the system SHALL regenerate `review.md` one final time (Final Verify)
+- **THEN** the system SHALL regenerate `audit.md` one final time (Final Verify)
 - **AND** the final verify report SHALL confirm 0 CRITICAL issues
 - **AND** only then SHALL the system proceed to request Approval
 
 #### Scenario: Auto-approve bypasses user testing when PASS and auto_approve true
 
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
-- **AND** apply generates `review.md` with verdict PASS and 0 CRITICAL / 0 WARNING issues
+- **AND** apply generates `audit.md` with verdict PASS and 0 CRITICAL / 0 WARNING issues
 - **WHEN** the QA loop reaches the User Testing step
 - **THEN** the system SHALL skip the user testing pause
 - **AND** SHALL auto-mark the Approval checkbox as complete
@@ -76,7 +76,7 @@ The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verif
 #### Scenario: Auto-approve does NOT bypass when warnings present
 
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
-- **AND** apply generates `review.md` with verdict PASS WITH WARNINGS
+- **AND** apply generates `audit.md` with verdict PASS WITH WARNINGS
 - **WHEN** the QA loop reaches the User Testing step
 - **THEN** the system SHALL pause for user review of the warnings
 - **AND** SHALL NOT auto-approve
@@ -103,11 +103,11 @@ The QA Loop SHALL include the following steps in order: Metric Check, Auto-Verif
 
 Verify issues and user correction requests SHALL be resolved via a tiered re-entry process before re-verification. Before applying any fix, the system SHALL classify the correction into one of three tiers and apply the matching re-entry depth:
 
-**Tier 1 — Tweak**: The correction changes a value, line, or detail *within* the current approach (wrong value, typo, missing line, formatting error). Re-entry depth: fix in place, then regenerate `review.md`.
+**Tier 1 — Tweak**: The correction changes a value, line, or detail *within* the current approach (wrong value, typo, missing line, formatting error). Re-entry depth: fix in place, then regenerate `audit.md`.
 
-**Tier 2 — Design Pivot**: The correction changes *which files are modified* or *which approach/abstraction is used*, but requirements are still correct (wrong file edited, wrong architectural pattern, wrong abstraction level). Re-entry depth: update `design.md` to reflect the corrected approach, discard and re-generate the affected task sections in `tasks.md`, re-implement from the updated design, then regenerate `review.md`.
+**Tier 2 — Design Pivot**: The correction changes *which files are modified* or *which approach/abstraction is used*, but requirements are still correct (wrong file edited, wrong architectural pattern, wrong abstraction level). Re-entry depth: update `design.md` to reflect the corrected approach, discard and re-generate the affected task sections in `tasks.md`, re-implement from the updated design, then regenerate `audit.md`.
 
-**Tier 3 — Scope Change**: The correction changes *which requirements apply* or *who the target audience is* (wrong capability scope, missing requirement, wrong consumer model). Re-entry depth: update `docs/specs/<capability>.md` and `proposal.md` to reflect the corrected scope, update `design.md`, re-generate affected tasks, re-implement fully, then regenerate `review.md`.
+**Tier 3 — Scope Change**: The correction changes *which requirements apply* or *who the target audience is* (wrong capability scope, missing requirement, wrong consumer model). Re-entry depth: update `docs/specs/<capability>.md` and `proposal.md` to reflect the corrected scope, update `design.md`, re-generate affected tasks, re-implement fully, then regenerate `audit.md`.
 
 **Detection signals** — the system SHALL check these before classifying a correction:
 - A completed task needs to be reverted or undone → Design Pivot or Scope Change
@@ -117,11 +117,11 @@ Verify issues and user correction requests SHALL be resolved via a tiered re-ent
 - The correction reveals that a listed requirement does not apply to the correct audience → Scope Change
 - More than two incremental fix commits on the same issue → heuristic signal; treat as Design Pivot or Scope Change unless the agent can confirm each commit was a genuine independent Tweak
 
-**Artifact staleness rule**: For Tier 2 and Tier 3 corrections, ALL stale change artifacts SHALL be updated before re-implementing. A stale artifact is any change file (design.md, tasks.md, preflight.md, review.md) that still describes the original (wrong) approach. The system SHALL NOT leave stale artifacts in the change directory that contradict the corrected implementation.
+**Artifact staleness rule**: For Tier 2 and Tier 3 corrections, ALL stale change artifacts SHALL be updated before re-implementing. A stale artifact is any change file (design.md, tasks.md, preflight.md, audit.md) that still describes the original (wrong) approach. The system SHALL NOT leave stale artifacts in the change directory that contradict the corrected implementation.
 
 The bidirectional feedback principle applies at all tiers: updating a spec or design to match the intended implementation is always a valid resolution path.
 
-After all fixes are applied at the appropriate re-entry depth, the system SHALL regenerate `review.md` to confirm resolution. The system SHALL support iterative fix-verify cycles until all CRITICAL issues are resolved and the user is satisfied with remaining warnings.
+After all fixes are applied at the appropriate re-entry depth, the system SHALL regenerate `audit.md` to confirm resolution. The system SHALL support iterative fix-verify cycles until all CRITICAL issues are resolved and the user is satisfied with remaining warnings.
 
 **User Story:** As a developer I want a structured fix-verify loop with explicit re-entry tiers, so that approach changes trigger artifact updates and clean re-implementation instead of patch commits on top of a wrong design.
 
@@ -132,7 +132,7 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **WHEN** the system classifies the correction
 - **THEN** it SHALL identify this as Tier 1 — Tweak
 - **AND** SHALL fix the value in place
-- **AND** SHALL regenerate `review.md` after the fix
+- **AND** SHALL regenerate `audit.md` after the fix
 
 #### Scenario: Classify correction as Design Pivot — update design and re-implement
 
@@ -143,17 +143,17 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **AND** SHALL update `design.md` Architecture & Components to reflect the correct file targets
 - **AND** SHALL discard and re-generate the affected task sections
 - **AND** SHALL re-implement the affected tasks from the corrected design
-- **AND** SHALL regenerate `review.md` after re-implementation
+- **AND** SHALL regenerate `audit.md` after re-implementation
 
 #### Scenario: Design Pivot updates all stale artifacts
 
 - **GIVEN** a Design Pivot correction has occurred
-- **AND** the existing `review.md` in the change directory still shows PASS against the original (wrong) approach
+- **AND** the existing `audit.md` in the change directory still shows PASS against the original (wrong) approach
 - **WHEN** the system applies the Tier 2 re-entry
 - **THEN** it SHALL update `design.md` to reflect the corrected approach
 - **AND** SHALL update `tasks.md` affected sections to remove old tasks and add corrected ones
-- **AND** SHALL delete `review.md` (stale) before re-implementing
-- **AND** SHALL generate a new `review.md` from the corrected implementation
+- **AND** SHALL delete `audit.md` (stale) before re-implementing
+- **AND** SHALL generate a new `audit.md` from the corrected implementation
 
 #### Scenario: Classify correction as Scope Change — update specs and re-implement
 
@@ -165,13 +165,13 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **AND** SHALL update `design.md` to align with the corrected requirements
 - **AND** SHALL re-generate affected task sections in `tasks.md`
 - **AND** SHALL re-implement fully from the corrected design
-- **AND** SHALL regenerate `review.md` after re-implementation
+- **AND** SHALL regenerate `audit.md` after re-implementation
 
 #### Scenario: Fix code to resolve critical issue
 
 - **GIVEN** a verification report with CRITICAL issue "Requirement not found: Session Timeout"
 - **WHEN** the developer implements session timeout logic in the auth module
-- **AND** regenerates `review.md`
+- **AND** regenerates `audit.md`
 - **THEN** the new verification report no longer lists the session timeout issue as CRITICAL
 - **AND** the Completeness dimension reflects the additional requirement coverage
 
@@ -180,14 +180,14 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **GIVEN** a verification report with WARNING "Implementation may diverge from spec: auth uses session cookies, spec requires JWT"
 - **AND** the developer intentionally chose session cookies over JWT
 - **WHEN** the developer updates the spec to reflect session cookie authentication
-- **AND** regenerates `review.md`
+- **AND** regenerates `audit.md`
 - **THEN** the new verification report no longer lists the divergence warning
 - **AND** the spec accurately reflects the implementation
 
 #### Scenario: Multiple fix-verify iterations
 
 - **GIVEN** a first verification finds 3 CRITICAL and 2 WARNING issues
-- **WHEN** the developer fixes all 3 CRITICAL issues and regenerates `review.md`
+- **WHEN** the developer fixes all 3 CRITICAL issues and regenerates `audit.md`
 - **THEN** the second report shows 0 CRITICAL issues
 - **AND** may show the same 2 warnings plus any new issues introduced by the fixes
 - **AND** the developer may choose to address warnings or approve with acknowledged warnings
@@ -196,7 +196,7 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 
 - **GIVEN** a developer fixes a CRITICAL issue by refactoring the auth module
 - **AND** the refactoring removes a function that another requirement depends on
-- **WHEN** the developer regenerates `review.md`
+- **WHEN** the developer regenerates `audit.md`
 - **THEN** the original CRITICAL issue is resolved
 - **BUT** a new CRITICAL issue appears for the broken dependency
 - **AND** the developer must address the new issue before approval
@@ -206,12 +206,12 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 - **GIVEN** a verification finds that the implementation uses a different architectural pattern than design.md specifies
 - **AND** the new pattern is superior and the developer wants to keep it
 - **WHEN** the developer updates design.md to document the actual architecture
-- **AND** regenerates `review.md`
+- **AND** regenerates `audit.md`
 - **THEN** the coherence check passes because design.md now matches the implementation
 
 ## Edge Cases
 
-- **Approval without running verify**: If `review.md` has never been generated for the current change, the QA Loop approval checkbox in tasks.md will not be checked. The system SHALL warn that verification has not been performed.
+- **Approval without running verify**: If `audit.md` has never been generated for the current change, the QA Loop approval checkbox in tasks.md will not be checked. The system SHALL warn that verification has not been performed.
 - **Stale verification**: If code changes are made after the last verify run, the verification report may be stale. The system does not enforce re-verification automatically but SHALL note the timestamp of the last verify run relative to the most recent code changes when the user proceeds with the post-apply workflow.
 - **No design.md success metrics**: If design.md does not contain explicit success metrics, the QA Loop section SHALL still include the mandatory human approval checkbox but will have no PASS/FAIL metric checkboxes.
 - **User provides partial approval**: If the user responds with something ambiguous (e.g., "looks ok" or "seems fine"), the system SHALL clarify that it needs an explicit "Approved" and SHALL NOT treat ambiguous responses as approval.

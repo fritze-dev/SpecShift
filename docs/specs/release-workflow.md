@@ -386,7 +386,7 @@ The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`).
 
 #### Scenario: Finalize triggers AOT compilation
 
-- **GIVEN** a completed change with review.md verdict PASS
+- **GIVEN** a completed change with audit.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
 - **THEN** it SHALL copy source files to the release directory (`.claude/`)
 - **AND** SHALL generate compiled requirements files for each built-in action at `.claude/skills/specshift/actions/<action>.md`
