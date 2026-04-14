@@ -110,7 +110,7 @@ The `specshift propose` skill SHALL execute post-artifact commit logic after cre
 The system SHALL create a change workspace when the user invokes `specshift propose <change-name>`. The workspace directory SHALL use a creation-date prefix in the format `YYYY-MM-DD-<change-name>`, set at creation time and never changed. If `worktree.enabled` is `true` in WORKFLOW.md, the system SHALL create a git worktree (see "Create Worktree-Based Workspace" requirement) and then create the change directory inside it via `mkdir -p <worktree>/.specshift/changes/YYYY-MM-DD-<name>`. If worktree mode is not enabled, the workspace SHALL be created by running `mkdir -p .specshift/changes/YYYY-MM-DD-<name>`. The change name MUST be in kebab-case format. If the user provides a description instead of a name, the system SHALL derive a kebab-case name from the description. The system SHALL NOT proceed without a valid change name.
 
 When the proposal artifact (`proposal.md`) is created for a change, the propose action SHALL include YAML frontmatter with tracking fields:
-- `status: active` — change lifecycle (flipped to `completed` during verify completion)
+- `status: active` — change lifecycle (`active` → `review` when audit passes, `review` → `completed` after PR merge)
 - `branch: <branch-name>` — git branch association
 - `worktree: <worktree-path>` — only when worktree mode is enabled
 - `capabilities` — structured list of affected capabilities:

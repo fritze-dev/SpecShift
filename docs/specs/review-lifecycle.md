@@ -144,7 +144,7 @@ The review action SHALL support iterative review cycles: after processing commen
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling. Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling, then set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
@@ -154,6 +154,7 @@ When no unresolved review threads remain and CI checks are passing, the review a
 - **WHEN** the action asks for merge confirmation
 - **AND** the user confirms
 - **THEN** the action merges the PR using available GitHub tooling
+- **AND** sets proposal `status` to `completed`
 - **AND** triggers post-merge cleanup per change-workspace.md
 
 #### Scenario: CI checks pending delays merge

@@ -34,7 +34,7 @@ The system SHALL define an 8-stage artifact pipeline with the following stages i
 ### Requirement: Artifact Output Frontmatter
 Certain pipeline artifacts SHALL include YAML frontmatter in their generated output for machine-readable metadata:
 
-- **proposal.md**: SHALL include frontmatter with `status` (active/completed), `branch`, optionally `worktree`, and `capabilities` (structured list of new/modified/removed capability names mirroring the body's Capabilities section). Skills that create proposals SHALL populate these fields. Skills that read proposals SHALL use frontmatter fields preferentially over parsing markdown sections.
+- **proposal.md**: SHALL include frontmatter with `status` (active/review/completed), `branch`, optionally `worktree`, and `capabilities` (structured list of new/modified/removed capability names mirroring the body's Capabilities section). Skills that create proposals SHALL populate these fields. Skills that read proposals SHALL use frontmatter fields preferentially over parsing markdown sections.
 - **design.md**: SHALL include frontmatter with `has_decisions` (boolean, `true` if the Decisions section contains at least one entry). Skills that scan for design decisions (docs, docs-verify) SHALL check this field to skip designs without decisions.
 
 Other artifacts (research.md, preflight.md, tasks.md) do not require output frontmatter.

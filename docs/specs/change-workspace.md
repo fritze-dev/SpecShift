@@ -16,7 +16,7 @@ Manages the change lifecycle including workspace creation (now part of `specshif
 The system SHALL create a change workspace when the user invokes `specshift propose <change-name>`. The workspace directory SHALL use a creation-date prefix in the format `YYYY-MM-DD-<change-name>`, set at creation time and never changed. If `worktree.enabled` is `true` in WORKFLOW.md, the system SHALL create a git worktree (see "Create Worktree-Based Workspace" requirement) and then create the change directory inside it via `mkdir -p <worktree>/.specshift/changes/YYYY-MM-DD-<name>`. If worktree mode is not enabled, the workspace SHALL be created by running `mkdir -p .specshift/changes/YYYY-MM-DD-<name>`. The change name MUST be in kebab-case format. If the user provides a description instead of a name, the system SHALL derive a kebab-case name from the description. The system SHALL NOT proceed without a valid change name.
 
 When the proposal artifact (`proposal.md`) is created for a change, the propose action SHALL include YAML frontmatter with tracking fields:
-- `status: active` — change lifecycle (flipped to `completed` during verify completion)
+- `status: active` — change lifecycle (`active` → `review` when audit passes, `review` → `completed` after PR merge)
 - `branch: <branch-name>` — git branch association
 - `worktree: <worktree-path>` — only when worktree mode is enabled
 - `capabilities` — structured list of affected capabilities:
@@ -282,11 +282,16 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 ### Requirement: Active vs Completed Change Detection
 
-The router SHALL distinguish active from completed changes using the proposal's `status` frontmatter field. A change is considered **active** if its `proposal.md` has `status: active` or has no `status` field (legacy/early pipeline). A change is considered **completed** if its `proposal.md` has `status: completed`. The `status` field is set to `active` at change creation and flipped to `completed` during verify completion (same step that flips spec `draft → stable`).
+The router SHALL distinguish change phases using the proposal's `status` frontmatter field. The lifecycle has three states:
+- **`active`** — change is being developed (propose, apply phases). Set at change creation.
+- **`review`** — implementation verified, PR under review. Set when audit.md passes (same step that flips spec `draft → stable`).
+- **`completed`** — PR merged, change finished. Set by the review action after successful merge.
+
+A change is considered **active** if its `proposal.md` has `status: active` or has no `status` field (legacy/early pipeline). A change is considered **in review** if its `proposal.md` has `status: review`. A change is considered **completed** if its `proposal.md` has `status: completed`.
 
 **Fallback** (for proposals without frontmatter): A change is active if its `tasks.md` contains at least one unchecked item (`- [ ]`) or if `tasks.md` does not exist. A change is completed if its `tasks.md` exists and all items are checked (`- [x]`).
 
-Actions that operate on active changes (propose, apply) SHALL filter to active changes. Actions that operate on completed changes (finalize) SHALL filter to completed changes.
+Actions that operate on active changes (propose, apply) SHALL filter to active changes. Actions that operate on changes in review (finalize, review) SHALL filter to changes with `status: review` or `status: completed`. The review action SHALL also accept `status: review` changes (its primary input).
 
 **User Story:** As a developer I want the system to distinguish active from completed changes using structured metadata, so that detection is instant and does not require parsing task checkboxes.
 

@@ -98,7 +98,7 @@ The system SHALL verify the implementation against change artifacts as part of `
 
 **Verify completion (draft→stable flip):** When verify passes (no CRITICAL issues) and the change is approved for merge, the system SHALL finalize tracking fields:
 - **Specs**: For all specs modified by this change: set `status: stable`, remove the `change` field, increment `version` by 1, and set `lastModified` to the current date.
-- **Proposal**: Set `proposal.md` frontmatter `status` to `completed`.
+- **Proposal**: Set `proposal.md` frontmatter `status` to `review` (indicating the change is verified and ready for PR review; `completed` is set later by the review action after merge).
 
 This completion step runs as part of the post-apply workflow, after user approval and before the merge commit. Each issue found SHALL be classified as CRITICAL (must fix before proceeding), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
 
@@ -132,7 +132,7 @@ The audit.md generation SHALL serve as both the initial verification (tasks.md s
 - **WHEN** the verify completion step runs
 - **THEN** `quality-gates` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 4`, `lastModified: 2026-04-08`
 - **AND** `spec-format` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 6`, `lastModified: 2026-04-08`
-- **AND** `proposal.md` frontmatter SHALL be updated to `status: completed`
+- **AND** `proposal.md` frontmatter SHALL be updated to `status: review`
 
 #### Scenario: Test coverage verification with automated tests
 - **GIVEN** a change with `tests.md` listing 5 automated test files and 2 manual test items

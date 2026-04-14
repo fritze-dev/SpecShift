@@ -197,7 +197,7 @@ The system SHALL verify the implementation against change artifacts as part of `
 
 **Verify completion (draft→stable flip):** When verify passes (no CRITICAL issues) and the change is approved for merge, the system SHALL finalize tracking fields:
 - **Specs**: For all specs modified by this change: set `status: stable`, remove the `change` field, increment `version` by 1, and set `lastModified` to the current date.
-- **Proposal**: Set `proposal.md` frontmatter `status` to `completed`.
+- **Proposal**: Set `proposal.md` frontmatter `status` to `review` (indicating the change is verified and ready for PR review; `completed` is set later by the review action after merge).
 
 This completion step runs as part of the post-apply workflow, after user approval and before the merge commit. Each issue found SHALL be classified as CRITICAL (must fix before proceeding), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
 
@@ -231,7 +231,7 @@ The audit.md generation SHALL serve as both the initial verification (tasks.md s
 - **WHEN** the verify completion step runs
 - **THEN** `quality-gates` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 4`, `lastModified: 2026-04-08`
 - **AND** `spec-format` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 6`, `lastModified: 2026-04-08`
-- **AND** `proposal.md` frontmatter SHALL be updated to `status: completed`
+- **AND** `proposal.md` frontmatter SHALL be updated to `status: review`
 
 #### Scenario: Test coverage verification with automated tests
 - **GIVEN** a change with `tests.md` listing 5 automated test files and 2 manual test items
@@ -600,11 +600,16 @@ After all fixes are applied at the appropriate re-entry depth, the system SHALL 
 
 ### Requirement: Active vs Completed Change Detection
 
-The router SHALL distinguish active from completed changes using the proposal's `status` frontmatter field. A change is considered **active** if its `proposal.md` has `status: active` or has no `status` field (legacy/early pipeline). A change is considered **completed** if its `proposal.md` has `status: completed`. The `status` field is set to `active` at change creation and flipped to `completed` during verify completion (same step that flips spec `draft → stable`).
+The router SHALL distinguish change phases using the proposal's `status` frontmatter field. The lifecycle has three states:
+- **`active`** — change is being developed (propose, apply phases). Set at change creation.
+- **`review`** — implementation verified, PR under review. Set when audit.md passes (same step that flips spec `draft → stable`).
+- **`completed`** — PR merged, change finished. Set by the review action after successful merge.
+
+A change is considered **active** if its `proposal.md` has `status: active` or has no `status` field (legacy/early pipeline). A change is considered **in review** if its `proposal.md` has `status: review`. A change is considered **completed** if its `proposal.md` has `status: completed`.
 
 **Fallback** (for proposals without frontmatter): A change is active if its `tasks.md` contains at least one unchecked item (`- [ ]`) or if `tasks.md` does not exist. A change is completed if its `tasks.md` exists and all items are checked (`- [x]`).
 
-Actions that operate on active changes (propose, apply) SHALL filter to active changes. Actions that operate on completed changes (finalize) SHALL filter to completed changes.
+Actions that operate on active changes (propose, apply) SHALL filter to active changes. Actions that operate on changes in review (finalize, review) SHALL filter to changes with `status: review` or `status: completed`. The review action SHALL also accept `status: review` changes (its primary input).
 
 **User Story:** As a developer I want the system to distinguish active from completed changes using structured metadata, so that detection is instant and does not require parsing task checkboxes.
 
