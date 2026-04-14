@@ -299,7 +299,7 @@ The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstra
 - **GIVEN** a project with an existing `CLAUDE.md` file that contains a `## Workflow` section but lacks a `## Planning` section or `## Knowledge Management` section
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL NOT overwrite or modify `CLAUDE.md`
-- **AND** SHALL report WARNING: "CLAUDE.md missing standard section: Knowledge Management"
+- **AND** SHALL report WARNING for each missing standard section (e.g., "CLAUDE.md missing standard section: Planning")
 - **AND** SHALL suggest the user add the missing section manually
 
 ### Requirement: Initial Change Creation
