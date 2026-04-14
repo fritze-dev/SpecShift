@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Optimize Workflow and Context Management
+
+### Added
+- `.claudaignore` file to exclude `.specshift/changes/` from agent indexing, reducing token overhead
+
+### Changed
+- Workflow pipeline shortened from 8 steps to 3 (`[research, tasks, review]`) to prevent quadratic token growth in `.specshift/WORKFLOW.md`
+- `finalize` action: removed automatic regeneration of capability docs and ADRs to reduce LLM context load
+
 ## 2026-04-14 — Review Comment Acknowledgment
 
 ### Added
@@ -22,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Removed
 - Design review checkpoint convention from `.specshift/CONSTITUTION.md` — operational detail already lives in WORKFLOW.md propose instruction (Layer Separation)
-- Preflight Quality Check reference from `src/actions/init.md` — belongs to propose, not init
+- Preflight Quality Check reference from `src/actions/init.md` — belongs to propose, not __init__
 
 ### Specs
 - `three-layer-architecture.md` v5: added Layer Separation scenarios for constitution-workflow duplication and consumer template purity
