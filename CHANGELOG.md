@@ -3,21 +3,26 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## 2026-04-14 — Add Release Action
+## 2026-04-14 — Add Review Action
 
 ### Added
-- New `release` custom action for automated PR review-to-merge lifecycle — processes review comments, runs self-review, and merges with user confirmation
-- `release` configuration block in WORKFLOW.md frontmatter (`request_review: false | copilot | true`) for configurable reviewer assignment
-- Conditional `finalize → release` auto-dispatch in router when `auto_approve: true` and `release` is in the actions array
-- `release` added to default consumer template actions array
+- New `review` built-in action for automated PR review-to-merge lifecycle — re-entrant state machine that processes review comments, runs self-check, and merges with mandatory user confirmation
+- New spec `review-lifecycle.md` with 6 requirements (PR state assessment, draft-to-ready transition, review request dispatch, comment processing, safety limits, merge confirmation)
+- `review` configuration block in WORKFLOW.md frontmatter (`request_review: false | copilot | true`) for configurable reviewer assignment
+- Conditional `finalize → review` auto-dispatch in router when `auto_approve: true` and `review` is in the actions array
+- `review` added to default consumer template actions array (5 built-in actions total)
+- Proposal status lifecycle: `active → review → completed` (review = PR under review, completed = merged)
 
 ### Changed
-- Consumer workflow template version bumped from 4 to 5
-- Workflow diagram updated to include Release step
+- Implementation verification artifact renamed from `review.md` to `audit.md` to avoid naming collision with the review action
+- Pipeline updated: `[research, proposal, specs, design, preflight, tests, tasks, audit]`
+- Consumer workflow template version bumped from 4 to 6
+- Plugin version bumped from 0.1.8-beta to 0.2.0-beta (breaking: action surface change)
 
 ### Specs
-- `workflow-contract.md` v9: added Release Action Configuration requirement with 5 scenarios (config variants, user confirmation, re-entrancy)
-- Updated auto-dispatch scenario to include finalize→release chain
+- New: `review-lifecycle.md` v1 — 6 requirements, 19 scenarios
+- `workflow-contract.md` v9: added Review Action Configuration requirement, updated "4 built-in" → "5 built-in", renamed review artifact to audit
+- `three-layer-architecture.md`, `release-workflow.md`, `artifact-pipeline.md`, `quality-gates.md`, `human-approval-gate.md`, `task-implementation.md`, `documentation.md`: updated for review/audit naming
 
 ## 2026-04-14 — Fix SpecShift Skill Flow Triggering
 

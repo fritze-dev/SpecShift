@@ -170,10 +170,10 @@ When no unresolved review threads remain and CI checks are passing, the review a
 
 ### Requirement: Review Action Configuration
 
-WORKFLOW.md frontmatter SHALL support an optional `review` configuration object for the `review` custom action. The `review` object SHALL contain:
+WORKFLOW.md frontmatter SHALL support an optional `review` configuration object for the `review` built-in action. The `review` object SHALL contain:
 - `request_review` (optional, defaults to `false`) — controls whether the review action requests an external review when marking the PR ready. Values: `false` (no reviewer assigned), `copilot` (request Copilot review using available GitHub tooling), `true` (request review from the repository's default reviewers using available GitHub tooling). If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
 
-The `review` action itself is a custom action defined via `## Action: review` in the WORKFLOW.md body. Its behavior (re-entrant PR state machine, review comment processing, self-review via built-in tools, merge with user confirmation) is specified in the instruction text. This requirement covers only the frontmatter configuration surface.
+The `review` action is a built-in action with compiled requirements (extracted from `docs/specs/review-lifecycle.md`) and an instruction defined via `## Action: review` in the WORKFLOW.md body. Its behavior (re-entrant PR state machine, review comment processing, self-review via built-in tools, merge with user confirmation) is specified in the review-lifecycle spec. This requirement covers only the frontmatter configuration surface.
 
 When `auto_approve` is `true` and `review` is listed in the `actions` array, the router SHALL auto-dispatch from finalize to review after finalize completes successfully. The review action SHALL always pause for explicit user confirmation before merging, regardless of the `auto_approve` setting — `auto_approve` controls only the dispatch (whether review is started automatically), not the merge itself.
 

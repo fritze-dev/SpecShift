@@ -7,7 +7,7 @@ lastModified: 2026-04-13
 ---
 ## Purpose
 
-Defines the QA loop with mandatory explicit human approval before finalizing, including success metric validation, fix-verify cycles, and bidirectional feedback between code and specs. The QA loop now produces a `audit.md` artifact in the change directory (replacing the previous transient verify report) as the approval gate.
+Defines the QA loop with mandatory explicit human approval before finalizing, including success metric validation, fix-verify cycles, and bidirectional feedback between code and specs. The QA loop now produces an `audit.md` artifact in the change directory (replacing the previous transient verify report) as the approval gate.
 
 ## Requirements
 

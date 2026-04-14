@@ -7,7 +7,7 @@ lastModified: 2026-04-10
 ---
 ## Purpose
 
-Provides `specshift propose` for pre-implementation quality checks across six dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `audit.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
+Provides `specshift propose` for pre-implementation quality checks across six dimensions, and post-implementation verification (now part of `specshift apply`) that produces an `audit.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
 
 ## Requirements
 
@@ -92,7 +92,7 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 
 ### Requirement: Post-Implementation Verification (audit.md)
 
-The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing a `audit.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (test coverage: automated tests pass, manual test checklist items verified), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
+The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing an `audit.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (test coverage: automated tests pass, manual test checklist items verified), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
 
 **Draft spec gate:** As part of verification, the system SHALL check all specs listed in the change's proposal for `status: draft` with `change` matching the current change. If any such specs remain in draft status, the verify report SHALL include a CRITICAL issue: "Spec <name> is still in draft status — must be finalized before merge." This gate ensures no draft specs reach the main branch.
 

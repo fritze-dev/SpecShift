@@ -31,7 +31,7 @@ Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks →
 ## Context
 
 Always read and follow .specshift/CONSTITUTION.md before proceeding.
-All workflow artifacts (research, proposal, specs, design, preflight, tasks, audit)
+All workflow artifacts (research, proposal, specs, design, preflight, tests, tasks, audit)
 must be written in English regardless of docs_language.
 
 ## Action: propose

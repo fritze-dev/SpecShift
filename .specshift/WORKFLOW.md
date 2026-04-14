@@ -1,6 +1,6 @@
 ---
-template-version: 4
-plugin-version: 0.1.8-beta
+template-version: 6
+plugin-version: 0.2.0-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
 
@@ -29,7 +29,7 @@ Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks →
 ## Context
 
 Always read and follow .specshift/CONSTITUTION.md before proceeding.
-All workflow artifacts (research, proposal, specs, design, preflight, tasks, audit)
+All workflow artifacts (research, proposal, specs, design, preflight, tests, tasks, audit)
 must be written in English regardless of docs_language.
 
 ## Action: propose

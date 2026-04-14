@@ -19,15 +19,15 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 
 ## Features
 
-- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (7 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, `release`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
-- **Release action configuration** -- optional `release` object in WORKFLOW.md frontmatter with `request_review` field (`false` by default, `copilot` for Copilot review, `true` for repo default reviewers). The release action automates the PR review-to-merge lifecycle: processing review comments, running self-review, and merging with user confirmation
+- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (8 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, `review`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **Review action configuration** -- optional `review` object in WORKFLOW.md frontmatter with `request_review` field (`false` by default, `copilot` for Copilot review, `true` for repo default reviewers). The review action automates the PR review-to-merge lifecycle: processing review comments, running self-check, and merging with mandatory user confirmation
 - **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, baked into the compiled workflow template at compile time. The router compares the project's `plugin-version` against the compiled template's version on every action (except init) and displays an advisory warning on mismatch
 - **Smart Template format** -- each template carries `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields in YAML frontmatter, with the output structure as the markdown body
 - **Inline action definitions** -- `actions` array in frontmatter lists action names (built-in and custom); each action has a `## Action: <name>` body section with `### Instruction` for procedural guidance
 - **Custom actions** -- consumer projects define additional actions by adding names to the `actions` array and writing corresponding `## Action: <name>` body sections with self-contained instructions; no plugin modification required
 - **Router dispatch pattern** -- single router handles all commands (built-in and custom) in 5 steps: Load Configuration (WORKFLOW.md read once), Identify Action, Plugin Version Check, Change Context Detection, Dispatch; validates actions against the `actions` array with fallback to built-in list
 - **Template versioning** -- `template-version` (integer, monotonically increasing) enables version-aware merge during `specshift init`
-- **Auto-approve default** -- `auto_approve` defaults to `true` when absent or uncommented; the full pipeline runs end-to-end without pausing: propose skips the design checkpoint, auto-dispatches apply; apply skips the user testing pause on PASS, auto-dispatches finalize; finalize auto-dispatches release when `release` is in the actions array. Set to `false` to pause at every checkpoint (design review, user testing gate, approval).
+- **Auto-approve default** -- `auto_approve` defaults to `true` when absent or uncommented; the full pipeline runs end-to-end without pausing: propose skips the design checkpoint, auto-dispatches apply; apply skips the user testing pause on PASS, auto-dispatches finalize; finalize auto-dispatches review when `review` is in the actions array. Set to `false` to pause at every checkpoint (design review, user testing gate, approval).
 
 ## Behavior
 
@@ -37,19 +37,19 @@ The router reads WORKFLOW.md's YAML frontmatter to determine the template direct
 
 ### Auto-Approve Controls Checkpoint Behavior
 
-The `auto_approve` field in WORKFLOW.md frontmatter defaults to `true`. When `true`, the full pipeline runs end-to-end without pausing on success paths: propose skips the design review checkpoint and auto-dispatches apply; apply skips the user testing pause when review.md verdict is PASS and auto-dispatches finalize; finalize auto-dispatches release when `release` is in the actions array. When explicitly set to `false`, the pipeline pauses at each checkpoint: design review (user alignment), user testing gate (manual approval), and post-apply approval. FAIL or BLOCKED verdicts always stop regardless of `auto_approve`. The release action always pauses for user confirmation before merging, regardless of `auto_approve` -- auto-approve controls the dispatch (whether release starts automatically), not the merge itself.
+The `auto_approve` field in WORKFLOW.md frontmatter defaults to `true`. When `true`, the full pipeline runs end-to-end without pausing on success paths: propose skips the design review checkpoint and auto-dispatches apply; apply skips the user testing pause when audit.md verdict is PASS and auto-dispatches finalize; finalize auto-dispatches review when `review` is in the actions array. When explicitly set to `false`, the pipeline pauses at each checkpoint: design review (user alignment), user testing gate (manual approval), and post-apply approval. FAIL or BLOCKED verdicts always stop regardless of `auto_approve`. The review action always pauses for user confirmation before merging, regardless of `auto_approve` -- auto-approve controls the dispatch (whether review starts automatically), not the merge itself.
 
 ### Smart Templates Are Self-Describing
 
 Each template file contains everything needed to generate its artifact: the `instruction` field provides behavioral constraints for the AI, the `generates` field specifies where the output goes, `requires` lists dependency artifacts, and the markdown body defines the output structure. The `instruction` content is never copied into generated artifacts -- it serves only as generation-time constraints.
 
-### Built-in Actions Use Requirement Links from SKILL.md
+### Built-in Actions Use Compiled Requirements
 
-Each built-in action (init, propose, apply, finalize) has a `## Action: <name>` section in the WORKFLOW.md body containing `### Instruction` with procedural guidance. Requirement links (clickable markdown links to spec requirements) live in the SKILL.md file, not in WORKFLOW.md. When executing a built-in action, the router reads the instruction from WORKFLOW.md and the requirement links from SKILL.md, loads the referenced requirements from specs, and spawns a sub-agent with bounded context.
+Each built-in action (init, propose, apply, finalize, review) has a `## Action: <name>` section in the WORKFLOW.md body containing `### Instruction` with procedural guidance. Requirement links live in separate source files at `src/actions/<action>.md`, consumed by the AOT compiler to produce compiled requirement files at `.claude/skills/specshift/actions/<action>.md`. When executing a built-in action, the router reads the instruction from WORKFLOW.md (JIT, project-specific) and the compiled requirements (AOT, plugin-level).
 
 ### Action Instructions Describe Intra-Action Behavior Only
 
-Action instructions in `## Action: <name>` sections describe what happens within that action: workspace creation, pipeline traversal, checkpoints, task implementation. They do not describe inter-action dispatch (e.g., "auto-continue to apply"). Cross-action dispatch is a router concern defined in SKILL.md, which reads the `auto_approve` configuration and decides whether to chain propose→apply→finalize automatically.
+Action instructions in `## Action: <name>` sections describe what happens within that action: workspace creation, pipeline traversal, checkpoints, task implementation. They do not describe inter-action dispatch (e.g., "auto-continue to apply"). Cross-action dispatch is a router concern defined in SKILL.md, which reads the `auto_approve` configuration and decides whether to chain propose→apply→finalize→review automatically.
 
 ### Custom Actions Execute Instructions Directly
 
@@ -57,7 +57,7 @@ Custom actions listed in the `actions` array have their `## Action: <name>` sect
 
 ### Router Validates Actions Dynamically
 
-The router validates the invoked command against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing (pre-init), the router falls back to the 4 built-in actions. If the action is not recognized, the router reports the error and lists available actions.
+The router validates the invoked command against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing (pre-init), the router falls back to the 5 built-in actions. If the action is not recognized, the router reports the error and lists available actions.
 
 ## Known Limitations
 
