@@ -4,6 +4,17 @@
 
 All changes to this project MUST go through the spec-driven workflow. Before editing ANY file (source code, specs, skills, templates, docs, or configuration), invoke the specshift skill with the appropriate action (`specshift propose` to plan changes, `specshift apply` to implement them, `specshift finalize` to wrap up, `specshift init` to bootstrap or update). Never edit files directly.
 
+## Planning
+
+When using plan mode to discuss a change before invoking `specshift propose`, conclude the planning discussion with an explicit scope summary before exiting plan mode. The summary must cover:
+
+- **In scope** — what this change will do
+- **Out of scope / Non-goals** — what this change will explicitly not do, and why
+
+Present the summary to the user for review. Do not exit plan mode until the user has confirmed the scope. This confirmed scope feeds directly into the proposal's Scope & Boundaries section and the design's Non-Goals — treat it as a commitment, not a suggestion.
+
+For trivial changes, a one-line scope statement is sufficient. The goal is explicitness, not ceremony.
+
 ## Knowledge Management
 
 Do not use auto-memory for project knowledge (architecture decisions, conventions, design rationale, workflow patterns). Instead:
