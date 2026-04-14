@@ -2,7 +2,8 @@
 order: 3
 category: reference
 status: stable
-version: 7
+version: 8
+change: 2026-04-14-review-workflow-artifacts
 lastModified: 2026-04-13
 ---
 ## Purpose
@@ -113,6 +114,12 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 - **WHEN** the pipeline is traversed
 - **THEN** actions SHALL NOT be included in the pipeline artifact sequence
 - **AND** SHALL only be invoked via direct command
+
+#### Scenario: Action instructions describe intra-action behavior only
+- **GIVEN** a WORKFLOW.md `## Action: propose` section with `### Instruction`
+- **WHEN** the instruction text is inspected
+- **THEN** it SHALL describe behavior within the propose action (workspace creation, pipeline traversal, checkpoints)
+- **AND** it SHALL NOT describe inter-action dispatch (e.g., "auto-continue to apply") because cross-action dispatch is a router concern defined in SKILL.md
 
 ### Requirement: Router Dispatch Pattern
 
