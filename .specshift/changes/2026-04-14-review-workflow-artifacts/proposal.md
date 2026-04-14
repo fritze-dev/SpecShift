@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: claude/review-workflow-artifacts-DawzG
 capabilities:
   new: []
