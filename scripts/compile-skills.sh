@@ -24,6 +24,44 @@ if [[ ! -d "$ACTIONS_SRC" ]]; then
   exit 1
 fi
 
+# --- Template-version enforcement ---
+# Modified templates must have their template-version bumped.
+# Compares working tree against main to detect unbumped versions.
+
+tv_errors=0
+base_ref=""
+if git rev-parse --verify --quiet main &>/dev/null; then
+  base_ref="main"
+elif git rev-parse --verify --quiet origin/main &>/dev/null; then
+  base_ref="origin/main"
+fi
+
+if [[ -n "$base_ref" ]]; then
+  echo "Checking template-version freshness (vs $base_ref)..."
+
+  while IFS= read -r tpl; do
+    [[ -n "$tpl" ]] || continue
+    [[ -f "$tpl" ]] || continue
+
+    # If the diff does not contain a new +template-version line,
+    # the file was modified without bumping its version.
+    if ! git diff "$base_ref" -- "$tpl" | grep -qE '^\+template-version: '; then
+      echo "  ERROR: $tpl modified without template-version bump" >&2
+      ((tv_errors++)) || true
+    fi
+  done < <(git diff "$base_ref" --name-only -- src/templates/)
+
+  if [[ "$tv_errors" -gt 0 ]]; then
+    echo "ERROR: $tv_errors template(s) modified without version bump." >&2
+    echo "Increment template-version in each listed file's YAML frontmatter." >&2
+    exit 1
+  fi
+
+  echo "  All modified templates have bumped versions."
+else
+  echo "Skipping template-version check (no main branch for comparison)."
+fi
+
 # --- Copy source files ---
 
 echo "Building release at $PLUGIN_ROOT/ ..."

@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: completed
 branch: claude/centralize-versioning-compilation-vGtAO
 capabilities:
   new: []

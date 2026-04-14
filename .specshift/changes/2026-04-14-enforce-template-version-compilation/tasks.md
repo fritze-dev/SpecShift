@@ -6,18 +6,18 @@
 
 ## 2. Implementation
 
-- [ ] 2.1. [P] Add template-version enforcement section to `scripts/compile-skills.sh` between Preflight and Copy sections
-- [ ] 2.2. [P] Add "Template-version discipline" convention to `.specshift/CONSTITUTION.md`
-- [ ] 2.3. [P] Update finalize instruction in `.specshift/WORKFLOW.md` to mention template-version enforcement
+- [x] 2.1. [P] Add template-version enforcement section to `scripts/compile-skills.sh` between Preflight and Copy sections
+- [x] 2.2. [P] Add "Template-version discipline" convention to `.specshift/CONSTITUTION.md`
+- [x] 2.3. [P] Update finalize instruction in `.specshift/WORKFLOW.md` to mention template-version enforcement
 
 ## 3. QA Loop & Human Approval
 
-- [ ] 3.1. Metric Check:
-  - [ ] Compilation fails when template modified without version bump — PASS / FAIL
-  - [ ] Compilation succeeds when all modified templates have bumped versions — PASS / FAIL
-  - [ ] Compilation succeeds when no templates are modified — PASS / FAIL
-  - [ ] Compilation skips check when no main branch exists — PASS / FAIL
-- [ ] 3.2. Auto-Verify: generate review.md
+- [x] 3.1. Metric Check:
+  - [x] Compilation fails when template modified without version bump — PASS
+  - [x] Compilation succeeds when all modified templates have bumped versions — PASS
+  - [x] Compilation succeeds when no templates are modified — PASS
+  - [x] Compilation skips check when no main branch exists — PASS
+- [x] 3.2. Auto-Verify: generate review.md
 - [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.4. Fix Loop: Classify each correction before fixing.
   - **Tweak**: wrong value/typo → fix in place
