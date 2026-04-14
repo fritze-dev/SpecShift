@@ -2,7 +2,7 @@
 order: 3
 category: reference
 status: stable
-version: 8
+version: 9
 lastModified: 2026-04-14
 ---
 ## Purpose
@@ -21,7 +21,8 @@ The system SHALL support an `.specshift/WORKFLOW.md` file as the pipeline orches
 - `pipeline` (ordered array of artifact step IDs — each generates a file)
 - `actions` (array of action names, e.g., `[init, propose, apply, finalize]` — each has a corresponding `## Action: <name>` body section)
 - `worktree` (optional object with `enabled`, `path_pattern`, `auto_cleanup`)
-- `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
+- `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize→review flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
+- `review` (optional object — configuration for the `review` custom action's PR review-to-merge lifecycle; see "Review Action Configuration" requirement)
 - `plugin-version` (string, machine-managed — stamped by `specshift init` from the plugin's `plugin.json` version field. Used by the router for version mismatch detection. Consumers SHALL NOT edit this field manually.)
 - `docs_language` (optional, defaults to English)
 
@@ -78,11 +79,11 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 
 ### Requirement: Inline Action Definitions
 
-WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 4 built-in actions (`init`, `propose`, `apply`, `finalize`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links SHALL live in separate source files at `src/actions/<action>.md` (one file per action, with clickable relative links to spec files). These links are consumed by the AOT compiler to produce compiled requirement files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the executing agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
+WORKFLOW.md frontmatter SHALL contain `actions` as an array of action names. The array SHALL include the 5 built-in actions (`init`, `propose`, `apply`, `finalize`, `review`) and MAY include additional consumer-defined custom actions (e.g., `actions: [init, propose, apply, qa-review, finalize, review]`). Each action SHALL have a corresponding `## Action: <name>` section in the WORKFLOW.md markdown body containing only `### Instruction` (procedural guidance for the AI agent). For built-in actions, requirement links SHALL live in separate source files at `src/actions/<action>.md` (one file per action, with clickable relative links to spec files). These links are consumed by the AOT compiler to produce compiled requirement files — they are NOT resolved at runtime. Custom actions do not have requirement links in SKILL.md — their instruction text in WORKFLOW.md SHALL be self-contained. This structure ensures prose stays out of frontmatter, the executing agent receives focused context, and requirement wiring is managed at the skill level for built-in actions. Actions are NOT pipeline steps — they do not generate artifacts in the pipeline sequence. Actions are invoked by the router when the user calls the corresponding command.
 
 For built-in actions, the router SHALL read the `### Instruction` from WORKFLOW.md (project-specific, JIT) and the compiled requirements file at `actions/<action>.md` (pre-extracted, AOT). The instruction serves as the primary directive; the requirements provide behavioral context. For custom actions, the router SHALL read the `### Instruction` from the WORKFLOW.md body section and execute it directly — the executing agent decides whether to handle it inline or spawn a sub-agent based on the instruction content. Custom actions do not receive spec requirement links or compiled files.
 
-The system SHALL provide 4 built-in actions: `init` (project initialization and health check), `propose` (pipeline traversal for artifact generation), `apply` (task implementation with review.md generation), and `finalize` (post-approval changelog, docs, and version-bump). Consumer projects MAY define additional custom actions by adding them to the `actions` array and providing corresponding `## Action: <name>` body sections.
+The system SHALL provide 5 built-in actions: `init` (project initialization and health check), `propose` (pipeline traversal for artifact generation), `apply` (task implementation with audit.md generation), `finalize` (post-approval changelog, docs, and version-bump), and `review` (PR review-to-merge lifecycle). Consumer projects MAY define additional custom actions by adding them to the `actions` array and providing corresponding `## Action: <name>` body sections.
 
 **User Story:** As a consumer project maintainer I want to define custom actions in my WORKFLOW.md alongside the built-in ones, so that I can extend the workflow with project-specific steps without modifying the plugin.
 
@@ -108,7 +109,7 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 - **AND** SHALL NOT look for compiled requirement files for this action
 
 #### Scenario: Actions are not pipeline steps
-- **GIVEN** a WORKFLOW.md with `pipeline: [research, proposal, specs, design, preflight, tasks, review]`
+- **GIVEN** a WORKFLOW.md with `pipeline: [research, proposal, specs, design, preflight, tasks, audit]`
 - **AND** `actions: [init, propose, apply, qa-review, finalize]`
 - **WHEN** the pipeline is traversed
 - **THEN** actions SHALL NOT be included in the pipeline artifact sequence
@@ -122,7 +123,7 @@ The system SHALL provide 4 built-in actions: `init` (project initialization and 
 
 ### Requirement: Router Dispatch Pattern
 
-The system SHALL provide a single router skill that handles all user-facing commands. The router SHALL validate commands against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing, the router SHALL fall back to the built-in actions: `init`, `propose`, `apply`, `finalize`. The router SHALL read WORKFLOW.md exactly once and implement shared orchestration logic in the following phases:
+The system SHALL provide a single router skill that handles all user-facing commands. The router SHALL validate commands against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing, the router SHALL fall back to the built-in actions: `init`, `propose`, `apply`, `finalize`, `review`. The router SHALL read WORKFLOW.md exactly once and implement shared orchestration logic in the following phases:
 1. **Load Configuration**: Read `.specshift/WORKFLOW.md` once. Extract all frontmatter fields (`templates_dir`, `pipeline`, `actions`, `worktree`, `auto_approve`, `plugin-version`) and all body sections (`## Context`, `## Action: <name>`). Follow `## Context` instructions (typically: read CONSTITUTION.md). If WORKFLOW.md is missing: note it and fall back to built-in defaults.
 2. **Identify Action**: Parse the first argument and validate it against the loaded `actions` array. If WORKFLOW.md was missing and action is not `init`: stop and suggest running `specshift init`.
 3. **Plugin Version Check** (skip for `init`): Read the `plugin-version` field from the compiled workflow template at `${SKILL_DIR}/templates/workflow.md` (the current plugin version, injected at compile time) and compare it against the `plugin-version` field from the project's WORKFLOW.md frontmatter. If either `plugin-version` is missing or empty: display a note suggesting `specshift init` to enable version tracking. If versions do not match: display an advisory warning with installed vs current version and suggest `specshift init`. If versions match: proceed silently. The check is advisory — the dispatched action SHALL proceed regardless.
@@ -165,13 +166,21 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **AND** SHALL execute the instruction directly (agent decides execution mode)
 - **AND** SHALL NOT look for compiled requirement files
 
-#### Scenario: Router auto-dispatches propose→apply→finalize when auto_approve is true
+#### Scenario: Router auto-dispatches propose→apply→finalize→review when auto_approve is true
 - **GIVEN** `auto_approve: true` in WORKFLOW.md
 - **AND** the user invokes `specshift propose my-feature`
 - **WHEN** propose completes successfully (all pipeline artifacts generated)
 - **THEN** the router SHALL automatically dispatch apply without pausing
-- **AND** when apply completes with review.md verdict PASS, SHALL automatically dispatch finalize
+- **AND** when apply completes with audit.md verdict PASS, SHALL automatically dispatch finalize
+- **AND** when finalize completes successfully AND `review` is listed in the `actions` array, SHALL automatically dispatch review
 - **AND** SHALL only pause if a FAIL verdict, BLOCKED preflight, or genuine clarification question occurs
+
+#### Scenario: Router skips review auto-dispatch when review not in actions
+- **GIVEN** `auto_approve: true` in WORKFLOW.md
+- **AND** `actions: [init, propose, apply, finalize]` (no `review`)
+- **WHEN** finalize completes successfully
+- **THEN** the router SHALL NOT attempt to dispatch review
+- **AND** SHALL stop after finalize (current behavior preserved)
 
 #### Scenario: Router pauses at each transition when auto_approve is false
 - **GIVEN** `auto_approve: false` in WORKFLOW.md
@@ -212,6 +221,50 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **WHEN** a user invokes `specshift deploy`
 - **THEN** the router SHALL report that `deploy` is not a recognized action
 - **AND** SHALL list the available actions from the `actions` array
+
+### Requirement: Review Action Configuration
+
+WORKFLOW.md frontmatter SHALL support an optional `review` configuration object for the `review` built-in action. The `review` object SHALL contain:
+- `request_review` (optional, defaults to `false`) — controls whether the review action requests an external review when marking the PR ready. Values: `false` (no reviewer assigned), `copilot` (request Copilot review using available GitHub tooling), `true` (request review from the repository's default reviewers using available GitHub tooling). If the review request fails (tool unavailable, reviewer not configured), the action SHALL log a warning and continue without blocking.
+
+The `review` action is a built-in action with compiled requirements (extracted from `docs/specs/review-lifecycle.md`) and an instruction defined via `## Action: review` in the WORKFLOW.md body. Its behavior (re-entrant PR state machine, review comment processing, self-review via built-in tools, merge with user confirmation) is specified in the review-lifecycle spec. This requirement covers only the frontmatter configuration surface.
+
+When `auto_approve` is `true` and `review` is listed in the `actions` array, the router SHALL auto-dispatch from finalize to review after finalize completes successfully. The review action SHALL always pause for explicit user confirmation before merging, regardless of the `auto_approve` setting — `auto_approve` controls only the dispatch (whether review is started automatically), not the merge itself.
+
+**User Story:** As a consumer project maintainer I want configurable PR review automation, so that I can choose between no reviewer, Copilot review, or default reviewers without modifying the action instruction text.
+
+#### Scenario: Review configuration with request_review false (default)
+- **GIVEN** WORKFLOW.md contains `review: { request_review: false }`
+- **AND** `review` is in the `actions` array
+- **WHEN** the review action runs
+- **THEN** it SHALL mark the PR ready for review and update the PR body
+- **AND** SHALL NOT request a reviewer
+- **AND** SHALL process any review comments that exist or arrive
+
+#### Scenario: Review configuration with request_review copilot
+- **GIVEN** WORKFLOW.md contains `review: { request_review: copilot }`
+- **WHEN** the review action runs
+- **THEN** it SHALL request a Copilot review using available GitHub tooling
+- **AND** if the request fails, SHALL log a warning and continue
+
+#### Scenario: Review configuration with request_review true
+- **GIVEN** WORKFLOW.md contains `review: { request_review: true }`
+- **WHEN** the review action runs
+- **THEN** it SHALL request a review from the repository's default reviewers using available GitHub tooling
+
+#### Scenario: Review action always requires user confirmation for merge
+- **GIVEN** `auto_approve: true` in WORKFLOW.md
+- **AND** the PR is approved with all checks passing
+- **WHEN** the review action reaches the merge phase
+- **THEN** it SHALL pause and ask the user for explicit confirmation before merging
+- **AND** SHALL only merge after the user confirms
+
+#### Scenario: Review action is re-entrant across sessions
+- **GIVEN** the review action was started in a previous session that ended
+- **AND** review comments were partially processed
+- **WHEN** the user invokes `specshift review` in a new session
+- **THEN** the action SHALL read the current PR state from GitHub
+- **AND** SHALL continue processing from the current state (not restart from scratch)
 
 ## Edge Cases
 

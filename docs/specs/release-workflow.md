@@ -376,7 +376,7 @@ The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compi
 4. **Assemble compiled requirements file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing `# Requirements` followed by the concatenated extracted requirement blocks. No frontmatter, no instruction text — compiled files contain only requirements.
 5. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links in the source action file. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
 
-The compilation scope SHALL be limited to the 4 built-in actions (propose, apply, finalize, init). Custom actions defined in WORKFLOW.md SHALL NOT be compiled — they use JIT resolution at runtime, reading their instruction text directly from the `## Action: <name>` section in the consumer's local WORKFLOW.md. Rationale: built-in actions have spec-backed requirements that benefit from pre-extraction; custom actions are self-contained instructions without spec requirement links.
+The compilation scope SHALL be limited to the 5 built-in actions (propose, apply, finalize, init, review). Custom actions defined in WORKFLOW.md SHALL NOT be compiled — they use JIT resolution at runtime, reading their instruction text directly from the `## Action: <name>` section in the consumer's local WORKFLOW.md. Rationale: built-in actions have spec-backed requirements that benefit from pre-extraction; custom actions are self-contained instructions without spec requirement links.
 
 At runtime, the router reads **instructions** from the project's `.specshift/WORKFLOW.md` (JIT, project-specific) and **requirements** from the compiled action files (AOT, plugin-level). This separation ensures projects can customize action behavior via their WORKFLOW.md while the requirements remain consistent across all consumers.
 
@@ -386,7 +386,7 @@ The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`).
 
 #### Scenario: Finalize triggers AOT compilation
 
-- **GIVEN** a completed change with review.md verdict PASS
+- **GIVEN** a completed change with audit.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
 - **THEN** it SHALL copy source files to the release directory (`.claude/`)
 - **AND** SHALL generate compiled requirements files for each built-in action at `.claude/skills/specshift/actions/<action>.md`

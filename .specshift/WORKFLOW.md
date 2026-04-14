@@ -1,10 +1,10 @@
 ---
-template-version: 4
-plugin-version: 0.1.8-beta
+template-version: 6
+plugin-version: 0.2.0-beta
 templates_dir: .specshift/templates
-pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
+pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
 
-actions: [init, propose, apply, finalize]
+actions: [init, propose, apply, finalize, review]
 # Add custom actions here (e.g. qa-review) and define matching
 # ## Action: <name> sections in the body below.
 
@@ -16,17 +16,20 @@ worktree:
 
 auto_approve: true
 
+review:
+  request_review: copilot
+
 # docs_language: English
 ---
 
 # Workflow
 
-Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks → Apply → Review → Finalize
+Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks → Apply → Audit → Finalize → Review
 
 ## Context
 
 Always read and follow .specshift/CONSTITUTION.md before proceeding.
-All workflow artifacts (research, proposal, specs, design, preflight, tasks, review)
+All workflow artifacts (research, proposal, specs, design, preflight, tests, tasks, audit)
 must be written in English regardless of docs_language.
 
 ## Action: propose
@@ -39,7 +42,7 @@ Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean co
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
-review artifact: stop before review and suggest running the specshift skill with `apply`.
+audit artifact: stop before audit and suggest running the specshift skill with `apply`.
 
 ## Action: init
 
@@ -56,16 +59,16 @@ Report findings, suggest running the specshift skill with `propose` for changes 
 
 ### Instruction
 
-Implement tasks from tasks.md, then generate review.md.
-QA loop: implement → generate review.md → fix if FAIL → regenerate review.md → until PASS.
-Delete existing review.md before starting implementation.
-When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause.
-Fix loop: before applying any fix, classify the correction — Tweak (wrong value/typo/missing line → fix in place), Design Pivot (wrong files/approach/abstraction → update design.md + discard affected tasks → re-implement), or Scope Change (wrong requirements/target audience → update specs + design → full re-implementation). After any fix, regenerate review.md before presenting to user.
+Implement tasks from tasks.md, then generate audit.md.
+QA loop: implement → generate audit.md → fix if FAIL → regenerate audit.md → until PASS.
+Delete existing audit.md before starting implementation.
+When auto_approve is false, pause at user testing gate. When auto_approve is true and audit.md verdict is PASS, skip user testing pause.
+Fix loop: before applying any fix, classify the correction — Tweak (wrong value/typo/missing line → fix in place), Design Pivot (wrong files/approach/abstraction → update design.md + discard affected tasks → re-implement), or Scope Change (wrong requirements/target audience → update specs + design → full re-implementation). After any fix, regenerate audit.md before presenting to user.
 Artifact staleness: for Design Pivot or Scope Change corrections, update ALL stale change artifacts (design.md, tasks.md affected sections, preflight.md if needed) before re-implementing. A stale artifact is one that still describes the original wrong approach. Specs must match implementation before proceeding.
 Standard Tasks (post-implementation section) are NOT part of apply.
 Constitution standard tasks: pre-merge executed during post-apply, post-merge remain as reminders.
 Before committing, mark all standard task checkboxes as complete except post-merge.
-After review.md PASS, commit and push implementation.
+After audit.md PASS, commit and push implementation.
 
 ## Action: finalize
 
@@ -77,4 +80,21 @@ Post-approval finalization, executed sequentially:
 3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
 4. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/` — compilation validates that modified templates have bumped `template-version`
 On error in one step: continue with next, report failures at end.
-Check review.md exists with verdict PASS before proceeding.
+Check audit.md exists with verdict PASS before proceeding.
+
+## Action: review
+
+### Instruction
+
+PR review-to-merge lifecycle. Re-entrant: can be run in any session.
+State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling (gh CLI, MCP tools, or API).
+1. If PR is draft: mark ready for review, update body with change summary and issue references.
+2. If no reviews requested and `review.request_review` is `copilot`: request Copilot review using available GitHub tooling. If `true`: request from repo default reviewers. If `false` or absent: skip. If request fails, log warning and continue.
+3. Subscribe to PR activity for real-time updates if tooling supports it.
+4. Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
+5. After fixes: commit, push, run built-in self-check. Fix any findings.
+6. If reviewer posts new comments: process them (return to step 4). Safety limit: max 3 cycles, then pause.
+7. When no unresolved comments remain: check CI. If pending, report status. If passing, ask user for explicit merge confirmation.
+8. After user confirms: merge the PR using available GitHub tooling. Set proposal status: completed. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
+When auto_approve is true and no reviews are pending or needed: proceed directly to merge confirmation.
+If session may end before review arrives: report state and suggest re-running the specshift skill with `review` later.

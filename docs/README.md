@@ -5,8 +5,8 @@
 SpecShift uses a three-layer architecture where each layer has distinct responsibilities and can be modified independently:
 
 1. **Constitution Layer** (`.specshift/CONSTITUTION.md`): Global project rules — Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. All AI actions read the constitution before performing any work.
-2. **Schema Layer** (`.specshift/WORKFLOW.md` + `.specshift/templates/`): Declarative pipeline orchestration via YAML frontmatter and Smart Templates. Defines the 8-stage artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, review), action instructions, and artifact generation rules.
-3. **Router + Actions Layer** (`.claude/skills/specshift/`): A single router SKILL.md dispatches to 4 built-in actions (init, propose, apply, finalize) plus consumer-defined custom actions. Built-in actions read compiled requirements from AOT-extracted action files.
+2. **Schema Layer** (`.specshift/WORKFLOW.md` + `.specshift/templates/`): Declarative pipeline orchestration via YAML frontmatter and Smart Templates. Defines the 8-stage artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit), action instructions, and artifact generation rules.
+3. **Router + Actions Layer** (`.claude/skills/specshift/`): A single router SKILL.md dispatches to 5 built-in actions (init, propose, apply, finalize, review) plus consumer-defined custom actions. Built-in actions read compiled requirements from AOT-extracted action files.
 
 ## Tech Stack
 
@@ -60,7 +60,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 | Capability | Description |
 |---|---|
 | [Constitution Management](capabilities/constitution-management.md) | Constitution lifecycle, codebase observation, and global context |
-| [Quality Gates](capabilities/quality-gates.md) | Preflight checks, review.md verification, and docs drift detection |
+| [Quality Gates](capabilities/quality-gates.md) | Preflight checks, audit.md verification, and docs drift detection |
 | [Task Implementation](capabilities/task-implementation.md) | Sequential task execution with progress tracking |
 | [Test Generation](capabilities/test-generation.md) | Automated test stubs and manual test plans from Gherkin scenarios |
 | [Human Approval Gate](capabilities/human-approval-gate.md) | QA loop with tiered fix-verify cycles and mandatory approval |

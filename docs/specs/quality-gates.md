@@ -7,7 +7,7 @@ lastModified: 2026-04-10
 ---
 ## Purpose
 
-Provides `specshift propose` for pre-implementation quality checks across six dimensions, and post-implementation verification (now part of `specshift apply`) that produces a `review.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
+Provides `specshift propose` for pre-implementation quality checks across six dimensions, and post-implementation verification (now part of `specshift apply`) that produces an `audit.md` artifact for completeness, correctness, and coherence assessment. Documentation drift verification (`docs-verify`) is absorbed into `specshift init` as a project-level health check.
 
 ## Requirements
 
@@ -90,15 +90,15 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **AND** SHALL report which required artifacts are missing
 - **AND** SHALL suggest running `specshift propose` to generate them
 
-### Requirement: Post-Implementation Verification (review.md)
+### Requirement: Post-Implementation Verification (audit.md)
 
-The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing a `review.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (test coverage: automated tests pass, manual test checklist items verified), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
+The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing an `audit.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (test coverage: automated tests pass, manual test checklist items verified), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
 
 **Draft spec gate:** As part of verification, the system SHALL check all specs listed in the change's proposal for `status: draft` with `change` matching the current change. If any such specs remain in draft status, the verify report SHALL include a CRITICAL issue: "Spec <name> is still in draft status — must be finalized before merge." This gate ensures no draft specs reach the main branch.
 
 **Verify completion (draft→stable flip):** When verify passes (no CRITICAL issues) and the change is approved for merge, the system SHALL finalize tracking fields:
 - **Specs**: For all specs modified by this change: set `status: stable`, remove the `change` field, increment `version` by 1, and set `lastModified` to the current date.
-- **Proposal**: Set `proposal.md` frontmatter `status` to `completed`.
+- **Proposal**: Set `proposal.md` frontmatter `status` to `review` (indicating the change is verified and ready for PR review; `completed` is set later by the review action after merge).
 
 This completion step runs as part of the post-apply workflow, after user approval and before the merge commit. Each issue found SHALL be classified as CRITICAL (must fix before proceeding), WARNING (should fix), or SUGGESTION (nice to fix). The system SHALL produce a verification report with a summary scorecard, issues grouped by priority, and specific actionable recommendations with file and line references where applicable. The system SHALL err on the side of lower severity when uncertain (SUGGESTION over WARNING, WARNING over CRITICAL).
 
@@ -114,14 +114,14 @@ The system SHALL load the branch diff (full content and file list) as part of co
 
 **Preflight Side-Effect Cross-Check**: The system SHALL read `preflight.md` Section C and cross-check each identified side-effect against `tasks.md` entries, diff content, and codebase evidence. Side-effects with neither a matching task nor detectable evidence SHALL be reported as WARNING. If Section C contains no actionable side-effects, the system SHALL skip the cross-check and note it in the report.
 
-The review.md generation SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When run as a final verify after the fix loop, the verification SHALL operate identically — checking implementation and scope against the current state of code and artifacts. No special flags or modes are needed; the verification is stateless and always checks the current state. The review.md artifact is persisted in the change directory, replacing the previous transient verify report.
+The audit.md generation SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When run as a final verify after the fix loop, the verification SHALL operate identically — checking implementation and scope against the current state of code and artifacts. No special flags or modes are needed; the verification is stateless and always checks the current state. The audit.md artifact is persisted in the change directory, replacing the previous transient verify report.
 
 **User Story:** As a developer I want post-implementation verification that checks my code against the specs, so that I can catch gaps, divergences, and inconsistencies before proceeding.
 
 #### Scenario: Verify gates on draft spec status
 - **GIVEN** a change `2026-04-08-my-change` that modified spec `quality-gates`
 - **AND** `docs/specs/quality-gates.md` has `status: draft` and `change: 2026-04-08-my-change`
-- **WHEN** apply generates review.md for `2026-04-08-my-change`
+- **WHEN** apply generates audit.md for `2026-04-08-my-change`
 - **THEN** the report SHALL include a CRITICAL issue: "Spec quality-gates is still in draft status — must be finalized before merge"
 
 #### Scenario: Verify completion flips draft to stable and proposal to completed
@@ -132,32 +132,32 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 - **WHEN** the verify completion step runs
 - **THEN** `quality-gates` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 4`, `lastModified: 2026-04-08`
 - **AND** `spec-format` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 6`, `lastModified: 2026-04-08`
-- **AND** `proposal.md` frontmatter SHALL be updated to `status: completed`
+- **AND** `proposal.md` frontmatter SHALL be updated to `status: review`
 
 #### Scenario: Test coverage verification with automated tests
 - **GIVEN** a change with `tests.md` listing 5 automated test files and 2 manual test items
 - **AND** all 5 automated test files exist in the project's test directory
 - **AND** all 2 manual test items are checked off in tests.md
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the Testing dimension SHALL report "5/5 automated tests present, 2/2 manual items verified"
 - **AND** SHALL NOT raise any test coverage issues
 
 #### Scenario: Test coverage with missing automated test file
 - **GIVEN** a change with `tests.md` listing 3 automated test files
 - **AND** only 2 of the 3 test files exist in the project's test directory
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the Testing dimension SHALL report a WARNING: "Missing test file: <path>"
 
 #### Scenario: Test coverage with unchecked manual items
 - **GIVEN** a change with `tests.md` containing 4 manual test checklist items
 - **AND** only 2 of the 4 items are checked off
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the Testing dimension SHALL report a WARNING: "2 manual test items not verified"
 
 #### Scenario: Test coverage for project without framework
 - **GIVEN** a project with no test framework configured
 - **AND** `tests.md` contains only manual test items (no automated tests section)
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the Testing dimension SHALL verify only manual checklist completion
 - **AND** SHALL NOT check for automated test files
 
@@ -165,7 +165,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 
 - **GIVEN** a change "add-user-auth" with all tasks complete
 - **AND** all spec requirements are implemented and all design decisions are followed
-- **WHEN** apply generates review.md for `add-user-auth`
+- **WHEN** apply generates audit.md for `add-user-auth`
 - **THEN** the system produces a verification report
 - **AND** the Implementation dimension shows all tasks complete, requirements verified, and scenarios covered
 - **AND** the Scope dimension shows design adherence and no untraced changes
@@ -175,7 +175,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 
 - **GIVEN** a change with 5 of 7 tasks marked complete
 - **AND** one spec requirement has no corresponding implementation in the codebase
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the report lists 2 CRITICAL issues: incomplete tasks and missing requirement implementation
 - **AND** each issue includes a specific recommendation (e.g., "Complete task: Add rate limiting middleware" and "Implement requirement: Session Timeout -- no session timeout logic found in auth module")
 - **AND** the final assessment states "2 critical issue(s) found. Fix before proceeding."
@@ -192,7 +192,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 
 - **GIVEN** a change where `proposal.md` references an artifact filename that was renamed during the specs stage
 - **AND** the stale reference is a simple text replacement (old filename → new filename)
-- **WHEN** the system generates review.md
+- **WHEN** the system generates audit.md
 - **THEN** the system SHALL auto-fix the stale reference in `proposal.md`
 - **AND** the verification report SHALL list the fix as "WARNING (auto-fixed): Updated stale reference in proposal.md"
 - **AND** the report SHALL NOT present it as an open issue requiring user action
@@ -201,7 +201,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 
 - **GIVEN** a spec requiring JWT authentication
 - **AND** the implementation uses session cookies instead
-- **WHEN** the system generates review.md
+- **WHEN** the system generates audit.md
 - **THEN** the system SHALL NOT auto-fix the divergence
 - **AND** SHALL present it as an open WARNING for the user to decide whether to update the spec or the code
 
@@ -216,7 +216,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 #### Scenario: Graceful degradation with missing artifacts
 
 - **GIVEN** a change with only tasks.md (no specs or design)
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the system verifies task completion only
 - **AND** skips requirement verification and scope checks
 - **AND** notes in the report which checks were skipped and why
@@ -224,7 +224,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 #### Scenario: Verification with no spec changes
 
 - **GIVEN** a change that has tasks but the proposal lists no capability modifications
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the system skips requirement-level verification
 - **AND** focuses on task completion and scope checks
 
@@ -232,7 +232,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 
 - **GIVEN** a change where the initial verify found 2 CRITICAL issues
 - **AND** the developer fixed both issues in the fix loop
-- **WHEN** the system regenerates review.md as the final verification step (3.5)
+- **WHEN** the system regenerates audit.md as the final verification step (3.5)
 - **THEN** the verification report SHALL show 0 CRITICAL issues
 - **AND** the report SHALL reflect the current state of all artifacts (including any specs updated during the fix loop)
 - **AND** the final assessment SHALL be "All checks passed. Ready to proceed." or note remaining warnings
@@ -242,7 +242,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 - **GIVEN** a change where preflight Section C identifies "Regression to existing auth middleware" as a side-effect
 - **AND** no task in tasks.md addresses auth middleware regression
 - **AND** no codebase evidence of auth middleware changes
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the report includes a WARNING: "Preflight side-effect not addressed: Regression to existing auth middleware"
 - **AND** recommends "Add a task or verify that this side-effect is handled in the implementation"
 
@@ -258,7 +258,7 @@ The review.md generation SHALL serve as both the initial verification (tasks.md 
 #### Scenario: Preflight Section C has no side-effects
 
 - **GIVEN** a change where preflight Section C shows all risks assessed as NONE
-- **WHEN** apply generates review.md
+- **WHEN** apply generates audit.md
 - **THEN** the system skips the side-effect cross-check
 - **AND** notes "No preflight side-effects to verify" in the report
 
