@@ -38,6 +38,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 - **Template synchronization**: `src/templates/` is authoritative; `.specshift/` is synced from it
 - **Tool-agnostic instructions**: Describe intent, not specific CLI tools
 - **Knowledge transparency**: Project knowledge lives in version-controlled artifacts, not opaque memory files
+- **Review comment acknowledgment**: Reply to each PR review comment after fixing, resolve committed threads
 
 ## Capabilities
 

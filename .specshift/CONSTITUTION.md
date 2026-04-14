@@ -50,6 +50,7 @@ template-version: 1
 - **Template synchronization:** `src/templates/workflow.md` is the authoritative plugin source for workflow behavior. Changes to workflow actions, pipeline, and instruction text should be made in `src/templates/workflow.md` first, then synced to `.specshift/WORKFLOW.md`. The `worktree` config and skill reference phrasing may intentionally differ between plugin template and project instance (e.g., `enabled: true` in project, commented out in consumer).
 - **Agent instructions:** Project-level agent instructions live in `CLAUDE.md`. Instructions use tool-agnostic language.
 - **Tool-agnostic instructions:** Specs, skills, and templates MUST describe intent (e.g., "create a draft PR") rather than hardcoding specific CLI tools (e.g., `gh pr create`). The plugin runs across environments with different tooling — Claude Code Web (MCP tools), desktop (gh CLI), or API-only. Concrete tool names may appear in parenthetical examples (e.g., "available GitHub tooling (gh CLI, MCP tools, or API)") but MUST NOT be the sole instruction.
+- **Review comment acknowledgment:** After pushing fixes that address PR review comments, reply to each comment explaining the action taken (fixed, declined with reason, or not applicable) and resolve threads where the fix is committed. This applies to both human and automated reviewer comments.
 
 ## Standard Tasks
 
@@ -60,6 +61,7 @@ template-version: 1
 
 ### Pre-Merge
 - [ ] Update PR: mark ready for review, update body with change summary and issue references if applicable (e.g., `Closes #X`)
+- [ ] Reply to and resolve all PR review comments (fixed/declined with reason/not applicable)
 
 ### Post-Merge
 - Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`)
