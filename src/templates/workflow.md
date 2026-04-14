@@ -59,7 +59,7 @@ Report findings, suggest specshift propose for changes needed.
 Implement tasks from tasks.md, then generate review.md.
 QA loop: implement → generate review.md → fix if FAIL → regenerate review.md → until PASS.
 Delete existing review.md before starting implementation.
-Pause at user testing gate for approval.
+When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause.
 Fix loop: before applying any fix, classify the correction — Tweak (wrong value/typo/missing line → fix in place), Design Pivot (wrong files/approach/abstraction → update design.md + discard affected tasks → re-implement), or Scope Change (wrong requirements/target audience → update specs + design → full re-implementation). After any fix, regenerate review.md before presenting to user.
 Artifact staleness: for Design Pivot or Scope Change corrections, update ALL stale change artifacts (design.md, tasks.md affected sections, preflight.md if needed) before re-implementing. A stale artifact is one that still describes the original wrong approach. Specs must match implementation before proceeding.
 Standard Tasks (post-implementation section) are NOT part of apply.

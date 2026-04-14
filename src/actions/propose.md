@@ -8,3 +8,4 @@
 - [Create Worktree-Based Workspace](../../docs/specs/change-workspace.md#requirement-create-worktree-based-workspace)
 - [Lazy Worktree Cleanup at Change Creation](../../docs/specs/change-workspace.md#requirement-lazy-worktree-cleanup-at-change-creation)
 - [Change Context Detection](../../docs/specs/change-workspace.md#requirement-change-context-detection)
+- [Preflight Quality Check](../../docs/specs/quality-gates.md#requirement-preflight-quality-check)

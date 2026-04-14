@@ -322,3 +322,82 @@ If a match is found, the router SHALL auto-select the change and announce: "Dete
 - **GIVEN** the user is on branch `add-user-auth`
 - **WHEN** a skill is invoked with explicit argument `other-change`
 - **THEN** the router SHALL use "other-change" regardless of proposal frontmatter or worktree context
+
+### Requirement: Preflight Quality Check
+
+The system SHALL run a mandatory quality review before task creation when the user invokes `specshift propose`. The preflight check SHALL cover seven dimensions: (A) Traceability Matrix -- mapping each capability from the proposal's frontmatter `capabilities` field (falling back to parsing the Capabilities section if frontmatter is absent) to its corresponding spec at `docs/specs/<capability>.md` and verifying that the spec has been updated to reflect the proposed changes, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, (F) Marker Audit -- auditing all assumption and review markers from spec.md and design.md, and (G) Draft Spec Validation -- verifying that all specs with `status: draft` have a `change` value matching the current change directory name. Specs with `status: draft` belonging to a different change SHALL be flagged as BLOCKED. Specs with `status: draft` and no `change` field SHALL be flagged as WARNING. The Marker Audit SHALL:
+1. Collect all `<!-- ASSUMPTION: ... -->` tags and verify each has an accompanying visible list item. Assumptions written entirely inside HTML comments (no visible text) SHALL be flagged as format violations.
+2. Rate each valid assumption as Acceptable Risk, Needs Clarification, or Blocking.
+3. Scan for any remaining `<!-- REVIEW -->` or `<!-- REVIEW: ... -->` markers. Any REVIEW marker found SHALL be rated as Blocking, because REVIEW markers must be resolved before implementation.
+
+The system SHALL produce a `preflight.md` artifact containing findings and a verdict of PASS, PASS WITH WARNINGS, or BLOCKED. The system SHALL NOT auto-fix issues; it SHALL report findings for the user to resolve. The system SHALL NOT proceed to task creation if blockers are found. If the verdict is PASS WITH WARNINGS, the system SHALL pause and require explicit user acknowledgment of the warnings before proceeding to task creation. The system SHALL NOT auto-accept warnings or continue without the user reviewing each warning.
+
+- All change artifacts (specs, design) are available and up to date when preflight is invoked. <!-- ASSUMPTION: Artifact availability -->
+
+**User Story:** As a developer I want a thorough quality review of my specs and design before tasks are created, so that implementation is based on complete, consistent, and well-traced requirements with no unresolved markers.
+
+#### Scenario: Preflight passes with no issues
+
+- **GIVEN** a change named "add-user-auth" with complete specs and design artifacts
+- **AND** all requirements have scenarios, no gaps are detected, all assumptions have visible text, and no REVIEW markers remain
+- **WHEN** the user invokes `specshift propose add-user-auth`
+- **THEN** the system reads constitution.md, all change artifacts, and existing specs
+- **AND** produces `preflight.md` covering all six dimensions
+- **AND** the verdict is "PASS"
+- **AND** the summary shows 0 blockers, 0 warnings
+
+#### Scenario: Preflight finds invisible assumption
+
+- **GIVEN** a change with a spec containing `<!-- ASSUMPTION: External API rate limit is 1000/min -->` with no visible list item
+- **WHEN** the user invokes `specshift propose`
+- **THEN** the Marker Audit flags the invisible assumption as a format violation
+- **AND** the verdict is "BLOCKED"
+- **AND** the system recommends adding visible text: `- External API rate limit is 1000/min. <!-- ASSUMPTION: API rate limit -->`
+
+#### Scenario: Preflight finds unresolved REVIEW marker
+
+- **GIVEN** a change where design.md contains `<!-- REVIEW: confirm caching strategy -->`
+- **WHEN** the user invokes `specshift propose`
+- **THEN** the Marker Audit flags the REVIEW marker as Blocking
+- **AND** the verdict is "BLOCKED"
+- **AND** the system informs the user that REVIEW markers must be resolved before proceeding
+
+#### Scenario: Preflight detects contradiction with constitution
+
+- **GIVEN** a design.md that proposes adding a project-level package.json
+- **AND** the constitution states "Package manager: npm (global installs only -- no project-level package.json)"
+- **WHEN** the system runs the Constitution Check
+- **THEN** the system flags a contradiction between design.md and the constitution
+- **AND** classifies it as a blocker
+- **AND** recommends either updating the design to comply or updating the constitution if the rule should change
+
+#### Scenario: Preflight with warnings requires user acknowledgment
+
+- **GIVEN** a change where all requirements have scenarios, all assumptions have visible text, and no REVIEW markers remain
+- **BUT** a minor gap is detected (missing error handling for an unlikely edge case)
+- **WHEN** the user invokes `specshift propose`
+- **THEN** the verdict is "PASS WITH WARNINGS"
+- **AND** each warning is listed with a recommendation
+- **AND** the system SHALL pause and ask the user to acknowledge each warning
+- **AND** the system SHALL NOT proceed to task creation until the user explicitly confirms
+
+#### Scenario: Preflight validates draft spec ownership
+- **GIVEN** a change named `2026-04-08-my-change`
+- **AND** `docs/specs/quality-gates.md` has `status: draft` and `change: 2026-04-08-my-change`
+- **AND** `docs/specs/user-auth.md` has `status: draft` and `change: 2026-04-01-other-change`
+- **WHEN** the user invokes `specshift propose 2026-04-08-my-change`
+- **THEN** the Draft Spec Validation dimension SHALL flag `user-auth` as BLOCKED (draft owned by different change)
+- **AND** SHALL confirm `quality-gates` as valid (draft owned by current change)
+
+#### Scenario: Preflight detects orphaned draft spec
+- **GIVEN** a spec with `status: draft` but no `change` field
+- **WHEN** the user invokes `specshift propose`
+- **THEN** the Draft Spec Validation SHALL flag it as WARNING: "Draft spec with no change owner"
+
+#### Scenario: Required artifacts missing
+
+- **GIVEN** a change where specs exist but design.md has not been created
+- **WHEN** the user invokes `specshift propose`
+- **THEN** the system SHALL abort the preflight
+- **AND** SHALL report which required artifacts are missing
+- **AND** SHALL suggest running `specshift propose` to generate them
