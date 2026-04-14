@@ -1,6 +1,9 @@
 ---
 name: specshift
-description: "Central workflow command. Use with action argument: init (setup project), propose (create change + artifacts), apply (implement + verify), finalize (changelog + docs + version). Example: specshift propose\nTRIGGER when: user asks to implement, build, code, or apply changes; user exits plan mode and wants to start coding; a change proposal or tasks.md exists and implementation is requested; user says 'make it', 'build this', 'implement', 'apply', 'start coding', or similar implementation intent.\nDO NOT TRIGGER when: user is asking questions, reading files, exploring code, running read-only commands, or discussing design without requesting implementation."
+description: |
+  Central workflow command. Use with action argument: init (setup project), propose (create change + artifacts), apply (implement + verify), finalize (changelog + docs + version). Example: specshift propose
+  TRIGGER when: user asks to implement, build, code, or apply changes; user exits plan mode and wants to start coding; a change proposal or tasks.md exists and implementation is requested; user says 'make it', 'build this', 'implement', 'apply', 'start coding', or similar implementation intent.
+  DO NOT TRIGGER when: user is asking questions, reading files, exploring code, running read-only commands, or discussing design without requesting implementation.
 ---
 
 # Workflow
