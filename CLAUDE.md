@@ -2,7 +2,7 @@
 
 ## Workflow
 
-All changes to this project MUST go through the spec-driven workflow (actions: propose, apply, finalize, init). Never edit specs, skills, templates, or docs directly — always create a change first.
+All changes to this project MUST go through the spec-driven workflow. Before editing ANY file (source code, specs, skills, templates, docs, or configuration), invoke the specshift skill with the appropriate action (`specshift propose` to plan changes, `specshift apply` to implement them, `specshift finalize` to wrap up, `specshift init` to bootstrap or update). Never edit files directly.
 
 ## Knowledge Management
 

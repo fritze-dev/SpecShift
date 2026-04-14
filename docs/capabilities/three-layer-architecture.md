@@ -22,6 +22,7 @@ Separating concerns into Constitution (project rules), WORKFLOW.md + Smart Templ
 - **Constitution Layer**: A single `CONSTITUTION.md` file at `.specshift/CONSTITUTION.md` defines all project-wide rules, including Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. Every AI action reads this file before performing work, enforced via WORKFLOW.md's `context` field.
 - **WORKFLOW.md + Smart Templates Layer**: `.specshift/WORKFLOW.md` declares the 7-stage artifact pipeline order, inline action definitions (built-in and custom), apply gate, optional worktree configuration, and project context. Smart Templates in `.specshift/templates/` carry per-artifact instructions, output paths, and dependencies in YAML frontmatter. Together they serve as the single source of truth for pipeline structure, action instructions, and artifact generation.
 - **Router + Actions Layer**: All commands are delivered through a single router SKILL.md that dispatches to 4 built-in actions: `init` (project setup and health checks), `propose` (pipeline traversal), `apply` (task implementation with review.md), and `finalize` (changelog, docs, version bump). The router additionally supports consumer-defined custom actions listed in the WORKFLOW.md `actions` array. The router is model-invocable.
+- **Proactive Skill Invocation**: The router's skill description includes TRIGGER and DO NOT TRIGGER conditions that enable the AI to proactively invoke the specshift workflow when implementation intent is detected (e.g., "implement this", "build it", transitioning from plan mode to coding). Read-only activities like asking questions or exploring code do not trigger the skill. The project's CLAUDE.md reinforces this by instructing the AI to invoke the skill before editing any file.
 - **Layer Separation**: Each layer is independently modifiable. WORKFLOW.md and Smart Templates do not embed router logic, and the constitution does not contain pipeline-specific definitions. The router depends on WORKFLOW.md and Smart Templates by reading them directly at runtime. Adding a custom action requires only WORKFLOW.md changes -- no router or constitution modifications.
 
 ## Behavior
@@ -49,6 +50,14 @@ Updating a WORKFLOW.md action instruction does not require changes to the router
 ### Constitution Does Not Duplicate Workflow Instruction Details
 
 Operational behavior details (e.g., checkpoint behavior, auto-dispatch rules) live exclusively in the WORKFLOW.md action instructions that govern them. The constitution defines project-wide governance rules (tech stack, code style, conventions) but does not restate action-level operational rules. This prevents drift between layers when a rule is updated in one place but not the other.
+
+### Skill Triggers Proactively on Implementation Requests
+
+When a user asks the AI to implement, build, or code something -- including after exiting plan mode -- the router's TRIGGER conditions cause the specshift skill to be invoked automatically. The AI does not need to wait for an explicit `/specshift` command. Conversely, asking questions, reading files, exploring code, or discussing design without requesting implementation does not trigger the skill.
+
+### CLAUDE.md Enforces Workflow for All File Types
+
+The project's CLAUDE.md instructs the AI to invoke the specshift skill before editing any file -- source code, specs, skills, templates, docs, or configuration. This prevents the AI from bypassing the workflow by editing files directly.
 
 ### Consumer Templates Do Not Contain Project-Specific Steps
 

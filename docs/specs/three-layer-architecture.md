@@ -2,7 +2,7 @@
 order: 13
 category: reference
 status: stable
-version: 5
+version: 6
 lastModified: 2026-04-14
 ---
 ## Purpose
@@ -66,6 +66,27 @@ The system SHALL deliver all commands through a single router SKILL.md that disp
 - **GIVEN** the router `SKILL.md`
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** the `disable-model-invocation` field SHALL be set to `false` or be absent (defaulting to false)
+
+### Requirement: Proactive Skill Invocation
+The router SKILL.md `description` field SHALL include TRIGGER and DO NOT TRIGGER conditions that enable the AI to proactively invoke the skill when implementation intent is detected, without requiring an explicit slash command. TRIGGER conditions SHALL cover implementation-related phrasings (e.g., user requests to implement, build, code, apply changes, or transitions from planning to coding). DO NOT TRIGGER conditions SHALL exclude read-only activities (e.g., asking questions, reading files, exploring code, discussing design). The project's CLAUDE.md SHALL reinforce workflow enforcement by instructing the AI to invoke the specshift skill before editing ANY file, not just specs, skills, templates, or docs.
+
+**User Story:** As a developer I want the AI to proactively use the specshift workflow when I ask it to implement changes, so that I don't need to remember to explicitly type the slash command after plan mode.
+
+#### Scenario: Skill triggers proactively on implementation request
+- **GIVEN** a project with the specshift plugin installed
+- **AND** a user exits plan mode and says "implement this"
+- **WHEN** the AI processes the implementation request
+- **THEN** it SHALL invoke the specshift skill (propose or apply depending on change context) instead of editing files directly
+
+#### Scenario: Skill does not trigger on read-only activities
+- **GIVEN** a project with the specshift plugin installed
+- **WHEN** a user asks "how does the pipeline work?" or "read the CONSTITUTION.md"
+- **THEN** the AI SHALL NOT invoke the specshift skill and SHALL handle the request directly
+
+#### Scenario: CLAUDE.md enforces workflow for all file types
+- **GIVEN** a project with the generated CLAUDE.md from the plugin template
+- **WHEN** the CLAUDE.md workflow section is inspected
+- **THEN** it SHALL instruct the AI to invoke the specshift skill before editing ANY file (source code, specs, skills, templates, docs, or configuration)
 
 ### Requirement: Layer Separation
 The three layers SHALL be independently modifiable. WORKFLOW.md and Smart Templates SHALL NOT embed action logic; instead, the router and actions SHALL depend on WORKFLOW.md and Smart Templates by reading them directly for pipeline configuration, artifact definitions, instructions, and dependencies. The constitution SHALL NOT contain pipeline-specific artifact definitions. Modifications to one layer SHALL NOT require changes to another layer unless the interface contract between them changes.
