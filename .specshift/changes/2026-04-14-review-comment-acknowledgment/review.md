@@ -8,7 +8,7 @@
 | Requirements | N/A (no spec changes) |
 | Scenarios | N/A (no spec scenarios) |
 | Tests | 4/4 manual checks pass |
-| Scope | Clean — only CONSTITUTION.md and SKILL.md modified |
+| Scope | Clean — CONSTITUTION.md, SKILL.md, plugin version files, WORKFLOW.md plugin-version, docs/README.md, and CHANGELOG.md modified |
 
 ### Findings
 

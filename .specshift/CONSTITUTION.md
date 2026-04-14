@@ -61,7 +61,7 @@ template-version: 1
 
 ### Pre-Merge
 - [ ] Update PR: mark ready for review, update body with change summary and issue references if applicable (e.g., `Closes #X`)
-- [ ] Reply to and resolve all PR review comments (fixed/declined with reason)
+- [ ] Reply to and resolve all PR review comments (fixed/declined with reason/not applicable)
 
 ### Post-Merge
 - Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`)
