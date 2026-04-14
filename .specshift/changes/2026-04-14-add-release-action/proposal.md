@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 branch: claude/automate-pr-review-merge-E3KOL
 capabilities:
   new: []

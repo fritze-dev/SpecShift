@@ -1,10 +1,10 @@
 ---
-template-version: 4
+template-version: 5
 plugin-version: ""
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
 
-actions: [init, propose, apply, finalize]
+actions: [init, propose, apply, finalize, release]
 # Add custom actions here (e.g. qa-review) and define matching
 # ## Action: <name> sections in the body below.
 
@@ -16,12 +16,17 @@ actions: [init, propose, apply, finalize]
 
 auto_approve: true
 
+release:
+  request_review: false
+  # request_review: copilot  # Request Copilot review
+  # request_review: true     # Request repo default reviewers
+
 # docs_language: English
 ---
 
 # Workflow
 
-Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks → Apply → Review → Finalize
+Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks → Apply → Review → Finalize → Release
 
 ## Context
 
@@ -77,3 +82,20 @@ Post-approval finalization, executed sequentially:
 3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
 On error in one step: continue with next, report failures at end.
 Check review.md exists with verdict PASS before proceeding.
+
+## Action: release
+
+### Instruction
+
+PR review-to-merge lifecycle. Re-entrant: can be run in any session.
+State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling.
+1. If PR is draft: mark ready for review, update body with change summary.
+2. If no reviews requested and `release.request_review` is configured: request external review using available GitHub tooling. If unavailable or request fails, log warning and continue.
+3. Subscribe to PR activity for real-time updates if tooling supports it.
+4. Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
+5. After fixes: commit, push, run built-in review for self-check. Fix any findings.
+6. If reviewer posts new comments: process them (return to step 4). Safety limit: max 3 cycles, then pause.
+7. When no unresolved comments remain: check CI. If pending, report status. If passing, ask user for explicit merge confirmation.
+8. After user confirms: merge the PR using available GitHub tooling. Post-merge: clean up worktree if applicable.
+When auto_approve is true and no reviews are pending or needed: proceed directly to merge confirmation.
+If session may end before review arrives: report state and suggest re-running specshift release later.

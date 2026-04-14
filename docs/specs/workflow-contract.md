@@ -1,10 +1,9 @@
 ---
 order: 3
 category: reference
-status: draft
-version: 8
+status: stable
+version: 9
 lastModified: 2026-04-14
-change: 2026-04-14-add-release-action
 ---
 ## Purpose
 

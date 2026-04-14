@@ -85,6 +85,7 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 
 1. Read change artifacts for context (proposal, review.md)
 2. Execute the action using the `### Instruction` (from Load Configuration) bounded by the strict requirements in `actions/finalize.md`.
+3. **Auto-dispatch to release**: If `auto_approve` is `true` and finalize completed successfully, and `release` is listed in the `actions` array (from Load Configuration), automatically dispatch by running `specshift release` using the same change context. If `release` is not in the `actions` array, stop after finalize.
 
 ### `init` — Project Setup
 
