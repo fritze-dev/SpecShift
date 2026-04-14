@@ -53,7 +53,8 @@ For `propose`, `apply`, `finalize`, `review`:
 2. **Proposal frontmatter lookup**: Scan `.specshift/changes/*/proposal.md` for a proposal whose YAML frontmatter `branch` field matches the current branch. If found, auto-select that change.
 3. **Fallback — worktree convention**: If no matching proposal, check if inside a worktree (`git rev-parse --git-dir` contains `/worktrees/`), derive change name from branch, search for `.specshift/changes/*-<branch-name>/`.
 4. If detected: announce "Detected change context: using change '<name>'"
-5. If not detected and action is `apply`, `finalize`, or `review`: list active changes and ask the user to select.
+5. If not detected and action is `apply`: list changes with `status: active` and ask the user to select.
+5b. If not detected and action is `finalize` or `review`: list changes with `status: review` and ask the user to select.
 6. If not detected and action is `propose`: the user may be starting a new change — proceed to propose dispatch which handles workspace creation.
 
 ## Dispatch

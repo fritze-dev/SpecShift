@@ -34,7 +34,7 @@ The system SHALL use `.specshift/WORKFLOW.md` (YAML frontmatter) combined with S
 #### Scenario: WORKFLOW.md defines the pipeline order
 - **GIVEN** the `.specshift/WORKFLOW.md` file
 - **WHEN** its frontmatter is read by a skill
-- **THEN** it SHALL declare a `pipeline` array with exactly 7 artifact IDs: research, proposal, specs, design, preflight, tasks, and audit in that dependency order
+- **THEN** it SHALL declare a `pipeline` array with exactly 8 artifact IDs: research, proposal, specs, design, preflight, tests, tasks, and audit in that dependency order
 
 #### Scenario: Each Smart Template has instruction and metadata
 - **GIVEN** a Smart Template in `.specshift/templates/`
