@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Fix SpecShift Skill Flow Triggering
+
+### Fixed
+- Skill description in `src/skills/specshift/SKILL.md` now includes TRIGGER/DO NOT TRIGGER conditions — the AI proactively invokes the specshift skill when implementation is requested instead of editing files directly
+- CLAUDE.md workflow enforcement strengthened: "Before editing ANY file" replaces the previous text that excluded source code from the workflow gate
+
+### Changed
+- Consumer CLAUDE.md template (`src/templates/claude.md`) synced with project CLAUDE.md enforcement text (template-version 1 → 2)
+
+### Specs
+- `three-layer-architecture.md` v6: added Proactive Skill Invocation requirement
+
 ## 2026-04-14 — Review Comment Acknowledgment
 
 ### Added
