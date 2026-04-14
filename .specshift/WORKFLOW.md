@@ -2,7 +2,7 @@
 template-version: 4
 plugin-version: 0.1.7-beta
 templates_dir: .specshift/templates
-pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
+pipeline: [research, tasks, review]
 
 actions: [init, propose, apply, finalize]
 # Add custom actions here (e.g. qa-review) and define matching
@@ -73,8 +73,7 @@ After review.md PASS, commit and push implementation.
 
 Post-approval finalization, executed sequentially:
 1. Changelog: incremental entries from completed change
-2. Docs: regenerate affected capability docs, ADRs, README
-3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
-4. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/` — compilation validates that modified templates have bumped `template-version`
+2. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
+3. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/` — compilation validates that modified templates have bumped `template-version`
 On error in one step: continue with next, report failures at end.
 Check review.md exists with verdict PASS before proceeding.
