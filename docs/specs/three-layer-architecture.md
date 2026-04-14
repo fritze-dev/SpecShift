@@ -2,8 +2,8 @@
 order: 13
 category: reference
 status: stable
-version: 4
-lastModified: 2026-04-10
+version: 5
+lastModified: 2026-04-14
 ---
 ## Purpose
 
@@ -91,6 +91,18 @@ The three layers SHALL be independently modifiable. WORKFLOW.md and Smart Templa
 - **GIVEN** an action's instruction text needs refinement
 - **WHEN** the action definition in WORKFLOW.md is updated
 - **THEN** neither the constitution nor the router SKILL.md SHALL require modification
+
+#### Scenario: Constitution does not duplicate workflow instruction details
+- **GIVEN** a WORKFLOW.md action instruction defines a checkpoint behavior (e.g., "pause after design for user alignment")
+- **WHEN** the constitution is inspected
+- **THEN** it SHALL NOT contain a convention restating the same operational rule
+- **AND** operational behavior details SHALL live exclusively in the WORKFLOW.md action instruction that governs them
+
+#### Scenario: Consumer workflow template does not contain project-specific steps
+- **GIVEN** the consumer workflow template distributed by the plugin (`src/templates/workflow.md`)
+- **WHEN** its action instructions are inspected
+- **THEN** they SHALL NOT contain steps referencing project-specific scripts, paths, or tools that only exist in the plugin's own repository
+- **AND** project-specific steps SHALL be added only to the project's `.specshift/WORKFLOW.md` instance
 
 ## Edge Cases
 

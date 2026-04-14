@@ -30,7 +30,7 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **AND** all requirements have scenarios, no gaps are detected, all assumptions have visible text, and no REVIEW markers remain
 - **WHEN** the user invokes `specshift propose add-user-auth`
 - **THEN** the system reads constitution.md, all change artifacts, and existing specs
-- **AND** produces `preflight.md` covering all six dimensions
+- **AND** produces `preflight.md` covering all dimensions
 - **AND** the verdict is "PASS"
 - **AND** the summary shows 0 blockers, 0 warnings
 

@@ -2,7 +2,7 @@
 title: "Three-Layer Architecture"
 capability: "three-layer-architecture"
 description: "Constitution, WORKFLOW.md + Smart Templates, and Router + Actions with independent modifiability"
-lastUpdated: "2026-04-10"
+lastUpdated: "2026-04-14"
 ---
 
 # Three-Layer Architecture
@@ -45,6 +45,14 @@ A consumer adds a custom action by appending it to the `actions` array in WORKFL
 ### Layers Are Independently Modifiable
 
 Updating a WORKFLOW.md action instruction does not require changes to the router, because the router reads WORKFLOW.md dynamically. Adding a new code style rule to the constitution does not require WORKFLOW.md changes. Refining the router's dispatch logic does not require changes to the constitution or WORKFLOW.md. Adding a custom action only touches WORKFLOW.md.
+
+### Constitution Does Not Duplicate Workflow Instruction Details
+
+Operational behavior details (e.g., checkpoint behavior, auto-dispatch rules) live exclusively in the WORKFLOW.md action instructions that govern them. The constitution defines project-wide governance rules (tech stack, code style, conventions) but does not restate action-level operational rules. This prevents drift between layers when a rule is updated in one place but not the other.
+
+### Consumer Templates Do Not Contain Project-Specific Steps
+
+The consumer workflow template distributed by the plugin (`src/templates/workflow.md`) contains only generic action instructions. Project-specific steps (e.g., compilation scripts, hardcoded version-bump paths) are added only to the project's `.specshift/WORKFLOW.md` instance as intentional overrides.
 
 ## Known Limitations
 

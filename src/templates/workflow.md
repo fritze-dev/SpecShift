@@ -1,5 +1,5 @@
 ---
-template-version: 3
+template-version: 4
 plugin-version: ""
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, review]
@@ -39,7 +39,7 @@ Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean co
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
-review artifact: when auto_approve is false, stop before review and suggest specshift apply. When auto_approve is true, do not stop — auto-continue to apply.
+review artifact: stop before review and suggest specshift apply.
 
 ## Action: init
 
@@ -59,13 +59,13 @@ Report findings, suggest specshift propose for changes needed.
 Implement tasks from tasks.md, then generate review.md.
 QA loop: implement → generate review.md → fix if FAIL → regenerate review.md → until PASS.
 Delete existing review.md before starting implementation.
-When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause and auto-continue to finalize.
+When auto_approve is false, pause at user testing gate. When auto_approve is true and review.md verdict is PASS, skip user testing pause.
 Fix loop: before applying any fix, classify the correction — Tweak (wrong value/typo/missing line → fix in place), Design Pivot (wrong files/approach/abstraction → update design.md + discard affected tasks → re-implement), or Scope Change (wrong requirements/target audience → update specs + design → full re-implementation). After any fix, regenerate review.md before presenting to user.
 Artifact staleness: for Design Pivot or Scope Change corrections, update ALL stale change artifacts (design.md, tasks.md affected sections, preflight.md if needed) before re-implementing. A stale artifact is one that still describes the original wrong approach. Specs must match implementation before proceeding.
 Standard Tasks (post-implementation section) are NOT part of apply.
 Constitution standard tasks: pre-merge executed during post-apply, post-merge remain as reminders.
 Before committing, mark all standard task checkboxes as complete except post-merge.
-After review.md PASS, commit and push implementation. When auto_approve is false, pause for user approval. When auto_approve is true, auto-continue to finalize.
+After review.md PASS, commit and push implementation.
 
 ## Action: finalize
 
@@ -75,6 +75,5 @@ Post-approval finalization, executed sequentially:
 1. Changelog: incremental entries from completed change
 2. Docs: regenerate affected capability docs, ADRs, README
 3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
-4. Compile: run `bash scripts/compile-skills.sh` to regenerate the release directory at `.claude/skills/specshift/`
 On error in one step: continue with next, report failures at end.
 Check review.md exists with verdict PASS before proceeding.

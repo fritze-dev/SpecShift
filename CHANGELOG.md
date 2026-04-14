@@ -3,6 +3,22 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-14 — Review Workflow Artifacts
+
+### Changed
+- Consumer workflow template (`src/templates/workflow.md`) finalize action reduced to 3 steps — removed project-specific compile step that fails for all consumer projects
+- Action instructions in WORKFLOW.md now describe intra-action behavior only — auto-dispatch language removed (router handles cross-action chaining in SKILL.md)
+- Project WORKFLOW.md version-bump step delegates to constitution convention instead of hardcoding file paths
+- Workflow template-version bumped from 3 to 4
+
+### Removed
+- Design review checkpoint convention from `.specshift/CONSTITUTION.md` — operational detail already lives in WORKFLOW.md propose instruction (Layer Separation)
+- Preflight Quality Check reference from `src/actions/init.md` — belongs to propose, not init
+
+### Specs
+- `three-layer-architecture.md` v5: added Layer Separation scenarios for constitution-workflow duplication and consumer template purity
+- `workflow-contract.md` v8: added scenario clarifying that action instructions describe intra-action behavior only
+
 ## 2026-04-14 — Template-Version Enforcement in Compilation
 
 ### Added

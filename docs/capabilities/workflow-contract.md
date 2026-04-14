@@ -2,7 +2,7 @@
 title: "Workflow Contract"
 capability: "workflow-contract"
 description: "WORKFLOW.md pipeline orchestration, Smart Templates, inline actions, custom actions, and router dispatch"
-lastUpdated: "2026-04-13"
+lastUpdated: "2026-04-14"
 ---
 
 # Workflow Contract
@@ -45,6 +45,10 @@ Each template file contains everything needed to generate its artifact: the `ins
 ### Built-in Actions Use Requirement Links from SKILL.md
 
 Each built-in action (init, propose, apply, finalize) has a `## Action: <name>` section in the WORKFLOW.md body containing `### Instruction` with procedural guidance. Requirement links (clickable markdown links to spec requirements) live in the SKILL.md file, not in WORKFLOW.md. When executing a built-in action, the router reads the instruction from WORKFLOW.md and the requirement links from SKILL.md, loads the referenced requirements from specs, and spawns a sub-agent with bounded context.
+
+### Action Instructions Describe Intra-Action Behavior Only
+
+Action instructions in `## Action: <name>` sections describe what happens within that action: workspace creation, pipeline traversal, checkpoints, task implementation. They do not describe inter-action dispatch (e.g., "auto-continue to apply"). Cross-action dispatch is a router concern defined in SKILL.md, which reads the `auto_approve` configuration and decides whether to chain propose→apply→finalize automatically.
 
 ### Custom Actions Execute Instructions Directly
 
