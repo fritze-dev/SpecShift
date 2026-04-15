@@ -2,7 +2,7 @@
 title: "Project Init"
 capability: "project-init"
 description: "One-command project initialization with template merge, codebase scanning, constitution generation, CLAUDE.md bootstrap, Claude Code Web settings generation, and health checks"
-lastUpdated: "2026-04-13"
+lastUpdated: "2026-04-15"
 ---
 
 # Project Init
@@ -20,7 +20,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 ## Features
 
 - **One-command setup** via `specshift init` -- copies Smart Templates, installs WORKFLOW.md, creates CONSTITUTION.md placeholder, generates CLAUDE.md from bootstrap template, and validates the result
-- **CLAUDE.md bootstrap** -- generates CLAUDE.md from a plugin template containing Workflow and Knowledge Management sections, adapted with project-specific rules from the codebase scan
+- **CLAUDE.md bootstrap** -- generates CLAUDE.md from a plugin template containing Workflow, Planning (with scope commitment and workflow routing), and Knowledge Management sections, adapted with project-specific rules from the codebase scan
 - **Version-aware template merge** -- uses `template-version` fields to detect user customizations and merge plugin updates instead of overwriting
 - **Constitution section-level merge** -- detects missing sections from newer template versions and offers to generate content for them based on the codebase
 - **CLAUDE.md section-level check** -- during re-init, compares CLAUDE.md against bootstrap template section headings and reports missing standard sections as WARNING without modifying the file
