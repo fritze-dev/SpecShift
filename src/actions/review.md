@@ -5,6 +5,7 @@
 - [Review Request Dispatch](../../docs/specs/review-lifecycle.md#requirement-review-request-dispatch)
 - [Review Comment Processing](../../docs/specs/review-lifecycle.md#requirement-review-comment-processing)
 - [Review Cycle Safety Limit](../../docs/specs/review-lifecycle.md#requirement-review-cycle-safety-limit)
+- [Pre-Merge Summary Comment](../../docs/specs/review-lifecycle.md#requirement-pre-merge-summary-comment)
 - [Merge Execution with Mandatory Confirmation](../../docs/specs/review-lifecycle.md#requirement-merge-execution-with-mandatory-confirmation)
 - [Review Action Configuration](../../docs/specs/workflow-contract.md#requirement-review-action-configuration)
 - [Post-Merge Worktree Cleanup](../../docs/specs/change-workspace.md#requirement-post-merge-worktree-cleanup)

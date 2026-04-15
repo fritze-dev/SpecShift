@@ -69,6 +69,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 
 | Capability | Description |
 |---|---|
+| [Review Lifecycle](capabilities/review-lifecycle.md) | Re-entrant PR review-to-merge state machine with comment processing, summary posting, and mandatory merge confirmation |
 | [Release Workflow](capabilities/release-workflow.md) | Version management, automated releases, and plugin distribution |
 
 ### Documentation
