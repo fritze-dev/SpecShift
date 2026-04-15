@@ -1,6 +1,6 @@
 <!--
 ---
-status: review
+status: completed
 branch: claude/fix-friction-issues-Mq3iy
 capabilities:
   new: []
