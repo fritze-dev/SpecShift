@@ -1,6 +1,6 @@
 ---
 id: claude
-template-version: 3
+template-version: 4
 description: CLAUDE.md bootstrap template with standard agent directives
 generates: CLAUDE.md
 requires: []
@@ -26,6 +26,8 @@ When using plan mode to discuss a change before invoking `specshift propose`, co
 Present the summary to the user for review. Do not exit plan mode until the user has confirmed the scope. This confirmed scope feeds directly into the proposal's Scope & Boundaries section and the design's Non-Goals — treat it as a commitment, not a suggestion.
 
 For trivial changes, a one-line scope statement is sufficient. The goal is explicitness, not ceremony.
+
+When describing implementation steps, the plan MUST route implementation through the specshift workflow skill (starting with `specshift propose`). Plans that describe direct file edits without invoking specshift are non-conforming.
 
 ## Knowledge Management
 

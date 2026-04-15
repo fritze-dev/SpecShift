@@ -6,18 +6,18 @@ No foundation tasks — this is a text-only change to existing files.
 
 ## 2. Implementation
 
-- [ ] 2.1. [P] Add workflow-routing paragraph to `src/templates/claude.md` `## Planning` section (after "For trivial changes..." paragraph) and bump `template-version` from 3 to 4
-- [ ] 2.2. [P] Add identical workflow-routing paragraph to `CLAUDE.md` `## Planning` section (after "For trivial changes..." paragraph)
-- [ ] 2.3. Verify `docs/specs/project-init.md` CLAUDE.md Bootstrap requirement (line 274) mentions workflow routing (already done during specs stage)
+- [x] 2.1. [P] Add workflow-routing paragraph to `src/templates/claude.md` `## Planning` section (after "For trivial changes..." paragraph) and bump `template-version` from 3 to 4
+- [x] 2.2. [P] Add identical workflow-routing paragraph to `CLAUDE.md` `## Planning` section (after "For trivial changes..." paragraph)
+- [x] 2.3. Verify `docs/specs/project-init.md` CLAUDE.md Bootstrap requirement (line 274) mentions workflow routing (already done during specs stage)
 
 ## 3. QA Loop & Human Approval
 
-- [ ] 3.1. Metric Check:
-  - [ ] Both `CLAUDE.md` and `src/templates/claude.md` contain the workflow-routing paragraph — PASS / FAIL
-  - [ ] `src/templates/claude.md` has `template-version: 4` — PASS / FAIL
-  - [ ] `docs/specs/project-init.md` requirement text mentions workflow routing — PASS / FAIL
-  - [ ] `bash scripts/compile-skills.sh` passes — PASS / FAIL
-- [ ] 3.2. Auto-Verify: generate audit.md using the audit template.
+- [x] 3.1. Metric Check:
+  - [x] Both `CLAUDE.md` and `src/templates/claude.md` contain the workflow-routing paragraph — PASS
+  - [x] `src/templates/claude.md` has `template-version: 4` — PASS
+  - [x] `docs/specs/project-init.md` requirement text mentions workflow routing — PASS
+  - [x] `bash scripts/compile-skills.sh` passes — PASS
+- [x] 3.2. Auto-Verify: generate audit.md using the audit template.
 - [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.4. Fix Loop: Classify each correction before fixing. Update all stale artifacts before re-implementing. Specs must match code before proceeding.
   - **Tweak**: wrong value/typo → fix in place

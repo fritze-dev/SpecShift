@@ -1,5 +1,5 @@
 ---
-status: active
+status: review
 branch: claude/enforce-specshift-workflow-0Syd7
 capabilities:
   new: []
