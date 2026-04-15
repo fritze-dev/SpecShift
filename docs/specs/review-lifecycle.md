@@ -153,7 +153,7 @@ When no unresolved review threads remain and CI checks are passing, the review a
 - **AND** all CI checks pass
 - **WHEN** the action asks for merge confirmation
 - **AND** the user confirms
-- **THEN** the action merges the PR using available GitHub tooling
+- **THEN** the action merges the PR via squash with a composed commit message
 - **AND** sets proposal `status` to `completed`
 - **AND** triggers post-merge cleanup per change-workspace.md
 
