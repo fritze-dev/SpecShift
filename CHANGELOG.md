@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Fix Version Drift Between CHANGELOG, Tags, and GitHub Releases
 
 #### Fixed
-- CHANGELOG.md reformatted with `## [version] — date` headers — all 13 entries now map to their corresponding git tags
+- CHANGELOG.md reformatted with `## [version] — date` headers — all previously released versions now map to their corresponding git tags
 - Two orphan entries (#34 Conditional Post-Merge Reminders, #35 Fix Squash-Merge Commit Messages) consolidated under v0.2.2-beta where they belong
 - v0.2.2-beta GitHub release notes updated to include all three changes
 - `release.yml` sed pipeline now strips redundant version header and promotes headings for GitHub release notes (Closes #38)
