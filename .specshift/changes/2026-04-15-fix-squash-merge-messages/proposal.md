@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: review
 branch: claude/fix-squash-merge-messages-UEZgr
 capabilities:
   new: []

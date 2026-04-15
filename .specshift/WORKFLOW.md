@@ -95,6 +95,6 @@ State assessment: determine PR number from current branch, read PR state (draft,
 5. After fixes: commit, push, run built-in self-check. Fix any findings.
 6. If reviewer posts new comments: process them (return to step 4). Safety limit: max 3 cycles, then pause.
 7. When no unresolved comments remain: check CI. If pending, report status. If passing, ask user for explicit merge confirmation.
-8. After user confirms: merge the PR using available GitHub tooling. Set proposal status: completed. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
+8. After user confirms: merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section + What Changes bullets + issue-closing references (e.g., `Closes #N`). Do not use GitHub's default squash message. Set proposal status: completed. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
 When auto_approve is true and no reviews are pending or needed: proceed directly to merge confirmation.
 If session may end before review arrives: report state and suggest re-running the specshift skill with `review` later.

@@ -6,18 +6,18 @@ No foundation tasks — all changes are to existing files.
 
 ## 2. Implementation
 
-- [ ] 2.1. [P] Update `src/templates/workflow.md` review action step 8: add squash merge commit message composition instruction. Bump `template-version` from 6 to 7.
-- [ ] 2.2. [P] Update `.specshift/WORKFLOW.md` review action step 8: mirror the same change, preserving project-specific worktree cleanup detail.
-- [ ] 2.3. [P] Update `src/skills/specshift/SKILL.md` propose step 4: change commit message format from `WIP: <change-name> — <artifact-id>` to `specshift(<change-name>): <artifact-id>`.
+- [x] 2.1. [P] Update `src/templates/workflow.md` review action step 8: add squash merge commit message composition instruction. Bump `template-version` from 6 to 7.
+- [x] 2.2. [P] Update `.specshift/WORKFLOW.md` review action step 8: mirror the same change, preserving project-specific worktree cleanup detail.
+- [x] 2.3. [P] Update `src/skills/specshift/SKILL.md` propose step 4: change commit message format from `WIP: <change-name> — <artifact-id>` to `specshift(<change-name>): <artifact-id>`.
 
 ## 3. QA Loop & Human Approval
 
-- [ ] 3.1. Metric Check:
+- [x] 3.1. Metric Check:
   - `grep -r "WIP:" src/ docs/specs/` returns zero matches in requirement text and instruction text — PASS / FAIL
   - Compiled actions at `.claude/skills/specshift/actions/review.md` contain squash commit message composition text — PASS / FAIL
   - `bash scripts/compile-skills.sh` succeeds without warnings — PASS / FAIL
   - `src/templates/workflow.md` has `template-version: 7` — PASS / FAIL
-- [ ] 3.2. Auto-Verify: generate audit.md using the audit template.
+- [x] 3.2. Auto-Verify: generate audit.md using the audit template.
 - [ ] 3.3. User Testing: **Stop here!** Ask the user for manual approval.
 - [ ] 3.4. Fix Loop: Classify each correction before fixing. Update all stale artifacts before re-implementing. Specs must match code before proceeding.
   - **Tweak**: wrong value/typo → fix in place
