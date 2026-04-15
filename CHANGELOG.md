@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-15 — Enforce Plan-Mode Workflow Routing
+
+### Fixed
+- Plan-mode instructions now require plans to route implementation through the specshift workflow skill (starting with `specshift propose`) — plans that describe direct file edits are flagged as non-conforming
+
+### Changed
+- Consumer CLAUDE.md template (`src/templates/claude.md`) updated with workflow-routing rule (template-version 3 → 4)
+
+### Specs
+- `project-init.md`: CLAUDE.md Bootstrap requirement expanded to include workflow routing as a standard Planning directive
+
 ## 2026-04-15 — Fix Squash-Merge Commit Messages
 
 ### Changed

@@ -15,6 +15,8 @@ Present the summary to the user for review. Do not exit plan mode until the user
 
 For trivial changes, a one-line scope statement is sufficient. The goal is explicitness, not ceremony.
 
+When describing implementation steps, the plan MUST route implementation through the specshift workflow skill (starting with `specshift propose`). Plans that describe direct file edits without invoking specshift are non-conforming.
+
 ## Knowledge Management
 
 Do not use auto-memory for project knowledge (architecture decisions, conventions, design rationale, workflow patterns). Instead:
