@@ -1,9 +1,10 @@
 ---
 order: 15
 category: finalization
-status: stable
+status: draft
+change: 2026-04-15-post-pr-summary-comment
 version: 1
-lastModified: 2026-04-14
+lastModified: 2026-04-15
 ---
 ## Purpose
 
@@ -142,6 +143,43 @@ The review action SHALL support iterative review cycles: after processing commen
 - **WHEN** the action checks for new threads
 - **THEN** it proceeds to the merge readiness check
 
+### Requirement: Pre-Merge Summary Comment
+
+Before asking the user for merge confirmation, the review action SHALL post a PR comment summarizing the review activity. The summary comment SHALL include: (1) the number of review threads processed and resolved, (2) a brief list of fixes implemented, (3) the self-check result (pass or fail, and whether any findings were fixed), (4) the number of review cycles completed, and (5) a final status line in the format: `Ready for merge — N threads resolved, M fixes applied, self-check passed`. If no review threads were processed (e.g., no comments were posted by a reviewer), the summary SHALL still be posted with zeroed counts to confirm the action assessed the PR. If posting the comment fails (tooling error, permission issue), the action SHALL log a warning and continue to the merge confirmation — a failed summary SHALL NOT block the merge flow. On re-entrant invocations, the action SHALL check whether a summary comment has already been posted (by searching for a `<!-- specshift:review-summary -->` marker in the comment body); if found, the action SHALL update the existing comment rather than posting a duplicate.
+
+**User Story:** As a developer (and anyone watching the PR) I want a summary comment posted before merge, so that there is a clear audit trail of what the AI did during the review process.
+
+#### Scenario: Summary comment posted before merge confirmation
+- **GIVEN** the review action has processed 4 review threads and resolved all of them
+- **AND** implemented 3 fixes across 2 review cycles
+- **AND** the self-check passed with no findings
+- **WHEN** no unresolved comments remain and CI checks are passing
+- **THEN** the action posts a PR comment containing the summary
+- **AND** the comment includes "4 threads resolved, 3 fixes applied, self-check passed"
+- **AND** the action proceeds to ask the user for merge confirmation
+
+#### Scenario: Summary posted with zero counts when no review comments existed
+- **GIVEN** the PR received no review comments
+- **AND** CI checks are passing
+- **WHEN** the review action reaches the pre-merge phase
+- **THEN** the action posts a summary comment with "0 threads resolved, 0 fixes applied, self-check passed"
+- **AND** proceeds to merge confirmation
+
+#### Scenario: Summary comment failure does not block merge
+- **GIVEN** the review action has completed processing
+- **AND** posting the PR comment fails due to a tooling error
+- **WHEN** the action attempts to post the summary
+- **THEN** it logs a warning with the failure reason
+- **AND** continues to ask the user for merge confirmation
+
+#### Scenario: Re-entrant invocation updates existing summary instead of duplicating
+- **GIVEN** a previous session posted a summary comment with "2 threads resolved, 2 fixes applied"
+- **AND** a new review cycle resolved 1 additional thread with 1 fix
+- **WHEN** the review action reaches the pre-merge phase in the new session
+- **THEN** it detects the existing summary comment by its marker
+- **AND** updates it to reflect the cumulative totals: "3 threads resolved, 3 fixes applied"
+- **AND** does NOT post a second summary comment
+
 ### Requirement: Merge Execution with Mandatory Confirmation
 
 When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling, then set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
@@ -188,9 +226,11 @@ When no unresolved review threads remain and CI checks are passing, the review a
 - **GitHub tooling unavailable**: The action SHALL report the inability to read PR state and stop.
 - **Reviewer requests changes but leaves no inline comments**: The action SHALL report the review status and ask the user how to proceed.
 - **Partial comment processing interrupted by session end**: Re-invocation reads current PR state; resolved threads stay resolved, unresolved threads are reprocessed.
+- **Summary comment permissions denied**: If the GitHub token lacks permission to post comments, the action SHALL log a warning and proceed to merge confirmation without the summary.
 
 ## Assumptions
 
 - Available GitHub tooling (gh CLI, MCP tools, or API) can read and write PR state including draft status, reviews, comment threads, and merge operations. <!-- ASSUMPTION: GitHub tooling PR capabilities -->
 - The built-in review skill is available in the execution environment for self-review after fixes. <!-- ASSUMPTION: Built-in review availability -->
 - Review comment threads can be programmatically resolved after addressing the feedback. <!-- ASSUMPTION: Thread resolution capability -->
+- Available GitHub tooling can post and update individual PR comments (issue comments), and can search existing comments by content to detect duplicates. <!-- ASSUMPTION: PR issue comment read-write capability -->
