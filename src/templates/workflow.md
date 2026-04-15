@@ -99,5 +99,5 @@ State assessment: determine PR number from current branch, read PR state (draft,
 - **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
 - **Merge confirmation:** Ask user for explicit merge confirmation.
 - **Merge execution:** After user confirms, merge the PR using available GitHub tooling. Set proposal status: completed. Post-merge: clean up worktree if applicable.
-When auto_approve is true and no reviews are pending or needed: proceed directly to Merge confirmation.
+When auto_approve is true and no reviews are pending or needed: skip waiting for external review, but still run the CI gate and post/update the Pre-merge summary before asking for Merge confirmation.
 If session may end before review arrives: report state and suggest re-running specshift review later.
