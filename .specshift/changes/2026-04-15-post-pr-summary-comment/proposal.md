@@ -1,6 +1,6 @@
 <!--
 ---
-status: review
+status: completed
 branch: claude/post-pr-summary-comment-Yz4El
 capabilities:
   new: []
