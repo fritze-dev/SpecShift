@@ -1,6 +1,6 @@
 ---
 id: tasks
-template-version: 3
+template-version: 4
 description: Implementation checklist with QA loop
 generates: tasks.md
 requires: [tests]
@@ -37,11 +37,19 @@ instruction: |
   universal steps in section 4.
 
   Post-Merge Reminders: If the constitution's Standard Tasks has a
-  "### Post-Merge" subsection, add a separate section 5 titled
-  "Post-Merge Reminders". Copy post-merge items as plain `- ` bullets
-  (no checkbox, no numbering). These are not tracked tasks — just
-  reminders for manual execution after the PR is merged. If no
-  Post-Merge subsection exists, omit section 5 entirely.
+  "### Post-Merge" subsection, evaluate each item's relevance to the
+  current change. Check the proposal's "What Changes" and "Scope &
+  Boundaries" sections to determine which files and areas are affected.
+  Post-merge items may include a scope hint describing when they apply
+  (e.g., "applies when src/ files change"). Only include items whose
+  scope matches the change. Items without a scope hint are always
+  included. When ambiguous, err on the side of inclusion. Strip scope
+  hints from the output. Add matching items in a separate section 5
+  titled "Post-Merge Reminders" as plain `- ` bullets (no checkbox,
+  no numbering). These are not tracked tasks — just reminders for
+  manual execution after the PR is merged. If no Post-Merge subsection
+  exists, or no items are relevant to the change scope, omit section 5
+  entirely.
 ---
 # Implementation Tasks: [Feature Name]
 
@@ -74,5 +82,5 @@ instruction: |
 
 ## 5. Post-Merge Reminders
 <!-- Not tracked as tasks. Executed manually after the PR is merged.
-     If the constitution defines ## Standard Tasks > ### Post-Merge, copy those items here as plain bullets.
-     Omit this section entirely if no post-merge items exist. -->
+     If the constitution defines ## Standard Tasks > ### Post-Merge, include relevant items here as plain bullets.
+     Only include items whose scope matches the change. Omit this section if no items are relevant. -->

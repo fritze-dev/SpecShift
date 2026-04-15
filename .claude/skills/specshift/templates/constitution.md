@@ -1,6 +1,6 @@
 ---
 id: constitution
-template-version: 1
+template-version: 2
 description: Project governance template for bootstrap
 generates: CONSTITUTION.md
 requires: []
@@ -48,4 +48,4 @@ instruction: |
 <!-- - [ ] Example: Update PR body with summary -->
 
 ### Post-Merge
-<!-- - Example: Run deployment script -->
+<!-- - Example: Run deployment script — applies when change modifies files under src/ -->

@@ -64,4 +64,4 @@ template-version: 1
 - [ ] Reply to and resolve all PR review comments (fixed/declined with reason/not applicable)
 
 ### Post-Merge
-- Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`)
+- Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`) — applies when change modifies files under `src/` or `.claude/skills/`

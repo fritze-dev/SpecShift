@@ -1,5 +1,5 @@
 <!--
-status: active
+status: review
 branch: claude/conditional-merge-reminders-Vg5a2
 capabilities:
   new: []
