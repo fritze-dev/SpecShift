@@ -23,11 +23,13 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 | Three-tier fix loop classification (Tweak / Design Pivot / Scope Change) | Agents need mechanically checkable criteria; subjective judgment failed in PR #12 | [ADR-001](decisions/adr-001-tiered-re-entry-classification-for-fix-loop.md) |
 | Detection signals as observable facts for tier classification | Reduces subjectivity; agents can check signals mechanically before choosing tier | [ADR-001](decisions/adr-001-tiered-re-entry-classification-for-fix-loop.md) |
 | Update apply instruction rather than adding a new action | Fix loop is part of apply; a new action would fragment UX | [ADR-001](decisions/adr-001-tiered-re-entry-classification-for-fix-loop.md) |
+| Changelog version headers with orphan consolidation | Enables version-to-entry mapping; orphan entries belong under the release that includes them | [ADR-002](decisions/adr-002-changelog-version-header-format.md) |
 
 ### Notable Trade-offs
 
 - **Tiered fix loop classification**: Tier boundary ambiguity remains possible in edge cases — mitigated by defaulting to the higher tier, which errs toward clean artifacts at the cost of occasionally over-classifying a Tweak as a Design Pivot.
 - **SpecShift restructure**: All historical ADRs and changes deleted from working tree (preserved in git history). Consumers must reinstall under the new plugin name.
+- **Changelog reformatting**: Large diff in blame history (purely cosmetic). release.yml sed pipeline has additional transformation steps for heading promotion.
 
 ## Conventions
 
