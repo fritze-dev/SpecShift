@@ -134,7 +134,7 @@ The review action SHALL support iterative review cycles: after processing commen
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR using available GitHub tooling, then set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain and CI checks are passing, the review action SHALL ask the user for explicit merge confirmation before proceeding. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL merge the PR via squash using available GitHub tooling. The squash commit message SHALL be composed rather than using GitHub's default (which concatenates individual commit messages). The commit title SHALL be the PR title followed by the PR number in parentheses (e.g., `Fix auth timeout (#42)`). The commit body SHALL contain the proposal's **Why** section (problem statement), followed by a blank line and the **What Changes** bullet list, followed by any issue-closing references (e.g., `Closes #31`). If the proposal is unavailable, the action SHALL fall back to the PR body as the commit message. After merge, the action SHALL set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
@@ -168,6 +168,17 @@ When no unresolved review threads remain and CI checks are passing, the review a
 - **WHEN** the review action reaches the merge phase
 - **THEN** it SHALL pause and ask for explicit user confirmation
 - **AND** SHALL only merge after the user confirms
+
+#### Scenario: Squash merge uses clean commit message from proposal
+- **GIVEN** the user has confirmed merge
+- **AND** the PR title is "Fix auth timeout" and the PR number is 42
+- **AND** proposal.md has a Why section and What Changes section
+- **AND** proposal.md references issue #31
+- **WHEN** the action merges the PR
+- **THEN** the commit title is `Fix auth timeout (#42)`
+- **AND** the commit body contains the Why section text and What Changes bullets
+- **AND** the commit body includes `Closes #31`
+- **AND** the commit body does NOT contain pipeline commit messages
 
 ### Requirement: Review Action Configuration
 

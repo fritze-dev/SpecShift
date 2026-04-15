@@ -3,6 +3,22 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-15 — Fix Squash-Merge Commit Messages
+
+### Changed
+- Squash merge commit messages now composed from proposal content (title from PR, body from Why + What Changes sections) instead of concatenating WIP pipeline commits
+- Pipeline commit format changed from `WIP: <change-name> — <artifact-id>` to `specshift(<change-name>): <artifact-id>` (conventional-commit-style)
+- Implementation commit format changed from `WIP: <change-name> — implementation` to `specshift(<change-name>): implementation`
+- Draft PR body now uses proposal's Why section instead of `WIP: <change-name>`
+- Explicit squash merge method prescribed in review-lifecycle spec
+
+### Specs
+- `review-lifecycle.md` v2: extended Merge Execution requirement with squash commit message composition, added scenario and edge case
+- `artifact-pipeline.md` v4: updated Post-Artifact Commit and Post-Implementation Commit requirements with new commit format
+
+### Templates
+- `workflow.md` template-version 6 → 7: review action step 8 updated with commit message composition
+
 ## 2026-04-14 — Add Review Action
 
 ### Added
