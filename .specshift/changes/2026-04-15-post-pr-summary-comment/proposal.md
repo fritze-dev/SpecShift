@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: review
 branch: claude/post-pr-summary-comment-Yz4El
 capabilities:
   new: []

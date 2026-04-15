@@ -1,9 +1,8 @@
 ---
 order: 15
 category: finalization
-status: draft
-change: 2026-04-15-post-pr-summary-comment
-version: 1
+status: stable
+version: 2
 lastModified: 2026-04-15
 ---
 ## Purpose
