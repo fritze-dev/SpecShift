@@ -83,4 +83,5 @@ instruction: |
 ## 5. Post-Merge Reminders
 <!-- Not tracked as tasks. Executed manually after the PR is merged.
      If the constitution defines ## Standard Tasks > ### Post-Merge, include relevant items here as plain bullets.
-     Only include items whose scope matches the change. Omit this section if no items are relevant. -->
+     Only include items whose scope matches the change. Omit this section if there is no Post-Merge subsection
+     or if no items are relevant. -->
