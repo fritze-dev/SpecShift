@@ -88,13 +88,15 @@ Check audit.md exists with verdict PASS before proceeding.
 
 PR review-to-merge lifecycle. Re-entrant: can be run in any session.
 State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling (gh CLI, MCP tools, or API).
-1. If PR is draft: mark ready for review, update body with change summary and issue references.
-2. If no reviews requested and `review.request_review` is `copilot`: request Copilot review using available GitHub tooling. If `true`: request from repo default reviewers. If `false` or absent: skip. If request fails, log warning and continue.
-3. Subscribe to PR activity for real-time updates if tooling supports it.
-4. Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
-5. After fixes: commit, push, run built-in self-check. Fix any findings.
-6. If reviewer posts new comments: process them (return to step 4). Safety limit: max 3 cycles, then pause.
-7. When no unresolved comments remain: check CI. If pending, report status. If passing, ask user for explicit merge confirmation.
-8. After user confirms: merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Set proposal status: completed. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
-When auto_approve is true and no reviews are pending or needed: proceed directly to merge confirmation.
+- **Draft transition:** If PR is draft, mark ready for review, update body with change summary and issue references.
+- **Review dispatch:** If no reviews requested and `review.request_review` is `copilot`, request Copilot review using available GitHub tooling. If `true`, request from repo default reviewers. If `false` or absent, skip. If request fails, log warning and continue.
+- **Activity subscription:** Subscribe to PR activity for real-time updates if tooling supports it.
+- **Comment processing:** Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
+- **Self-check:** After fixes, commit, push, run built-in self-check. Fix any findings.
+- **Cycle limit:** If reviewer posts new comments, return to Comment processing. Safety limit: max 3 cycles, then pause.
+- **CI gate:** When no unresolved comments remain, check CI. If pending, report status and suggest waiting. If failing, report failures and stop.
+- **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
+- **Merge confirmation:** Ask user for explicit merge confirmation.
+- **Merge execution:** After user confirms, merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Set proposal status: completed. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
+When auto_approve is true and no reviews are pending or needed: skip review waiting/dispatch, but still run the CI gate and post/update the Pre-merge summary comment before proceeding to Merge confirmation.
 If session may end before review arrives: report state and suggest re-running the specshift skill with `review` later.

@@ -19,6 +19,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Templates
 - `workflow.md` template-version 6 → 7: review action step 8 updated with commit message composition
 
+## 2026-04-15 — Conditional Post-Merge Reminders
+
+### Changed
+- Tasks template instruction now evaluates post-merge item relevance against the proposal scope before including them in generated tasks.md — items with scope hints that don't match the change are filtered out
+- Constitution post-merge items can include a natural-language scope hint (e.g., "applies when change modifies files under src/") to describe when they are relevant
+- Items without scope hints are always included for backward compatibility
+
+### Specs
+- `task-implementation.md` v3: added conditional post-merge filtering to Standard Tasks Exclusion requirement, new scenarios for scope-based inclusion/exclusion, new edge case for ambiguous scope
+- `artifact-pipeline.md` v4: Standard Tasks Directive updated to mention scope-aware filtering for post-merge items
+
+## 2026-04-15 — Pre-Merge Summary Comment
+
+### Added
+- New "Pre-Merge Summary Comment" requirement in `review-lifecycle.md` — review action posts a PR comment summarizing threads resolved, fixes applied, self-check result, and review cycles before merge confirmation
+- Graceful failure: if posting fails, action logs warning and continues to merge confirmation
+- Re-entrant idempotency: uses `<!-- specshift:review-summary -->` HTML marker to detect and update existing summary instead of duplicating
+- New edge case (permissions denied) and assumption (PR issue comment read-write capability) in review-lifecycle spec
+
+### Changed
+- Review action workflow instructions converted from numbered steps (1-8) to descriptive phase labels (Draft transition, Review dispatch, Comment processing, etc.) — eliminates fragile renumbering and makes back-references clearer
+- Old step 7 split into **CI gate** (failure handling) and **Pre-merge summary** + **Merge confirmation** phases
+- Consumer workflow template version bumped from 6 to 7
+
+### Specs
+- `review-lifecycle.md` v2: added Pre-Merge Summary Comment requirement (4 scenarios), 1 edge case, 1 assumption
+
 ## 2026-04-14 — Add Review Action
 
 ### Added

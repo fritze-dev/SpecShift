@@ -27,7 +27,7 @@ The pipeline uses WORKFLOW.md for declarative orchestration and Smart Templates 
 - **WORKFLOW.md-Owned Workflow Rules**: The tasks template's `instruction` contains the Definition of Done rule and standard tasks directive. WORKFLOW.md action instructions contain the post-apply workflow sequence.
 - **Incremental Commits with Draft PR**: After each artifact, the system commits with `specshift(<change-name>): <artifact-id>` and pushes. On the first commit, a feature branch and draft PR are created. The post-artifact hook is worktree-aware.
 - **Post-Implementation Commit Before Approval**: After apply's auto-verify passes, the system commits implementation changes with `specshift(<change-name>): implementation` and pushes before pausing for user approval.
-- **Standard Tasks in Every Task List**: The tasks template includes universal post-implementation steps. Constitution extras from `## Standard Tasks` are appended.
+- **Standard Tasks in Every Task List**: The tasks template includes universal post-implementation steps. Constitution extras from `## Standard Tasks` are appended. Post-merge items are scope-aware -- items with scope hints are only included when the change affects the described file areas.
 - **Capability Granularity Guidance**: The proposal template defines what constitutes a capability versus a feature detail, with merging heuristics (shared actor/trigger/data model).
 - **Mandatory Consolidation Check**: Before finalizing proposal capabilities, overlap with existing specs, pair-wise overlap between new capabilities, and minimum requirement counts are verified.
 - **Specs Overlap Verification**: Before creating spec files, overlap between proposed capabilities and existing specs is verified.

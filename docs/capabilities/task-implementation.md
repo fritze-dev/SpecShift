@@ -2,7 +2,7 @@
 title: "Task Implementation"
 capability: "task-implementation"
 description: "Sequential task execution with progress tracking, audit.md generation, and standard tasks separation"
-lastUpdated: "2026-04-10"
+lastUpdated: "2026-04-15"
 ---
 
 # Task Implementation
@@ -57,7 +57,7 @@ Specs at `docs/specs/` can be modified during implementation. When a task requir
 
 ### Standard Tasks (Post-Implementation)
 
-Every task list includes a Standard Tasks section with post-implementation workflow steps (changelog, docs, version bump, commit and push). These checkboxes are not executed by apply. During the post-apply workflow, universal standard task checkboxes and constitution-defined pre-merge extras are marked complete before the final commit. Post-merge reminders appear in a separate section as plain bullets -- not counted in progress totals.
+Every task list includes a Standard Tasks section with post-implementation workflow steps (changelog, docs, version bump, commit and push). These checkboxes are not executed by apply. During the post-apply workflow, universal standard task checkboxes and constitution-defined pre-merge extras are marked complete before the final commit. Post-merge reminders appear in a separate section as plain bullets -- not counted in progress totals. Post-merge items are scope-aware: items with a scope hint are only included when the change affects the described file areas. Items without a scope hint are always included. When the proposal scope is ambiguous, items are included by default.
 
 ## Known Limitations
 
