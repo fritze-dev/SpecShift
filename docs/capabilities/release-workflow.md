@@ -2,7 +2,7 @@
 title: "Release Workflow"
 capability: "release-workflow"
 description: "Version management, automated releases, plugin distribution, changelog generation, and consumer update process."
-lastUpdated: "2026-04-08"
+lastUpdated: "2026-04-15"
 ---
 # Release Workflow
 
@@ -111,6 +111,10 @@ If no completed changes exist, `specshift finalize` informs you that no complete
 ### Internal-Only Changes
 
 If a completed change describes purely internal refactoring with no user-visible impact, it is either omitted or included under a minimal note rather than fabricating user-facing changes.
+
+### Changelog Version Headers
+
+Each changelog entry uses a version-anchored header in the format `## [v<version>] — <date>`, where `<version>` is the plugin version from `src/.claude-plugin/plugin.json` at the time of finalization and `<date>` is the release date in ISO format. Individual changes within a version use `### <Title>` sub-headers. When multiple changes are included in a single version (for example, due to multiple merges between releases), all changes are grouped under one `## [v<version>]` header with separate `### <Title>` sub-headers for each change. This format ensures compatibility with the `release.yml` extraction pattern, which captures the first `## ` block as the release body. Date-only headers without version numbers are not used, as they prevent mapping changelog entries to specific releases.
 
 ### Changelog in Configured Language
 

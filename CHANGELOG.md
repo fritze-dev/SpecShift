@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.3-beta] — 2026-04-15
+
+### Fix Version Drift Between CHANGELOG, Tags, and GitHub Releases
+
+#### Fixed
+- CHANGELOG.md reformatted with `## [version] — date` headers — all 13 entries now map to their corresponding git tags
+- Two orphan entries (#34 Conditional Post-Merge Reminders, #35 Fix Squash-Merge Commit Messages) consolidated under v0.2.2-beta where they belong
+- v0.2.2-beta GitHub release notes updated to include all three changes
+- `release.yml` sed pipeline now strips redundant version header and promotes headings for GitHub release notes (Closes #38)
+
+#### Specs
+- `release-workflow.md` v3: new "Changelog Version Headers" requirement — entries must use `## [version] — date` format
+
 ## [v0.2.2-beta] — 2026-04-15
 
 ### Enforce Plan-Mode Workflow Routing
