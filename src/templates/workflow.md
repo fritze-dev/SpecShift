@@ -1,5 +1,5 @@
 ---
-template-version: 7
+template-version: 8
 plugin-version: ""
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
@@ -90,6 +90,7 @@ Check audit.md exists with verdict PASS before proceeding.
 PR review-to-merge lifecycle. Re-entrant: can be run in any session.
 State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling.
 - **Draft transition:** If PR is draft, mark ready for review, update body with change summary.
+- **Clean-tree check:** Before review dispatch, verify the working tree is clean. If uncommitted changes exist (e.g., from finalize compilation), commit and push them first.
 - **Review dispatch:** If no reviews requested and `review.request_review` is configured, request external review using available GitHub tooling. If unavailable or request fails, log warning and continue.
 - **Activity subscription:** Subscribe to PR activity for real-time updates if tooling supports it.
 - **Comment processing:** Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
@@ -97,7 +98,9 @@ State assessment: determine PR number from current branch, read PR state (draft,
 - **Cycle limit:** If reviewer posts new comments, return to Comment processing. Safety limit: max 3 cycles, then pause.
 - **CI gate:** When no unresolved comments remain, check CI. If pending, report status and suggest waiting. If failing, report failures and stop.
 - **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
-- **Merge confirmation:** Ask user for explicit merge confirmation.
-- **Merge execution:** After user confirms, merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Set proposal status: completed. Post-merge: clean up worktree if applicable.
-When auto_approve is true and no reviews are pending or needed: skip waiting for external review, but still run the CI gate and post/update the Pre-merge summary before asking for Merge confirmation.
+- **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later. Do NOT offer merge.
+- **Merge confirmation:** If no review is pending, ask user for explicit merge confirmation.
+- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: clean up worktree if applicable.
+When auto_approve is true and `review.request_review` is `false` or absent: skip Review dispatch and review waiting, proceed to CI gate + Pre-merge summary + Merge confirmation.
+When auto_approve is true and `review.request_review` is configured (`copilot` or `true`): dispatch the review and wait for the decision normally — auto_approve does NOT skip review when a review is explicitly configured.
 If session may end before review arrives: report state and suggest re-running specshift review later.

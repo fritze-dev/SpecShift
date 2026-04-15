@@ -21,11 +21,13 @@ The review action is designed as a re-entrant state machine rather than a sessio
 
 - **Re-entrant PR state assessment** -- reads PR state on each invocation (draft status, reviews, comments, CI checks) using available GitHub tooling; no session-local state stored
 - **Draft-to-ready transition** -- marks draft PRs ready for review and updates the PR body with a change summary and issue references
+- **Clean-tree check before review dispatch** -- verifies the working tree is clean before requesting external review; commits and pushes any uncommitted changes (e.g., from finalize compilation)
 - **Configurable review dispatch** -- requests reviews based on `review.request_review` setting (false, copilot, or true for default reviewers); graceful degradation on failure
 - **Automated comment processing** -- reads each unresolved thread, implements actionable fixes, replies explaining the action taken, and resolves threads; defers out-of-scope changes to the user
 - **Self-review after fixes** -- runs the built-in review skill as a self-check after processing comments to catch regressions
 - **Review cycle safety limit** -- max 3 review-fix cycles per invocation; pauses and reports remaining unresolved threads after the limit
 - **Pre-merge summary comment** -- posts a PR comment summarizing threads resolved, fixes applied, self-check result, and review cycles completed; uses an HTML marker for idempotent updates on re-entrant runs
+- **Review-pending gate** -- blocks merge offer while a requested review has no decision yet; reports pending status and suggests re-running later
 - **Mandatory merge confirmation** -- always requires explicit user confirmation before merging, regardless of `auto_approve` setting
 - **Post-merge cleanup** -- removes worktree, deletes local and remote branches after successful merge (when in worktree mode)
 
@@ -45,7 +47,7 @@ Before asking for merge confirmation, the action posts a summary comment on the 
 
 ### Merge with Mandatory Confirmation
 
-When no unresolved threads remain and CI checks pass, the action asks the user for explicit merge confirmation. After confirmation, it merges the PR, sets the proposal status to `completed`, and performs post-merge cleanup if in a worktree.
+When no unresolved threads remain, CI checks pass, and no requested review is pending without a decision, the action asks the user for explicit merge confirmation. If a requested review has not been submitted yet, the action reports "Review pending — waiting for reviewer decision" and suggests re-running later. After confirmation, the action sets the proposal status to `completed` on the feature branch (committing and pushing so the status change is included in the squash merge), then merges the PR and performs post-merge cleanup if in a worktree.
 
 ## Known Limitations
 
