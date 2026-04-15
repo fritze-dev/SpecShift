@@ -30,8 +30,8 @@ No foundation tasks — this is a text-only change to existing files.
 
 - [x] 4.1. Run `specshift finalize` (generates changelog and updates docs)
 - [x] 4.2. Bump version
-- [ ] 4.3. Commit and push to remote
-- [ ] 4.4. Update PR: mark ready for review, update body with change summary and issue references (Closes #32)
+- [x] 4.3. Commit and push to remote
+- [x] 4.4. Update PR: mark ready for review, update body with change summary and issue references (Closes #32)
 - [ ] 4.5. Reply to and resolve all PR review comments (fixed/declined with reason/not applicable)
 
 ## 5. Post-Merge Reminders
