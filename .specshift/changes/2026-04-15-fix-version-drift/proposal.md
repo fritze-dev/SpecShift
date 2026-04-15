@@ -1,5 +1,5 @@
 ---
-status: review
+status: completed
 branch: claude/fix-version-drift-ZivIM
 capabilities:
   new: []
