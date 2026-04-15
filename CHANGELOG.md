@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-04-15 — Conditional Post-Merge Reminders
+
+### Changed
+- Tasks template instruction now evaluates post-merge item relevance against the proposal scope before including them in generated tasks.md — items with scope hints that don't match the change are filtered out
+- Constitution post-merge items can include a natural-language scope hint (e.g., "applies when change modifies files under src/") to describe when they are relevant
+- Items without scope hints are always included for backward compatibility
+
+### Specs
+- `task-implementation.md` v3: added conditional post-merge filtering to Standard Tasks Exclusion requirement, new scenarios for scope-based inclusion/exclusion, new edge case for ambiguous scope
+- `artifact-pipeline.md` v4: Standard Tasks Directive updated to mention scope-aware filtering for post-merge items
+
 ## 2026-04-15 — Pre-Merge Summary Comment
 
 ### Added
