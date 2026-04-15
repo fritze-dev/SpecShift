@@ -24,9 +24,12 @@ jobs:
             exit 0
           fi
 
-          # Extract latest changelog entry (first ## section)
+          # Extract latest changelog entry (first ## section),
+          # strip the version header line, and promote headings by one level
           if [ -f CHANGELOG.md ]; then
-            NOTES=$(sed -n '/^## /{p;:a;n;/^## /q;p;ba}' CHANGELOG.md)
+            NOTES=$(sed -n '/^## /{p;:a;n;/^## /q;p;ba}' CHANGELOG.md \
+              | tail -n +2 \
+              | sed '/^####/{s/^####/###/;b}; s/^###/##/' )
           else
             NOTES="Release v${VERSION}"
           fi
