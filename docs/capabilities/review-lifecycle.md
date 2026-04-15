@@ -47,7 +47,7 @@ Before asking for merge confirmation, the action posts a summary comment on the 
 
 ### Merge with Mandatory Confirmation
 
-When no unresolved threads remain, CI checks pass, and no requested review is pending without a decision, the action asks the user for explicit merge confirmation. If a requested review has not been submitted yet, the action reports "Review pending" and suggests re-running later. After confirmation, the action sets the proposal status to `completed` on the feature branch (committing and pushing so the status change is included in the squash merge), then merges the PR and performs post-merge cleanup if in a worktree.
+When no unresolved threads remain, CI checks pass, and no requested review is pending without a decision, the action asks the user for explicit merge confirmation. If a requested review has not been submitted yet, the action reports "Review pending — waiting for reviewer decision" and suggests re-running later. After confirmation, the action sets the proposal status to `completed` on the feature branch (committing and pushing so the status change is included in the squash merge), then merges the PR and performs post-merge cleanup if in a worktree.
 
 ## Known Limitations
 
