@@ -2,8 +2,8 @@
 order: 9
 category: development
 status: stable
-version: 2
-lastModified: 2026-04-10
+version: 3
+lastModified: 2026-04-15
 ---
 ## Purpose
 
@@ -99,7 +99,7 @@ The system SHALL report implementation progress using checkbox counts from the t
 
 ### Requirement: Standard Tasks Exclusion from Apply Scope
 
-The system SHALL distinguish between implementation tasks (Foundation, Implementation, QA Loop sections) and standard tasks (Post-Implementation section) in the generated `tasks.md`. During `specshift apply`, the system SHALL only process tasks in the implementation and QA sections. Standard tasks in the Post-Implementation section SHALL NOT be executed by the apply phase. Standard tasks SHALL remain as unchecked `- [ ]` items after apply completes. The standard tasks section SHALL be included in the total checkbox count for progress reporting, reflecting the full workflow completion state. During the post-apply workflow, the system SHALL mark all standard task checkboxes as complete in `tasks.md` — including universal steps and constitution-defined pre-merge extras — before creating the final commit, so that the committed file reflects the fully-checked state. Constitution-defined post-merge items SHALL appear in a separate "Post-Merge Reminders" section using plain bullet format (`- ` without checkbox). Plain bullets are not counted in progress totals and are not parsed by the apply skill. If no post-merge items exist in the constitution, the Post-Merge Reminders section SHALL be omitted.
+The system SHALL distinguish between implementation tasks (Foundation, Implementation, QA Loop sections) and standard tasks (Post-Implementation section) in the generated `tasks.md`. During `specshift apply`, the system SHALL only process tasks in the implementation and QA sections. Standard tasks in the Post-Implementation section SHALL NOT be executed by the apply phase. Standard tasks SHALL remain as unchecked `- [ ]` items after apply completes. The standard tasks section SHALL be included in the total checkbox count for progress reporting, reflecting the full workflow completion state. During the post-apply workflow, the system SHALL mark all standard task checkboxes as complete in `tasks.md` — including universal steps and constitution-defined pre-merge extras — before creating the final commit, so that the committed file reflects the fully-checked state. Constitution-defined post-merge items SHALL appear in a separate "Post-Merge Reminders" section using plain bullet format (`- ` without checkbox). Plain bullets are not counted in progress totals and are not parsed by the apply skill. Post-merge items MAY include a scope hint describing when the reminder is relevant (e.g., "applies when src/ files change"). During task generation, the agent SHALL evaluate each post-merge item's relevance against the proposal's "What Changes" and "Scope & Boundaries" sections, including only items whose scope matches the change. Items without a scope hint SHALL always be included. If no post-merge items exist in the constitution, or no items are relevant to the change scope, the Post-Merge Reminders section SHALL be omitted.
 
 **User Story:** As a developer I want post-implementation workflow steps tracked as checkboxes in my task list but not executed by apply, so that I have a visible, auditable checklist for post-apply steps without conflating them with implementation work.
 
@@ -128,6 +128,22 @@ The system SHALL distinguish between implementation tasks (Foundation, Implement
 - **AND** Post-Merge Reminders SHALL remain as plain bullets (they have no checkbox to mark)
 - **AND** the committed tasks.md SHALL reflect the Standard Tasks / Post-Merge Reminders distinction
 - **AND** no extra follow-up commit SHALL be needed for pre-merge standard task checkboxes
+
+#### Scenario: Conditional post-merge item excluded by scope
+
+- **GIVEN** a constitution with a Post-Merge item that includes a scope hint indicating it applies when plugin files change
+- **AND** a proposal whose Scope & Boundaries state only docs/ files are in scope
+- **WHEN** the tasks artifact is generated
+- **THEN** the Post-Merge Reminders section SHALL be omitted
+- **AND** the conditional item SHALL NOT appear in the generated tasks.md
+
+#### Scenario: Conditional post-merge item included by scope
+
+- **GIVEN** a constitution with a Post-Merge item that includes a scope hint indicating it applies when src/ files change
+- **AND** a proposal whose What Changes lists modifications to files under src/
+- **WHEN** the tasks artifact is generated
+- **THEN** the Post-Merge Reminders section SHALL include the item as a plain bullet
+- **AND** the scope hint SHALL be stripped from the output
 
 ### Requirement: Spec Edits During Implementation
 
@@ -164,6 +180,7 @@ The system SHALL allow implementation tasks to modify spec files (`docs/specs/`)
 - **Pre-merge extras executed during post-apply:** Constitution-defined pre-merge standard tasks (e.g., "Update PR") SHALL be executed during the post-apply workflow after commit and push. Post-merge reminders (e.g., "Update plugin") use plain bullet format and are executed manually after the PR is merged.
 - **Constitution extra fails:** If a constitution extra fails (e.g., marking a PR ready fails due to network), the agent SHALL note the failure, skip marking that task as complete, and continue with remaining extras. The failed task remains as `- [ ]` for manual resolution.
 - **Partial post-apply workflow:** If the post-apply workflow is interrupted (e.g., changelog fails), only the steps that actually completed should be marked. The commit step should not be marked if the commit does not happen.
+- **Post-merge item with scope hint and ambiguous proposal scope:** If the proposal scope is ambiguous regarding a post-merge item's scope hint, the agent SHALL include the item (err on the side of inclusion).
 
 ## Assumptions
 
