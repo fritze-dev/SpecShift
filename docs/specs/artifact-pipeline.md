@@ -2,8 +2,8 @@
 order: 4
 category: change-workflow
 status: stable
-version: 3
-lastModified: 2026-04-11
+version: 4
+lastModified: 2026-04-15
 ---
 ## Purpose
 
@@ -129,7 +129,7 @@ Implementation (the apply phase) SHALL be gated by completion of the tasks artif
 - **THEN** the skill SHALL treat worktree mode as disabled and use existing directory-based behavior
 
 ### Requirement: Post-Artifact Commit and PR Integration
-The `specshift propose` skill SHALL execute post-artifact commit logic after creating each artifact during pipeline traversal. The skill SHALL: (1) check the current branch — if already on `<change-name>` branch (e.g., in a worktree), skip branch creation; if on main, create the branch via `git checkout -b <change-name>`; if on another branch, switch to it via `git checkout <change-name>`, (2) stage and commit the change artifacts with a WIP commit message including the artifact ID, (3) push the branch to the remote, and (4) on the first push only, create a draft PR using available GitHub tooling. This logic lives in the skill (SKILL.md), not in WORKFLOW.md.
+The `specshift propose` skill SHALL execute post-artifact commit logic after creating each artifact during pipeline traversal. The skill SHALL: (1) check the current branch — if already on `<change-name>` branch (e.g., in a worktree), skip branch creation; if on main, create the branch via `git checkout -b <change-name>`; if on another branch, switch to it via `git checkout <change-name>`, (2) stage and commit the change artifacts with a commit message in the format `specshift(<change-name>): <artifact-id>` (e.g., `specshift(fix-auth): research`), (3) push the branch to the remote, and (4) on the first push only, create a draft PR using available GitHub tooling. This logic lives in the skill (SKILL.md), not in WORKFLOW.md.
 
 **User Story:** As a developer I want every artifact committed incrementally with a draft PR created on the first commit, so that my team has early visibility and every pipeline stage is tracked in version control.
 
@@ -161,7 +161,7 @@ The `specshift propose` skill SHALL execute post-artifact commit logic after cre
 
 ### Requirement: Post-Implementation Commit Before Approval
 
-The WORKFLOW.md `apply.instruction` SHALL direct the agent to commit and push all implementation changes after `specshift apply` passes and before pausing for user approval. The commit message SHALL use the format `WIP: <change-name> — implementation`. This follows the same pattern as post-artifact commit (WIP commit + push per checkpoint) but applies to the implementation phase rather than the artifact phase, and is defined in `apply.instruction` rather than the tasks template. If push fails, the system SHALL continue with a local commit and note that the user should review changes locally. This WIP commit is distinct from the final commit in the Standard Tasks section, which includes changelog, docs, and version bump.
+The WORKFLOW.md `apply.instruction` SHALL direct the agent to commit and push all implementation changes after `specshift apply` passes and before pausing for user approval. The commit message SHALL use the format `specshift(<change-name>): implementation`. This follows the same pattern as post-artifact commit (commit + push per checkpoint) but applies to the implementation phase rather than the artifact phase, and is defined in `apply.instruction` rather than the tasks template. If push fails, the system SHALL continue with a local commit and note that the user should review changes locally. This commit is distinct from the final commit in the Standard Tasks section, which includes changelog, docs, and version bump.
 
 **User Story:** As a developer I want implementation changes committed and pushed before I'm asked for approval, so that I can review the actual PR diff rather than being asked to approve uncommitted local changes.
 
@@ -169,7 +169,7 @@ The WORKFLOW.md `apply.instruction` SHALL direct the agent to commit and push al
 
 - **GIVEN** a change with all implementation tasks complete and Auto-Verify passed
 - **WHEN** the post-apply workflow reaches the commit-before-approval step
-- **THEN** the system SHALL commit all changed files with message `WIP: <change-name> — implementation`
+- **THEN** the system SHALL commit all changed files with message `specshift(<change-name>): implementation`
 - **AND** SHALL push to the remote branch
 - **AND** the PR diff SHALL be available for the user to review before User Testing
 
@@ -181,13 +181,13 @@ The WORKFLOW.md `apply.instruction` SHALL direct the agent to commit and push al
 - **AND** SHALL note that the user should review changes locally
 - **AND** SHALL proceed to User Testing
 
-#### Scenario: WIP commit does not replace final commit
+#### Scenario: Implementation commit does not replace final commit
 
-- **GIVEN** a change where the WIP implementation commit was created during the post-apply workflow
+- **GIVEN** a change where the implementation commit was created during the post-apply workflow
 - **AND** the post-apply workflow completes changelog, docs, and version bump
 - **WHEN** the Standard Tasks commit step is reached
 - **THEN** the system SHALL create a separate commit with all post-apply changes
-- **AND** the WIP commit and the final commit SHALL be distinct commits in the git history
+- **AND** the implementation commit and the final commit SHALL be distinct commits in the git history
 
 ### Requirement: Smart Templates Own Workflow Rules
 Each Smart Template's `instruction` field SHALL contain workflow rules that apply to its artifact type. The tasks template instruction SHALL include the Definition of Done rule (emergent from artifacts). The tasks template instruction SHALL include a standard tasks directive for including universal post-implementation steps and appending constitution-defined project-specific extras. The apply instruction in WORKFLOW.md SHALL include the post-apply workflow sequence and clarify that standard tasks are executed separately after apply completes.
