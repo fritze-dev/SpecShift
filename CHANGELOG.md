@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.4-beta] — 2026-04-15
+
+### Fix Review Action Friction Issues
+
+#### Fixed
+- Review dispatch now verifies clean working tree before requesting external review — uncommitted changes (e.g., from finalize compilation) are committed and pushed first (Closes #36)
+- Merge is no longer offered while a requested review is pending — action reports "Review pending" and suggests re-running later (Closes #36)
+- `auto_approve` no longer skips review dispatch when `request_review` is configured — reviews are dispatched and awaited normally when explicitly configured (Closes #40)
+- Proposal `status: completed` is now set on the feature branch before squash merge, eliminating the extra post-merge commit on main (Closes #41)
+
+#### Specs
+- `review-lifecycle.md` v3: amended "Review Request Dispatch" (clean-tree prerequisite), amended "Merge Execution" (review-pending gate, status timing before merge)
+
 ## [v0.2.3-beta] — 2026-04-15
 
 ### Fix Version Drift Between CHANGELOG, Tags, and GitHub Releases
