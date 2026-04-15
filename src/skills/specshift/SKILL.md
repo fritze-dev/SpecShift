@@ -68,9 +68,9 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/changes/<id>.md`, check artifact status, generate if ready
 4. **After each artifact**, commit and push:
    - Stage the change artifacts and specs
-   - Commit with message `WIP: <change-name> — <artifact-id>`
+   - Commit with message `specshift(<change-name>): <artifact-id>`
    - Push to remote
-   - On first push (no PR exists): Create a draft PR titled `<Change Name>` with body `WIP: <change-name>` using available GitHub tooling (gh CLI, MCP tools, or API)
+   - On first push (no PR exists): Create a draft PR titled `<Change Name>` with body from the proposal's Why section (or `<change-name>` if proposal not yet generated) using available GitHub tooling (gh CLI, MCP tools, or API)
    - Skip PR creation if no GitHub tooling is available. Continue on push failure.
 5. Follow the checkpoint behavior, workspace creation, and pipeline gates defined in the requirements.
 6. **Auto-dispatch to apply**: If `auto_approve` is `true` (from Load Configuration) and propose completed successfully (all pipeline artifacts generated, no BLOCKED preflight), automatically dispatch the next stage by running `specshift apply` using the same change context. Do NOT pause — proceed directly.

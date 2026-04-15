@@ -7,7 +7,7 @@ lastUpdated: "2026-04-15"
 
 # Artifact Pipeline
 
-The artifact pipeline guides every change through eight mandatory stages -- research, proposal, specs, design, preflight, tests, tasks, and audit -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning. Key artifacts include YAML frontmatter for machine-readable metadata. Every artifact is committed incrementally, with a draft pull request created automatically on the first commit.
+The artifact pipeline guides every change through eight mandatory stages -- research, proposal, specs, design, preflight, tests, tasks, and audit -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning. Key artifacts include YAML frontmatter for machine-readable metadata. Every artifact is committed incrementally using `specshift(<change-name>): <artifact-id>` commit messages, with a draft pull request created automatically on the first commit.
 
 ## Purpose
 
@@ -25,8 +25,8 @@ The pipeline uses WORKFLOW.md for declarative orchestration and Smart Templates 
 - **Apply Gate**: Implementation is gated by the tasks artifact. Apply cannot begin until `tasks.md` exists and is non-empty.
 - **Propose as Single Entry Point**: `specshift propose` handles workspace creation, progress display, checkpoint/resume, and full artifact generation. Displays artifact status showing which stages are done, ready, or blocked. The `auto_approve` configuration (defaults to `true`) controls whether checkpoints pause for user confirmation.
 - **WORKFLOW.md-Owned Workflow Rules**: The tasks template's `instruction` contains the Definition of Done rule and standard tasks directive. WORKFLOW.md action instructions contain the post-apply workflow sequence.
-- **Incremental Commits with Draft PR**: After each artifact, the system commits and pushes. On the first commit, a feature branch and draft PR are created. The post-artifact hook is worktree-aware.
-- **Post-Implementation Commit Before Approval**: After apply's auto-verify passes, the system commits implementation changes and pushes before pausing for user approval.
+- **Incremental Commits with Draft PR**: After each artifact, the system commits with `specshift(<change-name>): <artifact-id>` and pushes. On the first commit, a feature branch and draft PR are created. The post-artifact hook is worktree-aware.
+- **Post-Implementation Commit Before Approval**: After apply's auto-verify passes, the system commits implementation changes with `specshift(<change-name>): implementation` and pushes before pausing for user approval.
 - **Standard Tasks in Every Task List**: The tasks template includes universal post-implementation steps. Constitution extras from `## Standard Tasks` are appended. Post-merge items are scope-aware -- items with scope hints are only included when the change affects the described file areas.
 - **Capability Granularity Guidance**: The proposal template defines what constitutes a capability versus a feature detail, with merging heuristics (shared actor/trigger/data model).
 - **Mandatory Consolidation Check**: Before finalizing proposal capabilities, overlap with existing specs, pair-wise overlap between new capabilities, and minimum requirement counts are verified.
@@ -64,7 +64,7 @@ The proposal template requires reviewing existing specs for domain overlap, chec
 
 ## Known Limitations
 
-- PR body is initially minimal ("WIP: <name>") until the constitution standard task enriches it post-apply.
+- PR body is initially minimal (proposal's Why section or change name) until the constitution standard task enriches it post-apply.
 - Multi-PR or stacked-PR workflows are not supported.
 - Automated migration of existing proposals to include frontmatter is not supported -- they remain without frontmatter and actions fall back gracefully.
 
