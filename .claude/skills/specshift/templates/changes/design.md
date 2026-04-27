@@ -1,6 +1,6 @@
 ---
 id: design
-template-version: 1
+template-version: 2
 description: Architecture, success metrics, and non-goals
 generates: design.md
 requires: [specs]
@@ -66,5 +66,5 @@ has_decisions: false
 <!-- Unresolved design questions — if none, state "No open questions." -->
 
 ## Assumptions
-<!-- Format: "- Visible assumption text. <!-- ASSUMPTION: short tag -->"
+<!-- Format: "- Visible assumption text. &lt;!-- ASSUMPTION: short tag --&gt;"
      If none: state "No assumptions made." -->

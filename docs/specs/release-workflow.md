@@ -2,57 +2,58 @@
 order: 12
 category: finalization
 status: stable
-version: 3
-lastModified: 2026-04-15
+version: 4
+lastModified: 2026-04-27
 ---
 ## Purpose
 
-Define the release workflow conventions for the plugin, including automatic patch version bumps, version synchronization between plugin files, manual minor/major release processes, consumer update guidance, skill immutability rules, end-to-end install/update checklists, changelog generation from completed changes, and AOT (Ahead-of-Time) skill compilation that builds a self-contained release directory at `.claude/skills/specshift/`.
+Define the release workflow conventions for the plugin, including automatic patch version bumps, version synchronization between plugin files, manual minor/major release processes, consumer update guidance, skill immutability rules, end-to-end install/update checklists, changelog generation from completed changes, and AOT (Ahead-of-Time) skill compilation that builds self-contained Claude and Codex release directories.
 
 ## Requirements
 
 ### Requirement: Auto Patch Version Bump
 
-The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/.claude-plugin/plugin.json` after a successful change completion. The convention SHALL also require syncing the `version` field in `.claude-plugin/marketplace.json` to match. The output SHALL display the new version.
+The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/.claude-plugin/plugin.json` after a successful change completion. The convention SHALL also require syncing the `version` field in `src/.codex-plugin/plugin.json` and `.claude-plugin/marketplace.json` to match. The root Codex manifest SHALL carry the Codex plugin version; no separate Codex marketplace version SHALL be maintained. The output SHALL display the new version.
 
 **User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed, so that consumers can detect updates without manual version bumps.
 
 #### Scenario: Successful auto-bump after change completion
 
 - **GIVEN** a plugin project with `src/.claude-plugin/plugin.json` containing version `1.0.3`
+- **AND** `src/.codex-plugin/plugin.json` containing version `1.0.3`
 - **AND** `.claude-plugin/marketplace.json` containing version `1.0.3`
 - **AND** the constitution defines the post-completion auto-bump convention
 - **WHEN** the post-apply workflow runs for a completed change
 - **THEN** the system SHALL increment the patch version to `1.0.4` in `plugin.json`
-- **AND** SHALL update `marketplace.json` to version `1.0.4`
+- **AND** SHALL update the Codex manifest and Claude marketplace file to version `1.0.4`
 - **AND** SHALL display the new version
 
 ### Requirement: Version Sync Between Plugin Files
 
-The `version` field in `.claude-plugin/marketplace.json` MUST always match the `version` field in `src/.claude-plugin/plugin.json`. The auto-bump convention SHALL update both files together. If they are found out of sync before bumping, the system SHALL sync them to the plugin.json version first, then apply the patch bump.
+The `version` field in `src/.codex-plugin/plugin.json` and `.claude-plugin/marketplace.json` MUST always match the `version` field in `src/.claude-plugin/plugin.json`. The auto-bump convention SHALL update all versioned plugin files together. If they are found out of sync before bumping, the system SHALL sync them to the Claude plugin.json version first, then apply the patch bump.
 
 #### Scenario: Files already in sync
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.3`
+- **GIVEN** the Claude manifest, Codex manifest, and Claude marketplace version are all `1.0.3`
 - **WHEN** the auto-bump runs
-- **THEN** both files SHALL be updated to `1.0.4`
+- **THEN** all versioned plugin files SHALL be updated to `1.0.4`
 
 #### Scenario: Files out of sync
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.0`
+- **GIVEN** the Claude manifest version is `1.0.3` and either the Codex manifest or Claude marketplace version is `1.0.0`
 - **WHEN** the auto-bump runs
-- **THEN** both files SHALL be bumped to `1.0.4` (based on plugin.json as source of truth)
+- **THEN** all versioned plugin files SHALL be bumped to `1.0.4` (based on the Claude plugin.json as source of truth)
 
 ### Requirement: Manual Minor and Major Release Process
 
-For intentional minor or major version changes, the maintainer SHALL manually set the version in both `src/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, then push to `main`. The GitHub Actions release workflow SHALL automatically create the git tag and GitHub Release from the pushed version change. For cases where a tag and release are needed without a code change (e.g., retroactive tagging), the maintainer MAY manually create a git tag in the format `v<version>`, push the tag, and create a GitHub Release using available GitHub tooling.
+For intentional minor or major version changes, the maintainer SHALL manually set the version in `src/.claude-plugin/plugin.json`, `src/.codex-plugin/plugin.json`, and `.claude-plugin/marketplace.json`, then push to `main`. The GitHub Actions release workflow SHALL automatically create the git tag and GitHub Release from the pushed version change. For cases where a tag and release are needed without a code change (e.g., retroactive tagging), the maintainer MAY manually create a git tag in the format `v<version>`, push the tag, and create a GitHub Release using available GitHub tooling.
 
 **User Story:** As a maintainer I want a clear process for minor/major releases, so that I can publish breaking or feature-level changes with proper git tags.
 
 #### Scenario: Manual minor release via push
 
 - **GIVEN** a maintainer decides a set of changes warrants a minor version bump
-- **WHEN** the maintainer updates `src/.claude-plugin/plugin.json` and `marketplace.json` to `1.1.0` and pushes to `main`
+- **WHEN** the maintainer updates both plugin manifests and the Claude marketplace version to `1.1.0` and pushes to `main`
 - **THEN** the GitHub Actions release workflow SHALL create tag `v1.1.0` and a corresponding GitHub Release
 
 #### Scenario: Retroactive manual tagging
@@ -321,13 +322,15 @@ The project documentation SHALL describe the local marketplace setup for plugin 
 
 ### Requirement: Source and Release Directory Structure
 
-The repository SHALL maintain two distinct directories for the plugin:
+The repository SHALL maintain source files plus generated release artifacts for each supported agent platform:
 
-**Source directory (`src/`)**: Contains the authoritative, hand-edited plugin files: `src/.claude-plugin/plugin.json` (plugin manifest, version source of truth), `src/skills/specshift/SKILL.md` (router with requirement link mappings), and `src/templates/` (Smart Templates). Developers edit files in `src/` to change plugin behavior.
+**Source directory (`src/`)**: Contains the authoritative, hand-edited plugin files: `src/.claude-plugin/plugin.json` (Claude manifest), `src/.codex-plugin/plugin.json` (Codex manifest), `src/skills/specshift/SKILL.md` (router with requirement link mappings), `src/templates/` (shared Smart Templates), and `src/codex/templates/agents.md` (Codex-specific bootstrap template). Developers edit files in `src/` to change plugin behavior.
 
-**Release directory (`.claude/skills/specshift/`)**: Contains the self-contained, generated release artifact built by the AOT compiler (`scripts/compile-skills.sh`). It includes: `SKILL.md` (copied from `src/`), `templates/` (copied from `src/`), `.claude-plugin/plugin.json` (copied from `src/`), and `actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Claude Code auto-discovers the skill from `.claude/skills/`.
+**Claude release directory (`.claude/`)**: Contains the self-contained, generated Claude Code release artifact built by the AOT compiler (`scripts/compile-skills.sh`). It includes: `.claude-plugin/plugin.json`, `skills/specshift/SKILL.md`, `skills/specshift/templates/`, and `skills/specshift/actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Claude Code auto-discovers the skill from `.claude/skills/`.
 
-Files not needed by consumers — documentation, CI workflows, specs, changelog, project workflow configuration — SHALL remain at the repository root, outside both `src/` and `.claude/skills/specshift/`.
+**Codex root plugin (`.codex-plugin/` + `skills/specshift/`)**: Contains the self-contained, generated Codex plugin built by the same compiler, matching the root-level layout used by Shopify AI Toolkit. It includes `.codex-plugin/plugin.json`, `skills/specshift/SKILL.md`, `skills/specshift/templates/`, and `skills/specshift/actions/`. Codex-specific generated templates SHALL use `AGENTS.md` and `.specshift/worktrees` terminology.
+
+Files not needed by consumers - documentation, CI workflows, specs, changelog, project workflow configuration - SHALL remain outside generated plugin payload paths. For Claude that means outside `.claude/`; for Codex the repository root is the plugin root, so non-plugin project files SHALL stay outside `.codex-plugin/` and `skills/specshift/`.
 
 **User Story:** As a plugin developer I want a clear separation between source files I edit and the release artifact that consumers receive, so that I can iterate on source files and rebuild the release without mixing concerns.
 
@@ -337,9 +340,11 @@ Files not needed by consumers — documentation, CI workflows, specs, changelog,
 - **WHEN** the directory is inspected
 - **THEN** `src/skills/specshift/SKILL.md` SHALL contain the router with requirement link mappings
 - **AND** `src/templates/` SHALL contain the authoritative Smart Templates
-- **AND** `src/.claude-plugin/plugin.json` SHALL contain the version (source of truth)
+- **AND** `src/.claude-plugin/plugin.json` SHALL contain the Claude manifest version
+- **AND** `src/.codex-plugin/plugin.json` SHALL contain the Codex manifest version
+- **AND** `src/codex/templates/agents.md` SHALL contain the Codex AGENTS.md bootstrap template
 
-#### Scenario: Release directory contains generated files
+#### Scenario: Claude release directory contains generated files
 
 - **GIVEN** the repository after running `bash scripts/compile-skills.sh`
 - **WHEN** `.claude/skills/specshift/` is inspected
@@ -347,6 +352,15 @@ Files not needed by consumers — documentation, CI workflows, specs, changelog,
 - **AND** `templates/` (copy of `src/templates/`)
 - **AND** `.claude-plugin/plugin.json` (copy of `src/.claude-plugin/plugin.json`)
 - **AND** `actions/` with compiled action files for each built-in action
+
+#### Scenario: Codex root plugin contains generated files
+
+- **GIVEN** the repository after running `bash scripts/compile-skills.sh`
+- **WHEN** the repository root is inspected
+- **THEN** it SHALL contain `.codex-plugin/plugin.json` (copy of `src/.codex-plugin/plugin.json`)
+- **AND** `skills/specshift/SKILL.md`
+- **AND** `skills/specshift/templates/` with `agents.md` instead of `claude.md`
+- **AND** `skills/specshift/actions/` with compiled action files for each built-in action
 
 #### Scenario: Plugin root resolves to .claude directory
 
@@ -358,16 +372,23 @@ Files not needed by consumers — documentation, CI workflows, specs, changelog,
 
 ### Requirement: Marketplace Source Configuration
 
-The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude"` to point to the plugin root. The `.claude/` directory follows the standard Claude Code plugin layout: `.claude-plugin/plugin.json` (manifest), `skills/` (skill definitions), and `templates/` (Smart Templates). The marketplace SHALL NOT point to `src/` directly — consumers receive the compiled release artifact, not the raw source. This path SHALL resolve correctly for both local filesystem marketplaces and GitHub-based marketplaces. The plugin version is determined by `.claude/.claude-plugin/plugin.json` (copied there by the compiler from `src/.claude-plugin/plugin.json`).
+The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: "./.claude"` to point Claude Code to the Claude plugin root. The repository root SHALL also contain `.codex-plugin/plugin.json` and `skills/specshift/`, matching the Codex root plugin layout used by Shopify AI Toolkit. Neither platform SHALL point to `src/` directly - consumers receive compiled release artifacts, not raw source. The Claude plugin version is determined by `.claude/.claude-plugin/plugin.json`; the Codex plugin version is determined by `.codex-plugin/plugin.json`.
 
 **User Story:** As a plugin consumer I want the marketplace to deliver a self-contained skill with pre-compiled requirements, so that I can use the workflow immediately without needing the framework's internal spec files.
 
-#### Scenario: Marketplace points to plugin root
+#### Scenario: Claude marketplace points to plugin root
 
 - **GIVEN** `.claude-plugin/marketplace.json` with `source: "./.claude"`
 - **WHEN** a consumer installs the plugin
 - **THEN** the consumer's plugin cache SHALL contain the release directory contents (SKILL.md, templates, compiled actions, plugin.json)
 - **AND** SHALL NOT contain `docs/specs/`, `src/`, CI workflows, or changelog
+
+#### Scenario: Codex root plugin points to generated skills
+
+- **GIVEN** the repository root contains `.codex-plugin/plugin.json`
+- **WHEN** a Codex user adds the repository as a plugin source
+- **THEN** the manifest SHALL use `skills: "./skills/"`
+- **AND** the plugin SHALL expose `skills/specshift/SKILL.md`
 
 #### Scenario: Version detection via release directory
 
@@ -383,32 +404,34 @@ The `.claude-plugin/marketplace.json` at the repository root SHALL use `source: 
 
 ### Requirement: Repository Layout Separation
 
-The repository SHALL maintain a clear three-way separation: plugin source (`src/`), release artifact (`.claude/skills/specshift/`), and project management files (repo root). The repo root SHALL contain: `.claude-plugin/marketplace.json`, `.specshift/` (project workflow), `docs/`, `scripts/`, `.github/`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. Project-specific files SHALL NOT exist inside `src/` or `.claude/skills/specshift/`.
+The repository SHALL maintain a clear separation between plugin source (`src/`), generated release artifacts (`.claude/`, `.codex-plugin/`, and `skills/specshift/`), and project management files (repo root). The repo root SHALL contain marketplace/manifest files (`.claude-plugin/marketplace.json` and `.codex-plugin/plugin.json`), `.specshift/` (project workflow), `docs/`, `scripts/`, `.github/`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. Project-specific files SHALL NOT exist inside `src/`, `.claude/skills/specshift/`, or `skills/specshift/`.
 
 #### Scenario: Three-way separation
 
 - **GIVEN** the repository after a complete `specshift finalize` cycle
 - **WHEN** the file layout is inspected
 - **THEN** `src/` SHALL contain only plugin source files (SKILL.md, templates, plugin.json)
-- **AND** `.claude/skills/specshift/` SHALL contain only the generated release (copied source + compiled actions)
+- **AND** `.claude/skills/specshift/` SHALL contain only the generated Claude release (copied source + compiled actions)
+- **AND** `skills/specshift/` SHALL contain only the generated Codex release (adapted source + compiled actions)
 - **AND** the repo root SHALL contain project files (CLAUDE.md, docs/, .specshift/, CHANGELOG.md)
-- **AND** no project files SHALL exist inside `src/` or `.claude/skills/specshift/`
+- **AND** no project files SHALL exist inside `src/`, `.claude/skills/specshift/`, or `skills/specshift/`
 
 ### Requirement: AOT Skill Compilation
 
-The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compilation step after changelog generation, documentation updates, and version bump. The compilation step SHALL:
+The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compilation step after changelog generation, documentation updates, and version bump. The compilation step SHALL build both Claude and Codex release artifacts:
 
-1. **Copy source files**: Copy `src/skills/specshift/SKILL.md` → `.claude/skills/specshift/SKILL.md`, `src/templates/` → `.claude/skills/specshift/templates/`, and `src/.claude-plugin/plugin.json` → `.claude/.claude-plugin/plugin.json`.
-2. **Parse requirement links**: For each file in `src/actions/*.md`, parse the markdown anchor links in the format `[Requirement Name](../../docs/specs/<spec>.md#requirement-<slug>)`.
-3. **Extract requirement blocks**: For each link, resolve the relative path to the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading.
-4. **Assemble compiled requirements file**: Write a markdown file to `.claude/skills/specshift/actions/<action>.md` containing `# Requirements` followed by the concatenated extracted requirement blocks. No frontmatter, no instruction text — compiled files contain only requirements.
-5. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links in the source action file. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
+1. **Build Claude release**: Copy `src/skills/specshift/SKILL.md` -> `.claude/skills/specshift/SKILL.md`, `src/templates/` -> `.claude/skills/specshift/templates/`, and `src/.claude-plugin/plugin.json` -> `.claude/.claude-plugin/plugin.json`.
+2. **Build Codex release**: Generate the Codex root plugin from source by copying `src/.codex-plugin/plugin.json` to `.codex-plugin/plugin.json`, adapting `src/skills/specshift/SKILL.md` for Codex trigger behavior, copying shared templates to `skills/specshift/templates/`, replacing `src/templates/claude.md` with `src/codex/templates/agents.md`, and rewriting Codex runtime template terminology where needed.
+3. **Parse requirement links**: For each file in `src/actions/*.md`, parse the markdown anchor links in the format `[Requirement Name](../../docs/specs/<spec>.md#requirement-<slug>)`.
+4. **Extract requirement blocks**: For each link, resolve the relative path to the target spec file and extract the `### Requirement: <Name>` block - including the normative description, optional user story, and all `#### Scenario:` blocks - up to the next `### ` or `## ` heading.
+5. **Assemble compiled requirements files**: Write markdown files to both `.claude/skills/specshift/actions/<action>.md` and `skills/specshift/actions/<action>.md` containing `# Requirements` followed by the concatenated extracted requirement blocks. No frontmatter, no instruction text - compiled files contain only requirements.
+6. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links in the source action file. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
 
 The compilation scope SHALL be limited to the 5 built-in actions (propose, apply, finalize, init, review). Custom actions defined in WORKFLOW.md SHALL NOT be compiled — they use JIT resolution at runtime, reading their instruction text directly from the `## Action: <name>` section in the consumer's local WORKFLOW.md. Rationale: built-in actions have spec-backed requirements that benefit from pre-extraction; custom actions are self-contained instructions without spec requirement links.
 
 At runtime, the router reads **instructions** from the project's `.specshift/WORKFLOW.md` (JIT, project-specific) and **requirements** from the compiled action files (AOT, plugin-level). This separation ensures projects can customize action behavior via their WORKFLOW.md while the requirements remain consistent across all consumers.
 
-The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`). It SHALL be committed to Git so that consumers and new team members can use the workflow without running a build step. The `.gitignore` SHALL whitelist `.claude/skills/`, `.claude/templates/`, and `.claude/.claude-plugin/`. `src/` remains the authoritative source for hand-edited files.
+The `.claude/` directory is the Claude plugin root (marketplace `source: "./.claude"`), while the repository root is the Codex plugin root through `.codex-plugin/plugin.json` and `skills/specshift/`. Both generated release artifacts SHALL be committed to Git so that consumers and new team members can use the workflow without running a build step. The `.gitignore` SHALL whitelist `.claude/skills/`, `.claude/templates/`, and `.claude/.claude-plugin/`. `src/` remains the authoritative source for hand-edited files.
 
 **User Story:** As a plugin maintainer I want requirements pre-compiled into focused action files during finalize, so that runtime token usage is minimized and consumers do not need access to the framework's internal spec files.
 
@@ -416,8 +439,10 @@ The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`).
 
 - **GIVEN** a completed change with audit.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
-- **THEN** it SHALL copy source files to the release directory (`.claude/`)
+- **THEN** it SHALL copy source files to the Claude release directory (`.claude/`)
 - **AND** SHALL generate compiled requirements files for each built-in action at `.claude/skills/specshift/actions/<action>.md`
+- **AND** SHALL generate the Codex root plugin at `.codex-plugin/` and `skills/specshift/`
+- **AND** SHALL generate compiled requirements files for each built-in action at `skills/specshift/actions/<action>.md`
 - **AND** each compiled file SHALL contain only the extracted requirement blocks
 
 #### Scenario: Count validation detects missing requirements
@@ -431,7 +456,7 @@ The `.claude/` directory is the plugin root (marketplace `source: "./.claude"`).
 
 ### Requirement: Compiled Action File Contract
 
-Each built-in action (propose, apply, finalize, init) SHALL have a corresponding source file at `src/actions/<action>.md` containing requirement links, and a compiled output file at `.claude/skills/specshift/actions/<action>.md` containing the extracted requirement blocks. The compiled file SHALL contain:
+Each built-in action (propose, apply, finalize, init, review) SHALL have a corresponding source file at `src/actions/<action>.md` containing requirement links, and compiled output files at `.claude/skills/specshift/actions/<action>.md` and `skills/specshift/actions/<action>.md` containing the extracted requirement blocks. The compiled file SHALL contain:
 
 - `# Requirements` heading
 - Concatenated requirement blocks, each as `### Requirement: <Name>` with normative description, optional user story, and Gherkin scenarios
@@ -442,7 +467,7 @@ Compiled action files contain **requirements only** — no frontmatter, no instr
 
 #### Scenario: Compiled file contains only requirements
 
-- **GIVEN** a compiled action file `.claude/skills/specshift/actions/propose.md`
+- **GIVEN** a compiled action file `.claude/skills/specshift/actions/propose.md` or `skills/specshift/actions/propose.md`
 - **WHEN** its content is inspected
 - **THEN** it SHALL begin with `# Requirements`
 - **AND** SHALL contain one `### Requirement:` block per linked requirement from `src/actions/propose.md`
@@ -456,7 +481,7 @@ Compiled action files contain **requirements only** — no frontmatter, no instr
 
 ### Requirement: Dev Sync Script
 
-The project SHALL provide a standalone bash script at `scripts/compile-skills.sh` that performs the same AOT compilation as the finalize step. The script SHALL be runnable from the repository root without requiring the full finalize pipeline. The script SHALL loop over each `src/actions/*.md` file, extract requirement links, resolve them against `docs/specs/`, and write the compiled output. The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) — no external runtime dependencies. The finalize instruction SHALL delegate to this same script, ensuring a single compilation implementation.
+The project SHALL provide a standalone bash script at `scripts/compile-skills.sh` that performs the same AOT compilation as the finalize step. The script SHALL be runnable from the repository root without requiring the full finalize pipeline. The script SHALL loop over each `src/actions/*.md` file, extract requirement links, resolve them against `docs/specs/`, and write the compiled output for both Claude and Codex. The script SHALL use only bash and standard POSIX utilities (awk, sed, grep) - no external runtime dependencies. The finalize instruction SHALL delegate to this same script, ensuring a single compilation implementation.
 
 **User Story:** As a plugin developer I want a quick script to rebuild the release directory after editing specs, so that I can test changes locally without running the full finalize pipeline.
 
@@ -464,8 +489,10 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 
 - **GIVEN** the developer runs `bash scripts/compile-skills.sh` from the repository root
 - **WHEN** the script completes
-- **THEN** it SHALL have copied source files to the release directory (`.claude/`)
+- **THEN** it SHALL have copied source files to the Claude release directory (`.claude/`)
 - **AND** SHALL have written compiled requirements files to `.claude/skills/specshift/actions/`
+- **AND** SHALL have generated the Codex root plugin at `.codex-plugin/` and `skills/specshift/`
+- **AND** SHALL have written compiled requirements files to `skills/specshift/actions/`
 - **AND** SHALL print a summary of actions compiled and requirements extracted
 
 #### Scenario: Dev script uses no external runtimes
@@ -485,6 +512,7 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 - **AOT compilation with no requirement links**: If a source action file has no links, the compiled file SHALL contain only the `# Requirements` heading.
 - **Stale compiled files**: If specs are edited without recompilation, the compiled action files contain outdated requirements. Finalize always recompiles; developers can run the dev sync script manually.
 - **`.claude/` gitignore conflict**: The `.gitignore` typically ignores `.claude/*`. The release directory MUST be whitelisted via `!/.claude/skills/`, `!/.claude/templates/`, and `!/.claude/.claude-plugin/`.
+- **Codex runtime template drift**: If new Claude-specific runtime terminology is added to shared templates or the router skill, the Codex generated release may need a compiler rewrite update. Validation SHALL scan generated Codex runtime files for stale `CLAUDE.md`, `${CLAUDE_PLUGIN_ROOT}`, and worktree path references.
 
 ## Assumptions
 

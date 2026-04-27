@@ -1,12 +1,12 @@
 ---
 title: "Release Workflow"
 capability: "release-workflow"
-description: "Version management, automated releases, plugin distribution, changelog generation, and consumer update process."
-lastUpdated: "2026-04-15"
+description: "Version management, automated releases, Claude and Codex plugin distribution, changelog generation, and consumer update process."
+lastUpdated: "2026-04-27"
 ---
 # Release Workflow
 
-The release workflow handles version management for the plugin, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, consumer version pinning, developer local marketplace workflow, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates.
+The release workflow handles version management for the plugin, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, generated Claude and Codex release artifacts, consumer version pinning, developer local marketplace workflow, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates.
 
 ## Purpose
 
@@ -19,9 +19,9 @@ The auto-bump is implemented as a constitution convention rather than a skill mo
 ## Features
 
 - **Automatic patch version bump** -- the patch version increments automatically after each completed change during the post-apply workflow
-- **Version synchronization** -- `plugin.json` and `marketplace.json` stay in sync automatically
+- **Version synchronization** -- Claude and Codex plugin manifests plus the Claude marketplace version stay in sync automatically
 - **Automated GitHub Releases** -- a GitHub Action creates git tags and releases automatically when a version bump is pushed to `main`
-- **Plugin source separation** -- plugin files live in `src/`, consumer caches contain only plugin files (no docs, CI, or project files)
+- **Plugin source separation** -- plugin files live in `src/`, while generated release artifacts live in `.claude/` for Claude Code and root-level `.codex-plugin/` plus `skills/specshift/` for Codex
 - **Consumer version pinning** -- consumers can pin to a specific version using a tag reference when adding the marketplace
 - **Developer local marketplace** -- developers register the local repo as marketplace source for live plugin development in VS Code and CLI
 - **Manual minor/major releases** -- documented process for intentional version changes; the Action handles tagging automatically
@@ -34,15 +34,20 @@ The auto-bump is implemented as a constitution convention rather than a skill mo
 
 ### Automatic Patch Bump
 
-During the post-apply workflow, the patch version in `src/.claude-plugin/plugin.json` is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The `version` field in `.claude-plugin/marketplace.json` is synced to match. The new version is displayed in the summary.
+During the post-apply workflow, the patch version in `src/.claude-plugin/plugin.json` is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The `version` field in `src/.codex-plugin/plugin.json` and `.claude-plugin/marketplace.json` is synced to match. The root Codex manifest carries the Codex plugin version; no separate Codex marketplace version is maintained. The new version is displayed in the summary.
 
 ### Automated GitHub Releases
 
 When a version bump is pushed to `main`, a GitHub Action automatically creates a git tag (`v<version>`) and a GitHub Release. The release body contains the latest changelog entry from `CHANGELOG.md`. If the tag already exists, the Action skips silently (idempotent).
 
-### Plugin Source Directory
+### Plugin Source and Release Directories
 
-Plugin source code (skills, templates, manifest) lives in the `src/` subdirectory. Consumer plugin caches contain only `src/` contents -- documentation, CI workflows, project spec files, and changelogs are not downloaded. The marketplace uses `source: "./src"` to reference the plugin subdirectory.
+Plugin source code (skills, templates, manifests) lives in the `src/` subdirectory. The compiler builds two committed release artifacts from that source:
+
+- Claude Code: `.claude/`
+- Codex: `.codex-plugin/` and `skills/specshift/`
+
+Consumers receive the compiled release artifact for their platform instead of the raw source files. Documentation, CI workflows, project spec files, and changelogs are not part of the plugin payload.
 
 ### Consumer Version Pinning
 
@@ -50,19 +55,21 @@ Consumers can pin to a specific plugin version by adding the marketplace with a 
 
 ### Developer Local Marketplace
 
-Developers register the local repository path as a marketplace source for live plugin development. This works in both the VS Code extension and CLI, unlike `--plugin-dir` which is CLI-only. Skill changes reload instantly via `/reload-plugins`. Version changes require an explicit `claude plugin update`.
+Developers register the local repository path as a marketplace source for live plugin development. Claude developers use `claude plugin marketplace add <path>` and update with `claude plugin update specshift@specshift`. Codex developers install or update the local checkout from the Codex `/plugins` UI.
 
 ### Version Synchronization
 
-The `version` field in `marketplace.json` always matches `src/.claude-plugin/plugin.json`. Both files are updated together during the auto-bump. If they are found out of sync beforehand, they are aligned to the `plugin.json` version first, then the patch bump is applied.
+The version fields in `src/.codex-plugin/plugin.json` and `.claude-plugin/marketplace.json` always match `src/.claude-plugin/plugin.json`. All versioned plugin files are updated together during the auto-bump. If they are found out of sync beforehand, they are aligned to the Claude `plugin.json` version first, then the patch bump is applied.
 
 ### Manual Minor and Major Releases
 
-For intentional minor or major version changes, you manually set the version in both `src/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, then push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, you can manually create and push a tag.
+For intentional minor or major version changes, you manually set the version in `src/.claude-plugin/plugin.json`, `src/.codex-plugin/plugin.json`, and `.claude-plugin/marketplace.json`, then push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, you can manually create and push a tag.
 
 ### Consumer Update Process
 
 When a new plugin version is available, consumers run `claude plugin marketplace update specshift` to refresh the listing, then `claude plugin update specshift@specshift` to install the update, and restart Claude Code to load the new version.
+
+For Codex, consumers use `/plugins` in the Codex CLI and update or reinstall SpecShift when Codex reports an available plugin update.
 
 ### Update Not Detected
 
@@ -80,6 +87,8 @@ When project-specific post-apply behavior is needed (such as version bumps), it 
 
 The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `specshift init`.
 
+For Codex, the install path is: run `/plugins`, add `https://github.com/fritze-dev/SpecShift` as a source, install SpecShift, then run `specshift init` in the target repository.
+
 ### End-to-End Update Flow
 
 The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `specshift init` again is safe (idempotent) and ensures schema updates are picked up.
@@ -87,6 +96,8 @@ The complete update path is: `claude plugin marketplace update` followed by `cla
 ### Post-Push Developer Plugin Update
 
 For developers using the local marketplace, running `claude plugin update specshift@specshift` detects the local version change and updates the cached plugin. For developers using the GitHub marketplace, the existing `marketplace update` + `plugin update` flow applies.
+
+For Codex local development, running `bash scripts/compile-skills.sh` regenerates `.codex-plugin/` and `skills/specshift/`; update or reinstall the local checkout from Codex `/plugins` to refresh it.
 
 ### Post-Apply Workflow Next Steps
 

@@ -122,10 +122,10 @@ Files not needed by consumers - documentation, CI workflows, specs, changelog, p
 #### Scenario: Plugin root resolves to .claude directory
 
 - **GIVEN** a plugin installed from the marketplace
-- **WHEN** a skill references `${CLAUDE_PLUGIN_ROOT}`
-- **THEN** `CLAUDE_PLUGIN_ROOT` SHALL resolve to the `.claude/` directory
-- **AND** `${CLAUDE_PLUGIN_ROOT}/skills/specshift/templates/` SHALL contain the Smart Templates
-- **AND** `${CLAUDE_PLUGIN_ROOT}/skills/specshift/actions/` SHALL contain the compiled requirement files
+- **WHEN** a skill references `the installed plugin root`
+- **THEN** the Claude plugin root environment variable SHALL resolve to the `.claude/` directory
+- **AND** `the installed plugin root/skills/specshift/templates/` SHALL contain the Smart Templates
+- **AND** `the installed plugin root/skills/specshift/actions/` SHALL contain the compiled requirement files
 
 ### Requirement: Marketplace Source Configuration
 
@@ -602,7 +602,7 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 #### Scenario: Cleanup after successful local merge
 
-- **GIVEN** the agent is working inside a worktree at `.claude/worktrees/fix-auth` on branch `fix-auth`
+- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
 - **AND** the agent merges the PR which succeeds
 - **WHEN** the merge completes
 - **THEN** the system SHALL switch the working directory to the main worktree

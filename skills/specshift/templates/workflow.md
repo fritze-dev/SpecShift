@@ -1,6 +1,6 @@
 ---
 template-version: 8
-plugin-version: 0.2.1-beta
+plugin-version: 0.2.4-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
 
@@ -8,16 +8,18 @@ actions: [init, propose, apply, finalize, review]
 # Add custom actions here (e.g. qa-review) and define matching
 # ## Action: <name> sections in the body below.
 
-worktree:
-  enabled: true
-  path_pattern: .claude/worktrees/{change}
-  auto_cleanup: true
-  stale_days: 14
+# worktree:
+#   enabled: false
+#   path_pattern: .specshift/worktrees/{change}
+#   auto_cleanup: false
+#   stale_days: 14
 
 auto_approve: true
 
 review:
-  request_review: copilot
+  request_review: false
+  # request_review: copilot  # Request Copilot review
+  # request_review: true     # Request repo default reviewers
 
 # docs_language: English
 ---
@@ -42,7 +44,7 @@ Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean co
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
-audit artifact: stop before audit and suggest running the specshift skill with `apply`.
+audit artifact: stop before audit and suggest specshift apply.
 
 ## Action: init
 
@@ -50,10 +52,10 @@ audit artifact: stop before audit and suggest running the specshift skill with `
 
 Project initialization and health check.
 Mode detection:
-- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution and CLAUDE.md
+- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution and AGENTS.md
 - Update (templates outdated): merge plugin template updates with local customizations
 - Re-sync (all installed): detect spec drift (code vs specs) + docs drift (docs vs specs)
-Report findings, suggest running the specshift skill with `propose` for changes needed.
+Report findings, suggest specshift propose for changes needed.
 
 ## Action: apply
 
@@ -78,7 +80,6 @@ Post-approval finalization, executed sequentially:
 1. Changelog: incremental entries from completed change
 2. Docs: regenerate affected capability docs, ADRs, README
 3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
-4. Compile: run `bash scripts/compile-skills.sh` to regenerate the Claude release at `.claude/` and the Codex root plugin at `.codex-plugin/` plus `skills/specshift/` — compilation validates that modified templates have bumped `template-version`
 On error in one step: continue with next, report failures at end.
 Check audit.md exists with verdict PASS before proceeding.
 
@@ -87,19 +88,19 @@ Check audit.md exists with verdict PASS before proceeding.
 ### Instruction
 
 PR review-to-merge lifecycle. Re-entrant: can be run in any session.
-State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling (gh CLI, MCP tools, or API).
-- **Draft transition:** If PR is draft, mark ready for review, update body with change summary and issue references.
+State assessment: determine PR number from current branch, read PR state (draft, reviews, comments, checks) using available GitHub tooling.
+- **Draft transition:** If PR is draft, mark ready for review, update body with change summary.
 - **Clean-tree check:** Before review dispatch, verify the working tree is clean. If uncommitted changes exist (e.g., from finalize compilation), commit and push them first.
-- **Review dispatch:** If no reviews requested and `review.request_review` is `copilot`, request Copilot review using available GitHub tooling. If `true`, request from repo default reviewers. If `false` or absent, skip. If request fails, log warning and continue.
+- **Review dispatch:** If no reviews requested and `review.request_review` is configured, request external review using available GitHub tooling. If unavailable or request fails, log warning and continue.
 - **Activity subscription:** Subscribe to PR activity for real-time updates if tooling supports it.
 - **Comment processing:** Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
 - **Self-check:** After fixes, commit, push, run built-in self-check. Fix any findings.
 - **Cycle limit:** If reviewer posts new comments, return to Comment processing. Safety limit: max 3 cycles, then pause.
 - **CI gate:** When no unresolved comments remain, check CI. If pending, report status and suggest waiting. If failing, report failures and stop.
 - **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
-- **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running the specshift skill with `review` later. Do NOT offer merge.
+- **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later. Do NOT offer merge.
 - **Merge confirmation:** If no review is pending, ask user for explicit merge confirmation.
-- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: clean up worktree if applicable (switch to main worktree, remove completed worktree, delete local and remote branch).
+- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: clean up worktree if applicable.
 When auto_approve is true and `review.request_review` is `false` or absent: skip Review dispatch and review waiting, proceed to CI gate + Pre-merge summary + Merge confirmation.
 When auto_approve is true and `review.request_review` is configured (`copilot` or `true`): dispatch the review and wait for the decision normally — auto_approve does NOT skip review when a review is explicitly configured.
-If session may end before review arrives: report state and suggest re-running the specshift skill with `review` later.
+If session may end before review arrives: report state and suggest re-running specshift review later.
