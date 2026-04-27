@@ -4,12 +4,12 @@
     "name": "fritze.dev"
   },
   "metadata": {
-    "description": "Spec-driven development workflow plugin for Claude Code"
+    "description": "Spec-driven development workflow plugin for OpenAI Codex CLI"
   },
   "plugins": [
     {
       "name": "specshift",
-      "source": "./",
+      "source": "./.codex-plugin",
       "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
       "version": "0.2.4-beta"
     }

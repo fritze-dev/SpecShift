@@ -1,18 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# AOT Skill Compiler for SpecShift
-# Builds the release directory at .claude/ from source files.
-# Plugin root = .claude/ (marketplace source: "./.claude")
+# AOT Skill Compiler for SpecShift (multi-target, agnostic).
+# Plugin root = ./ (repo root). Per-target plugin manifests AND marketplace files
+# are hand-edited at the root (`.claude-plugin/plugin.json`,
+# `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`,
+# `.agents/plugins/marketplace.json`). The compiled skill tree lives at
+# ./skills/specshift/ and is shared between both targets.
+#
+# Version source of truth: src/VERSION (plain text, single line, SemVer).
+# This script reads that value and stamps it into all four root manifest /
+# marketplace files via `jq` (preserving every other field verbatim). After
+# stamping, it re-reads each file and verifies the stamped value matches
+# src/VERSION; any mismatch fails the build.
+#
 # Run from the repository root: bash scripts/compile-skills.sh
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
 ACTIONS_SRC="src/actions"
-PLUGIN_JSON="src/.claude-plugin/plugin.json"
-PLUGIN_ROOT=".claude"
+VERSION_FILE="src/VERSION"
+
+PLUGIN_ROOT="."
 SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
+CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
+CLAUDE_MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
+CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
+CODEX_MARKETPLACE="$PLUGIN_ROOT/.agents/plugins/marketplace.json"
+LEGACY_SKILL_DIR=".claude/skills"
+
+warnings=0
 
 # --- Preflight ---
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: jq is required (used to read/stamp manifest versions)." >&2
+  exit 1
+fi
 
 if [[ ! -f "$SKILL_SRC" ]]; then
   echo "Error: $SKILL_SRC not found. Run this script from the repository root." >&2
@@ -21,6 +44,35 @@ fi
 
 if [[ ! -d "$ACTIONS_SRC" ]]; then
   echo "Error: $ACTIONS_SRC/ not found." >&2
+  exit 1
+fi
+
+if [[ ! -f "$VERSION_FILE" ]]; then
+  echo "Error: $VERSION_FILE not found (the agnostic version source of truth must exist at this path)." >&2
+  exit 1
+fi
+
+# Required: each per-target manifest / marketplace must be hand-edited at the root.
+for f in "$CLAUDE_MANIFEST" "$CLAUDE_MARKETPLACE" "$CODEX_MANIFEST" "$CODEX_MARKETPLACE"; do
+  if [[ ! -f "$f" ]]; then
+    echo "Error: $f not found (per-target manifest / marketplace files are hand-edited at the repository root)." >&2
+    exit 1
+  fi
+done
+
+# --- Read version source of truth ---
+
+PLUGIN_VERSION="$(tr -d '[:space:]' < "$VERSION_FILE")"
+if [[ -z "$PLUGIN_VERSION" ]]; then
+  echo "Error: $VERSION_FILE is empty (the version source of truth must contain one SemVer string)." >&2
+  exit 1
+fi
+
+# Sanity check: src/VERSION should be exactly one logical line. Multi-line
+# files indicate the maintainer accidentally added content beyond the version.
+line_count="$(grep -c '' "$VERSION_FILE" || true)"
+if [[ "$line_count" -gt 1 ]]; then
+  echo "Error: $VERSION_FILE contains $line_count lines (must contain exactly one line — the SemVer version string)." >&2
   exit 1
 fi
 
@@ -62,28 +114,62 @@ else
   echo "Skipping template-version check (no main branch for comparison)."
 fi
 
-# --- Copy source files ---
+# --- Clean previous build outputs ---
+# Per-target manifests and marketplace files are hand-edited at the root and
+# SHALL NOT be removed. Only generated outputs are cleaned: the shared skill
+# tree and any legacy compiled tree from the pre-multi-target layout.
 
-echo "Building release at $PLUGIN_ROOT/ ..."
+echo "Building release at $PLUGIN_ROOT/ (version: $PLUGIN_VERSION) ..."
 rm -rf "$SKILL_DIR"
-rm -rf "$PLUGIN_ROOT/.claude-plugin"
+rm -rf "$LEGACY_SKILL_DIR"
+
+# --- Copy shared skill tree (one tree, served to both targets) ---
+
 mkdir -p "$SKILL_DIR/actions"
 cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md"
 cp -r src/templates/ "$SKILL_DIR/templates/"
-mkdir -p "$PLUGIN_ROOT/.claude-plugin"
-cp "$PLUGIN_JSON" "$PLUGIN_ROOT/.claude-plugin/plugin.json"
 
 # --- Stamp plugin-version into compiled workflow template ---
 
-PLUGIN_VERSION=$(grep -o '"version": *"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/"version": *"//;s/"//')
-if [[ -n "$PLUGIN_VERSION" ]]; then
-  sed -i "s/^plugin-version: \"\"$/plugin-version: $PLUGIN_VERSION/" "$SKILL_DIR/templates/workflow.md"
-  echo "Stamped plugin-version: $PLUGIN_VERSION into compiled workflow template"
-fi
+sed -i "s/^plugin-version: \"\"$/plugin-version: $PLUGIN_VERSION/" "$SKILL_DIR/templates/workflow.md"
+echo "Stamped plugin-version: $PLUGIN_VERSION into compiled workflow template"
+
+# --- Stamp version into all four root manifest / marketplace files ---
+# Each file uses jq with the appropriate path expression. After stamping we
+# re-read and cross-check that the stamped value equals PLUGIN_VERSION.
+
+stamp_version() {
+  local file="$1"
+  local jq_set="$2"   # jq expression that sets the version field (uses $v)
+  local jq_get="$3"   # jq expression that reads the version field
+  local label="$4"
+
+  local current
+  current="$(jq -r "$jq_get" "$file")"
+
+  if [[ "$current" != "$PLUGIN_VERSION" ]]; then
+    jq --arg v "$PLUGIN_VERSION" "$jq_set" "$file" > "$file.tmp" \
+      && mv "$file.tmp" "$file"
+    echo "Stamped $label version: $current → $PLUGIN_VERSION ($file)"
+  else
+    echo "$label version already at $PLUGIN_VERSION ($file)"
+  fi
+
+  local stamped
+  stamped="$(jq -r "$jq_get" "$file")"
+  if [[ "$stamped" != "$PLUGIN_VERSION" ]]; then
+    echo "Error: $label version ($stamped) does not match src/VERSION ($PLUGIN_VERSION) after stamping ($file)." >&2
+    exit 1
+  fi
+}
+
+stamp_version "$CLAUDE_MANIFEST"     '.version = $v'                  '.version // empty'              "Claude manifest"
+stamp_version "$CLAUDE_MARKETPLACE"  '(.plugins[] | .version) = $v'   '.plugins[0].version // empty'   "Claude marketplace"
+stamp_version "$CODEX_MANIFEST"      '.version = $v'                  '.version // empty'              "Codex manifest"
+stamp_version "$CODEX_MARKETPLACE"   '(.plugins[] | .version) = $v'   '.plugins[0].version // empty'   "Codex marketplace"
 
 total_actions=0
 total_requirements=0
-warnings=0
 
 # --- Extract requirement block from spec file ---
 
@@ -181,7 +267,13 @@ echo "=== Compilation Summary ==="
 echo "Actions compiled: $total_actions"
 echo "Total requirements: $total_requirements"
 echo "Warnings: $warnings"
-echo "Plugin root: $PLUGIN_ROOT/"
+echo "Plugin version: $PLUGIN_VERSION (source: $VERSION_FILE)"
+echo "Outputs:"
+echo "  - $CLAUDE_MANIFEST (Claude manifest, hand-edited + version-stamped)"
+echo "  - $CLAUDE_MARKETPLACE (Claude marketplace, hand-edited + version-stamped)"
+echo "  - $CODEX_MANIFEST (Codex manifest, hand-edited + version-stamped)"
+echo "  - $CODEX_MARKETPLACE (Codex marketplace, hand-edited + version-stamped)"
+echo "  - $SKILL_DIR/ (shared skill tree)"
 echo ""
 
 if [[ "$warnings" -gt 0 ]]; then

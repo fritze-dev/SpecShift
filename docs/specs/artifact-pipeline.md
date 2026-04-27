@@ -2,8 +2,8 @@
 order: 4
 category: change-workflow
 status: stable
-version: 4
-lastModified: 2026-04-15
+version: 5
+lastModified: 2026-04-27
 ---
 ## Purpose
 
@@ -347,7 +347,7 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **Network failure during PR creation:** The pipeline SHALL NOT be blocked.
 - **Auto-continue transitions:** The skill's post-artifact commit logic runs after each artifact individually.
 - **Worktree config with invalid path_pattern**: If `path_pattern` does not contain `{change}`, the system SHALL report an error during `specshift propose`.
-- **Worktree config with empty path_pattern**: SHALL default to `.claude/worktrees/{change}`.
+- **Worktree config with empty path_pattern**: SHALL default to `.specshift/worktrees/{change}`.
 
 ## Assumptions
 

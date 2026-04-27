@@ -36,45 +36,53 @@ The `specshift finalize` command SHALL generate release notes from completed cha
 
 ### Requirement: Completion Workflow Next Steps
 
-The post-apply workflow output SHALL include a "Next steps" section guiding the user through the complete post-completion workflow: generate changelog, generate docs, version bump, push, and update the local plugin. This is defined via the constitution convention.
+The post-apply workflow output SHALL include a "Next steps" section guiding the user through the complete post-completion workflow: generate changelog, generate docs, version bump (`src/VERSION`), compile, push, and update the local plugin. This is defined via the constitution convention.
 
 #### Scenario: Next steps shown after verification
 
 - **GIVEN** a successful verification of a completed change
 - **WHEN** the verification summary is displayed
-- **THEN** the output SHALL include next steps: `specshift finalize` → version bump → push → update plugin
+- **THEN** the output SHALL include next steps: `specshift finalize` → `src/VERSION` bump → compile → push → update plugin
 
 ### Requirement: Auto Patch Version Bump
 
-The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/.claude-plugin/plugin.json` after a successful change completion. The convention SHALL also require syncing the `version` field in `.claude-plugin/marketplace.json` to match. The output SHALL display the new version.
+The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/VERSION` after a successful change completion. `src/VERSION` is the single agnostic version source of truth — manifest and marketplace files at the repository root carry the version only as a stamped copy. The output SHALL display the new version. The subsequent compile run SHALL propagate the new version into all four root files (`{.claude-plugin,.codex-plugin}/plugin.json`, `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
 
 **User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed, so that consumers can detect updates without manual version bumps.
 
 #### Scenario: Successful auto-bump after change completion
 
-- **GIVEN** a plugin project with `src/.claude-plugin/plugin.json` containing version `1.0.3`
-- **AND** `.claude-plugin/marketplace.json` containing version `1.0.3`
+- **GIVEN** a plugin project with `src/VERSION` containing `1.0.3`
 - **AND** the constitution defines the post-completion auto-bump convention
 - **WHEN** the post-apply workflow runs for a completed change
-- **THEN** the system SHALL increment the patch version to `1.0.4` in `plugin.json`
-- **AND** SHALL update `marketplace.json` to version `1.0.4`
-- **AND** SHALL display the new version
+- **THEN** the system SHALL update `src/VERSION` to `1.0.4`
+- **AND** the subsequent compile run SHALL stamp `1.0.4` into all four root manifest/marketplace files
+- **AND** the output SHALL display the new version
 
 ### Requirement: Version Sync Between Plugin Files
 
-The `version` field in `.claude-plugin/marketplace.json` MUST always match the `version` field in `src/.claude-plugin/plugin.json`. The auto-bump convention SHALL update both files together. If they are found out of sync before bumping, the system SHALL sync them to the plugin.json version first, then apply the patch bump.
+The `version` field in every per-target manifest and marketplace file at the repository root MUST equal the value in `src/VERSION`. The compile script SHALL enforce this by reading `src/VERSION` and stamping the value into `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). After stamping, the script SHALL re-read each file and verify the stamped version equals the SoT; any mismatch SHALL fail the build with an error naming the offending file. Hand-edits to a manifest's `version` field SHALL be considered transient — the next compile run overwrites them with the SoT value.
 
-#### Scenario: Files already in sync
+#### Scenario: All four root files in sync after compile
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.3`
-- **WHEN** the auto-bump runs
-- **THEN** both files SHALL be updated to `1.0.4`
+- **GIVEN** `src/VERSION` contains `1.0.3`
+- **WHEN** the compile script runs
+- **THEN** all four root manifest/marketplace files SHALL declare version `1.0.3`
 
-#### Scenario: Files out of sync
+#### Scenario: Manifest version drifts from SoT
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.0`
-- **WHEN** the auto-bump runs
-- **THEN** both files SHALL be bumped to `1.0.4` (based on plugin.json as source of truth)
+- **GIVEN** `src/VERSION` contains `1.0.3` and `.codex-plugin/plugin.json` declares version `1.0.0`
+- **WHEN** the compile script runs
+- **THEN** the system SHALL stamp `.codex-plugin/plugin.json` to version `1.0.3`
+- **AND** the post-stamp cross-check SHALL pass
+
+#### Scenario: Stamping failure caught by cross-check
+
+- **GIVEN** `src/VERSION` contains `1.0.3`
+- **AND** the in-place jq stamp on one of the four files fails silently
+- **WHEN** the cross-check step runs
+- **THEN** the script SHALL detect the mismatch
+- **AND** SHALL exit non-zero with an error naming the offending file
 
 ### Requirement: Generate Enriched Capability Documentation
 The `specshift finalize` command SHALL generate user-facing documentation from the specs located in `docs/specs/<capability>.md`. The command SHALL produce one documentation file per capability, placed under `docs/capabilities/<capability>.md`. The agent SHALL read the capability doc template at `.specshift/templates/docs/capability.md` for the expected output format. Generated documentation SHALL use clear, user-facing language that explains what the capability does, how to use it, and what behavior to expect. Documentation SHALL NOT include implementation details, internal architecture references, or normative specification language (SHALL/MUST). The agent SHALL transform requirement descriptions into natural explanations, convert Gherkin scenarios into readable usage examples or behavioral descriptions, and organize content with appropriate headings. If a User Story is present in the spec, the agent SHALL use it to inform the documentation's framing and context. The `docs/capabilities/` directory SHALL be created if it does not exist.
@@ -453,7 +461,7 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 #### Scenario: Cleanup after successful local merge
 
-- **GIVEN** the agent is working inside a worktree at `.claude/worktrees/fix-auth` on branch `fix-auth`
+- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
 - **AND** the agent merges the PR which succeeds
 - **WHEN** the merge completes
 - **THEN** the system SHALL switch the working directory to the main worktree

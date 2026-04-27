@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
-    paths: ['src/.claude-plugin/plugin.json']
+    paths: ['src/VERSION']
 
 jobs:
   release:
@@ -15,7 +15,7 @@ jobs:
 
       - name: Extract version and create release
         run: |
-          VERSION=$(jq -r .version src/.claude-plugin/plugin.json)
+          VERSION=$(tr -d '[:space:]' < src/VERSION)
           echo "Detected version: ${VERSION}"
 
           # Skip if tag already exists
