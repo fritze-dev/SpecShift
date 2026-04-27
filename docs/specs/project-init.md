@@ -2,17 +2,17 @@
 order: 12
 category: setup
 status: stable
-version: 5
-lastModified: 2026-04-14
+version: 6
+lastModified: 2026-04-27
 ---
 ## Purpose
 
-Handles project initialization via `specshift init`, including template installation, constitution generation, CLAUDE.md bootstrap, codebase scanning, and project health checks (spec drift, docs drift detection from the former docs-verify functionality).
+Handles project initialization via `specshift init`, including template installation, constitution generation, bootstrap-file generation (AGENTS.md and CLAUDE.md), codebase scanning, and project health checks (spec drift, docs drift detection from the former docs-verify functionality).
 
 ## Requirements
 
 ### Requirement: Install Workflow
-The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory (at `${CLAUDE_PLUGIN_ROOT}/templates/`) into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's workflow template at `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate `CLAUDE.md` from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` if no CLAUDE.md exists (see "CLAUDE.md Bootstrap" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
+The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory (at `${CLAUDE_PLUGIN_ROOT}/templates/`) into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's workflow template at `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate both `AGENTS.md` and `CLAUDE.md` from the bootstrap templates at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` and `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` (see "Bootstrap Files Generation" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
 
 The init command SHALL check for GitHub tooling availability (gh CLI, MCP tools, or API). If GitHub tooling is available and authenticated, the init command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the init command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The init command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge using available GitHub tooling.
 
@@ -270,37 +270,64 @@ The `specshift init` command SHALL generate a `CONSTITUTION.md` file based on th
 - **WHEN** the constitution is generated
 - **THEN** the Code Style section SHALL reflect the 4-space indentation and camelCase convention, and the Conventions section SHALL reference the conventional commits format
 
-### Requirement: CLAUDE.md Bootstrap
-The `specshift init` command SHALL generate a `CLAUDE.md` file from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` when no `CLAUDE.md` exists in the project root. The generated CLAUDE.md SHALL contain at minimum: (1) a `## Workflow` section directing all changes through the spec-driven workflow, (2) a `## Planning` section requiring explicit scope commitment before exiting plan mode and workflow routing through the specshift skill for implementation steps, and (3) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan, using REVIEW markers for uncertain items (same pattern as constitution generation). If `CLAUDE.md` already exists, init SHALL skip generation and report "CLAUDE.md already exists — skipped."
+### Requirement: Bootstrap Files Generation
+The `specshift init` command SHALL generate both `AGENTS.md` and `CLAUDE.md` at the project root to support both Codex CLI (which reads `AGENTS.md` natively) and Claude Code (which reads `CLAUDE.md`). Generation SHALL operate as follows:
 
-**User Story:** As a developer adopting the spec-driven workflow I want init to generate a CLAUDE.md with standard agent directives, so that every session respects the workflow and knowledge transparency rules without manual configuration.
+1. **AGENTS.md (full content)**: Generated from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md`. The generated AGENTS.md SHALL contain at minimum: (a) a `## Workflow` section directing all changes through the spec-driven workflow, (b) a `## Planning` section requiring explicit scope commitment before exiting plan mode and workflow routing through the specshift skill for implementation steps, (c) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge, and (d) a `## File Ownership` section describing project-specific file responsibilities. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan, using REVIEW markers for uncertain items.
 
-#### Scenario: CLAUDE.md generated on fresh init
-- **GIVEN** a project without a `CLAUDE.md` file
-- **AND** the plugin has a bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`
+2. **CLAUDE.md (import stub)**: Generated from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`. The generated CLAUDE.md SHALL be a small stub containing an `@AGENTS.md` import directive (Claude Code's documented memory-import syntax) plus optional Claude-Code-specific instructions that do not apply to other targets. CLAUDE.md SHALL NOT duplicate normative rules from AGENTS.md.
+
+If both files do not exist, init SHALL generate both. If only one exists, init SHALL generate the missing one and leave the existing one untouched. If both exist, init SHALL skip generation and report "AGENTS.md and CLAUDE.md already exist — skipped." Init SHALL never overwrite an existing AGENTS.md or CLAUDE.md.
+
+When an existing AGENTS.md is detected, init SHALL check it against the bootstrap template's section headings and report WARNING for each missing standard section. The same check SHALL NOT be applied to CLAUDE.md when a custom CLAUDE.md exists, because CLAUDE.md content is intentionally minimal and may legitimately diverge from the stub template (e.g., a user may add Claude-specific overrides).
+
+**User Story:** As a developer using either Claude Code or Codex (or both) I want init to generate the correct bootstrap files without me having to choose, so that whichever tool I open the project in finds the workflow rules already in place.
+
+#### Scenario: Both files generated on fresh init
+- **GIVEN** a project with no `AGENTS.md` and no `CLAUDE.md`
+- **AND** the plugin has bootstrap templates at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` and `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`
 - **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL generate `CLAUDE.md` at the project root
-- **AND** it SHALL contain a `## Workflow` section, a `## Planning` section, and a `## Knowledge Management` section
+- **THEN** the system SHALL generate `AGENTS.md` containing `## Workflow`, `## Planning`, `## Knowledge Management`, and `## File Ownership` sections
+- **AND** SHALL generate `CLAUDE.md` containing an `@AGENTS.md` import directive
 
-#### Scenario: CLAUDE.md skipped when already exists but checked for missing sections
-- **GIVEN** a project with an existing `CLAUDE.md` file containing all standard sections
+#### Scenario: AGENTS.md exists but CLAUDE.md missing
+- **GIVEN** a project with an existing `AGENTS.md` and no `CLAUDE.md`
 - **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL NOT overwrite `CLAUDE.md`
-- **AND** SHALL check CLAUDE.md against the bootstrap template's section headings
-- **AND** SHALL report "CLAUDE.md already exists — skipped (all standard sections present)"
+- **THEN** the system SHALL generate `CLAUDE.md` (import stub)
+- **AND** SHALL NOT overwrite the existing `AGENTS.md`
+- **AND** SHALL run the standard-sections check on the existing AGENTS.md and report WARNING for any missing section
 
-#### Scenario: CLAUDE.md includes project-specific rules
+#### Scenario: CLAUDE.md exists but AGENTS.md missing
+- **GIVEN** a project with an existing `CLAUDE.md` (e.g., from a pre-multi-target version of the plugin) and no `AGENTS.md`
+- **WHEN** the user runs `specshift init`
+- **THEN** the system SHALL generate `AGENTS.md` (full body)
+- **AND** SHALL NOT overwrite the existing `CLAUDE.md`
+- **AND** SHALL report that the existing CLAUDE.md may need to be reduced to an import stub manually
+
+#### Scenario: Both files exist
+- **GIVEN** a project where both `AGENTS.md` and `CLAUDE.md` already exist
+- **WHEN** the user runs `specshift init`
+- **THEN** the system SHALL NOT overwrite either file
+- **AND** SHALL report "AGENTS.md and CLAUDE.md already exist — skipped"
+
+#### Scenario: AGENTS.md missing standard section detected on re-init
+- **GIVEN** a project with an existing `AGENTS.md` containing `## Workflow` but lacking `## Planning` or `## Knowledge Management`
+- **WHEN** the user runs `specshift init`
+- **THEN** the system SHALL NOT overwrite or modify `AGENTS.md`
+- **AND** SHALL report WARNING for each missing standard section (e.g., "AGENTS.md missing standard section: Planning")
+- **AND** SHALL suggest the user add the missing section manually
+
+#### Scenario: AGENTS.md includes project-specific rules
 - **GIVEN** a project with specific conventions discovered during the codebase scan
-- **WHEN** the init command generates CLAUDE.md
+- **WHEN** the init command generates AGENTS.md
 - **THEN** the generated file SHALL include project-specific agent rules beyond the standard sections
 - **AND** uncertain items SHALL be marked with `<!-- REVIEW -->` for user resolution
 
-#### Scenario: CLAUDE.md missing standard section detected on re-init
-- **GIVEN** a project with an existing `CLAUDE.md` file that contains a `## Workflow` section but lacks a `## Planning` section or `## Knowledge Management` section
-- **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL NOT overwrite or modify `CLAUDE.md`
-- **AND** SHALL report WARNING for each missing standard section (e.g., "CLAUDE.md missing standard section: Planning")
-- **AND** SHALL suggest the user add the missing section manually
+#### Scenario: CLAUDE.md import directive resolves correctly
+- **GIVEN** a project with the generated `AGENTS.md` and `CLAUDE.md` import-stub
+- **WHEN** Claude Code starts a session in the project
+- **THEN** Claude Code SHALL load `CLAUDE.md`
+- **AND** SHALL expand the `@AGENTS.md` import to include AGENTS.md content in the session context
 
 ### Requirement: Initial Change Creation
 After generating the constitution, the `specshift init` command SHALL create an initial change workspace and hand off to the standard pipeline. The initial change SHALL be named according to the project context (e.g., `initial-spec`). The init command SHALL then inform the user to continue with the standard pipeline.
@@ -430,8 +457,9 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 - If migration encounters both WORKFLOW.md and legacy schema.yaml (manual partial migration), init SHALL preserve WORKFLOW.md and skip migration.
 - If `.specshift/constitution.md` (lowercase) and `.specshift/CONSTITUTION.md` (caps) both exist during migration, init SHALL use the lowercase content and rename to caps.
 - **Workflow template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` does not exist, report an error and suggest reinstalling the plugin.
-- **CLAUDE.md bootstrap template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` does not exist, skip CLAUDE.md generation and warn that the plugin may need updating. Do not block init.
-- **CLAUDE.md manually edited after init**: User edits to CLAUDE.md are authoritative. Re-running init SHALL NOT overwrite a manually edited CLAUDE.md.
+- **Bootstrap template missing from plugin**: If `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` or `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` does not exist, skip the corresponding file generation and warn that the plugin may need updating. Do not block init.
+- **CLAUDE.md or AGENTS.md manually edited after init**: User edits to either file are authoritative. Re-running init SHALL NOT overwrite a manually edited bootstrap file.
+- **Project initialized before multi-target support**: A project with an existing CLAUDE.md but no AGENTS.md (initialized by a pre-multi-target version of the plugin) SHALL receive a freshly generated AGENTS.md with the full body, and the existing CLAUDE.md SHALL remain untouched. The user is responsible for collapsing CLAUDE.md to an import stub manually if they want the new pattern; init SHALL only suggest this in its summary, not enforce it.
 - **Template merge with subdirectories**: The merge detection SHALL recursively process templates in subdirectories (e.g., `templates/docs/spec.md`, `templates/docs/capability.md`).
 - **Plugin downgrades**: If the plugin `template-version` is lower than the local `template-version`, the system SHALL warn and skip (do not downgrade).
 - **GitHub tooling available but not authenticated**: Report "GitHub tooling: available but not authenticated" and skip worktree opt-in.
