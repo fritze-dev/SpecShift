@@ -37,6 +37,13 @@ if [[ ! -f "$CLAUDE_PLUGIN_JSON" ]]; then
   exit 1
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: jq is required (used to read/stamp manifest versions)." >&2
+  exit 1
+fi
+
+warnings=0
+
 # --- Template-version enforcement ---
 # Modified templates must have their template-version bumped.
 # Compares working tree against main to detect unbumped versions.
@@ -77,9 +84,9 @@ fi
 
 # --- Read plugin version (Claude manifest is the source of truth) ---
 
-PLUGIN_VERSION=$(grep -o '"version": *"[^"]*"' "$CLAUDE_PLUGIN_JSON" | head -1 | sed 's/"version": *"//;s/"//')
+PLUGIN_VERSION=$(jq -r '.version // empty' "$CLAUDE_PLUGIN_JSON")
 if [[ -z "$PLUGIN_VERSION" ]]; then
-  echo "Error: could not read version from $CLAUDE_PLUGIN_JSON" >&2
+  echo "Error: could not read .version from $CLAUDE_PLUGIN_JSON" >&2
   exit 1
 fi
 
@@ -91,7 +98,7 @@ echo "Building release at $PLUGIN_ROOT/ ..."
 rm -rf "$SKILL_DIR"
 rm -f "$CLAUDE_MANIFEST_DIR/plugin.json"
 rm -rf "$CODEX_MANIFEST_DIR"
-rm -rf "$PLUGIN_ROOT/.agents"
+rm -rf "$CODEX_MARKETPLACE_DIR"
 # Remove legacy compiled tree from the pre-multi-target layout, if present.
 rm -rf "$LEGACY_SKILL_DIR"
 
@@ -116,32 +123,28 @@ echo "Emitted Claude manifest at $CLAUDE_MANIFEST_DIR/plugin.json"
 
 if [[ -f "$CODEX_PLUGIN_JSON" ]]; then
   mkdir -p "$CODEX_MANIFEST_DIR"
-  cp "$CODEX_PLUGIN_JSON" "$CODEX_MANIFEST_DIR/plugin.json"
-  # Replace the placeholder version with the Claude source version.
-  # The Codex source manifest uses "version": "0.0.0" as a placeholder.
-  sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$PLUGIN_VERSION\"/" "$CODEX_MANIFEST_DIR/plugin.json"
-  echo "Emitted Codex manifest at $CODEX_MANIFEST_DIR/plugin.json (version stamped: $PLUGIN_VERSION)"
+  out="$CODEX_MANIFEST_DIR/plugin.json"
+  jq --arg v "$PLUGIN_VERSION" '.version = $v' "$CODEX_PLUGIN_JSON" > "$out.tmp" && mv "$out.tmp" "$out"
+  echo "Emitted Codex manifest at $out (version stamped: $PLUGIN_VERSION)"
 else
   echo "WARNING: $CODEX_PLUGIN_JSON not found — skipping Codex manifest" >&2
-  warnings=$((${warnings:-0} + 1))
+  ((warnings++)) || true
 fi
 
 # --- Emit Codex marketplace entry ---
 
 if [[ -f "$CODEX_MARKETPLACE_SRC" ]]; then
   mkdir -p "$CODEX_MARKETPLACE_DIR"
-  cp "$CODEX_MARKETPLACE_SRC" "$CODEX_MARKETPLACE_DIR/marketplace.json"
-  # Stamp version in the marketplace entry.
-  sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$PLUGIN_VERSION\"/" "$CODEX_MARKETPLACE_DIR/marketplace.json"
-  echo "Emitted Codex marketplace at $CODEX_MARKETPLACE_DIR/marketplace.json (version stamped: $PLUGIN_VERSION)"
+  out="$CODEX_MARKETPLACE_DIR/marketplace.json"
+  jq --arg v "$PLUGIN_VERSION" '(.plugins[] | .version) = $v' "$CODEX_MARKETPLACE_SRC" > "$out.tmp" && mv "$out.tmp" "$out"
+  echo "Emitted Codex marketplace at $out (version stamped: $PLUGIN_VERSION)"
 else
   echo "WARNING: $CODEX_MARKETPLACE_SRC not found — skipping Codex marketplace" >&2
-  warnings=$((${warnings:-0} + 1))
+  ((warnings++)) || true
 fi
 
 total_actions=0
 total_requirements=0
-warnings=${warnings:-0}
 
 # --- Extract requirement block from spec file ---
 

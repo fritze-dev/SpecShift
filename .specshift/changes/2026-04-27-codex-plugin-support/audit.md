@@ -27,9 +27,9 @@ All changes trace to the design's Architecture & Components section or to task l
 
 1. **Per-Target Plugin Manifest** — verified
    - `src/.codex-plugin/plugin.json` exists with `name`, `version`, `description`, `skills`, `interface{displayName, shortDescription, category, capabilities}` ✓
-   - `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` both emitted at repo root with same version `0.2.4-beta` ✓
+   - `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` both emitted at repo root with same version `0.2.5-beta` ✓
    - Claude manifest schema preserved (no `interface` block; original keys intact) ✓
-   - Compile-script stamps Claude source version onto Codex output (verified by editing source manifest version and recompiling — done implicitly: the placeholder `0.0.0` in `src/.codex-plugin/plugin.json` was overwritten to `0.2.4-beta` via `sed` in the compile script) ✓
+   - Compile-script stamps Claude source version onto Codex output (verified by editing source manifest version and recompiling — done implicitly: the placeholder `0.0.0` in `src/.codex-plugin/plugin.json` was overwritten to `0.2.5-beta` via `sed` in the compile script) ✓
 
 2. **Shared Skill Tree at Repository Root** — verified
    - `./skills/specshift/SKILL.md`, `./skills/specshift/templates/`, `./skills/specshift/actions/` all exist after compile ✓
@@ -41,7 +41,7 @@ All changes trace to the design's Architecture & Components section or to task l
 3. **Codex Marketplace Entry** — verified
    - `.agents/plugins/marketplace.json` exists at repo root ✓
    - References `.codex-plugin` source path ✓
-   - Version `0.2.4-beta` stamped via compile script ✓
+   - Version `0.2.5-beta` stamped via compile script ✓
    - File generated only by compile script; no hand-edits required ✓
 
 4. **Bootstrap Single Source of Truth Pattern** — verified
@@ -129,7 +129,16 @@ Two Tweak-class corrections applied during apply:
 
 2. **Compile script `rm -rf $CLAUDE_MANIFEST_DIR` bug** — the first compile pass deleted the hand-maintained `.claude-plugin/marketplace.json`. Fixed by changing cleanup to `rm -f $CLAUDE_MANIFEST_DIR/plugin.json` (preserve the directory and other files in it). Marketplace.json restored from HEAD and source path re-applied. Stale artifacts: none (caught and fixed before second commit). Re-compiled cleanly.
 
-Both Tweak-class. No Design Pivot or Scope Change events.
+3. **PR-review hardening pass (post-finalize)** — five small Tweak-class corrections from the self-review of PR #45:
+   - `PLUGIN_VERSION` extraction switched from `grep | head | sed` to `jq -r '.version // empty'` (precise key path; rejects malformed JSON instead of returning unrelated nested fields).
+   - Codex `plugin.json` and `.agents/plugins/marketplace.json` version stamping switched from global `sed` substitution to `jq` updates anchored on `.version` and `(.plugins[] | .version)` respectively (no risk of replacing unrelated future `version` fields).
+   - `warnings` initialized to `0` early in preflight; the `${warnings:-0}` defensive defaults removed.
+   - Cleanup narrowed: `rm -rf "$PLUGIN_ROOT/.agents"` → `rm -rf "$CODEX_MARKETPLACE_DIR"` so unrelated future contents under `.agents/` are not nuked by SpecShift's compile.
+   - `jq` added as a hard preflight requirement (already used by the rewritten paths above).
+   - Codex manifest `interface.capabilities` widened from `["Read"]` to `["Read", "Edit", "Write", "Bash"]` to reflect the actual tool footprint of the workflow skill (apply/finalize write and run shell).
+   Build re-run, output validated as idempotent, all generated manifests pass `jq` validation, version `0.2.5-beta` agrees across all three emitted files.
+
+Both prior items Tweak-class; the PR-review pass is also Tweak-class. No Design Pivot or Scope Change events.
 
 ### Findings
 

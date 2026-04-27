@@ -7,6 +7,11 @@
     "displayName": "SpecShift",
     "shortDescription": "Spec-driven workflow: research, propose, apply, finalize, review.",
     "category": "Productivity",
-    "capabilities": ["Read"]
+    "capabilities": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash"
+    ]
   }
 }
