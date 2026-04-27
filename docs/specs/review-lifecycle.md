@@ -15,7 +15,7 @@ Defines the `specshift review` action behavior: a re-entrant PR review-to-merge 
 
 The `specshift review` action SHALL be re-entrant across sessions. On each invocation, the action SHALL identify the PR number from the current branch using available GitHub tooling (gh CLI, MCP tools, or API), then read the PR's current state including: draft status, requested reviews, review decisions (approved, changes-requested, commented), unresolved comment threads, and CI check status. The action SHALL report the assessed state before proceeding to the applicable phase. If no PR exists for the current branch, the action SHALL report the situation and stop. The action SHALL NOT store session-local state — all state SHALL be derived from the PR on GitHub and the local change artifacts.
 
-**User Story:** As a developer using Claude Code Web I want the review action to pick up where it left off in any session, so that ephemeral sessions do not block my PR from being merged.
+**User Story:** As a developer working in ephemeral or stateless agent sessions I want the review action to pick up where it left off in any session, so that short-lived sessions do not block my PR from being merged.
 
 #### Scenario: Fresh invocation reads PR state from GitHub
 - **GIVEN** a branch with an open draft PR

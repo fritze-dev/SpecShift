@@ -2,8 +2,8 @@
 order: 3
 category: change-workflow
 status: stable
-version: 3
-lastModified: 2026-04-11
+version: 4
+lastModified: 2026-04-27
 ---
 ## Purpose
 
@@ -49,10 +49,10 @@ These fields enable automated change context detection, active/completed filteri
 
 #### Scenario: Proposal created with tracking frontmatter
 
-- **GIVEN** a new change `add-user-auth` created on branch `add-user-auth` in worktree `.claude/worktrees/add-user-auth`
+- **GIVEN** a new change `add-user-auth` created on branch `add-user-auth` in worktree `.specshift/worktrees/add-user-auth`
 - **AND** the proposal lists `user-auth` as a new capability and `quality-gates` as modified
 - **WHEN** the proposal artifact is generated
-- **THEN** `proposal.md` SHALL include YAML frontmatter with `status: active`, `branch: add-user-auth`, `worktree: .claude/worktrees/add-user-auth`, and `capabilities: { new: [user-auth], modified: [quality-gates], removed: [] }`
+- **THEN** `proposal.md` SHALL include YAML frontmatter with `status: active`, `branch: add-user-auth`, `worktree: .specshift/worktrees/add-user-auth`, and `capabilities: { new: [user-auth], modified: [quality-gates], removed: [] }`
 
 #### Scenario: Proposal frontmatter without worktree
 
@@ -103,7 +103,7 @@ The system SHALL create a git worktree with a dedicated feature branch when the 
 
 #### Scenario: Create worktree when enabled
 
-- **GIVEN** WORKFLOW.md has `worktree.enabled: true` and `worktree.path_pattern: .claude/worktrees/{change}`
+- **GIVEN** WORKFLOW.md has `worktree.enabled: true` and `worktree.path_pattern: .specshift/worktrees/{change}`
 - **AND** no worktree for "add-user-auth" exists
 - **AND** today's date is 2026-04-01
 - **WHEN** the user invokes `specshift propose add-user-auth`
@@ -115,7 +115,7 @@ The system SHALL create a git worktree with a dedicated feature branch when the 
 #### Scenario: Worktree already exists
 
 - **GIVEN** WORKFLOW.md has `worktree.enabled: true`
-- **AND** a worktree at `.claude/worktrees/add-user-auth` already exists
+- **AND** a worktree at `.specshift/worktrees/add-user-auth` already exists
 - **WHEN** the user invokes `specshift propose add-user-auth`
 - **THEN** the system SHALL NOT create a duplicate worktree
 - **AND** SHALL suggest switching to the existing worktree
@@ -183,7 +183,7 @@ For completed changes (tiers 1–2), the system SHALL auto-remove the worktree w
 
 #### Scenario: Cleanup worktree with completed proposal status
 
-- **GIVEN** a worktree exists at `.claude/worktrees/feature-x` on branch `worktree-feature-x`
+- **GIVEN** a worktree exists at `.specshift/worktrees/feature-x` on branch `worktree-feature-x`
 - **AND** `<worktree-path>/.specshift/changes/2026-04-10-feature-x/proposal.md` has `status: completed`
 - **WHEN** the user invokes `specshift propose add-logging`
 - **THEN** the system reads the proposal from the worktree filesystem path
@@ -233,7 +233,7 @@ For completed changes (tiers 1–2), the system SHALL auto-remove the worktree w
 
 #### Scenario: Worktree with active change preserved
 
-- **GIVEN** a worktree exists at `.claude/worktrees/wip-feature` on branch `wip-feature`
+- **GIVEN** a worktree exists at `.specshift/worktrees/wip-feature` on branch `wip-feature`
 - **AND** the proposal has `status: active`
 - **AND** the last commit is within the `stale_days` threshold
 - **WHEN** the user invokes `specshift propose add-logging`
@@ -257,7 +257,7 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 #### Scenario: Cleanup after successful local merge
 
-- **GIVEN** the agent is working inside a worktree at `.claude/worktrees/fix-auth` on branch `fix-auth`
+- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
 - **AND** the agent merges the PR which succeeds
 - **WHEN** the merge completes
 - **THEN** the system SHALL switch the working directory to the main worktree

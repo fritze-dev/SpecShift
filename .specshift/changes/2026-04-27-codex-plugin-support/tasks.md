@@ -76,3 +76,58 @@
 ## 5. Post-Merge Reminders
 
 - Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`) — applies when change modifies files under `src/` or `./skills/`
+
+---
+
+## Scope Extension Tasks (2026-04-27 — second pass)
+
+The change is reopened to fold five extension items into the existing implementation. Tasks below are net-new on top of the completed first-pass tasks.
+
+### E1. Source agnostic-pass
+
+- [x] E1.1. `docs/specs/project-init.md` — replace every `${CLAUDE_PLUGIN_ROOT}/templates/...` reference with prose ("the plugin's `templates/` directory" or "the plugin's `templates/<file>`"). Bump spec version to 7.
+- [x] E1.2. `docs/specs/release-workflow.md` — rewrite Source-and-Release-Directory-Structure / Marketplace-Source-Configuration / Repository-Layout-Separation / AOT-Skill-Compilation / Compiled-Action-File-Contract / Dev-Sync-Script / Auto-Patch-Version-Bump / Version-Sync-Between-Plugin-Files / Manual-Release-Process / Consumer-Update-Process for multi-target reality and root-manifest layout. Bump version to 4.
+- [x] E1.3. `docs/specs/multi-target-distribution.md` — rewrite Per-Target-Plugin-Manifest for hand-edited root manifests with enrichment; rewrite Bootstrap-SSOT for manual-copy claude.md; add new Agnostic-Skill-Body requirement; add agnostic-asset-resolution assumption. Bump version to 2.
+- [x] E1.4. `docs/specs/review-lifecycle.md` — User Story phrasing: "Claude Code Web" → "ephemeral / stateless agent sessions".
+- [x] E1.5. `docs/specs/three-layer-architecture.md` — "Claude Code plugin system" → "the host plugin system (Claude Code, Codex CLI)".
+- [x] E1.6. `docs/specs/documentation.md` — translation rule lists both product names: "Product names (Claude Code, Codex)".
+- [x] E1.7. `src/skills/specshift/SKILL.md` — verify no Claude-specific tokens; agnostic phrasing for any plugin-asset references.
+- [x] E1.8. `src/templates/workflow.md` — `## Action: init` instruction: write only AGENTS.md on fresh init; the existing CLAUDE.md detection (warn-only) stays. Bump template-version to 10.
+- [x] E1.9. `src/templates/agents.md` — verify body still works as agnostic SoT; no edits expected unless wording drifts.
+- [x] E1.10. `src/actions/finalize.md` — add requirement links: Source-and-Release-Directory-Structure, Marketplace-Source-Configuration, AOT-Skill-Compilation, Compiled-Action-File-Contract, Dev-Sync-Script (already partially linked; verify final list).
+
+### E2. Manifests at repo root
+
+- [x] E2.1. Move `src/.claude-plugin/plugin.json` → ensure `.claude-plugin/plugin.json` at root carries the canonical hand-edited content (it already does post first-pass; verify and remove the `src/` copy).
+- [x] E2.2. Move `src/.codex-plugin/plugin.json` → enrich `.codex-plugin/plugin.json` at root with agnostic + UI fields (E3 below); remove the `src/` copy.
+- [x] E2.3. Delete `src/.claude-plugin/` and `src/.codex-plugin/` directories.
+
+### E3. Codex manifest enrichment
+
+- [x] E3.1. Add to `.codex-plugin/plugin.json`: `author` ({name, url}), `homepage`, `repository`, `license`, `keywords`.
+- [x] E3.2. Add to `.codex-plugin/plugin.json` `interface`: `longDescription`, `developerName`, `websiteURL`, `defaultPrompt[]`, `brandColor`, `screenshots[]`.
+- [x] E3.3. Verify the enriched manifest passes `jq -e .` and matches the schema described in `design.md` Architecture (Extension).
+
+### E4. Compile script simplification
+
+- [x] E4.1. Remove `cp src/.claude-plugin/plugin.json` block — manifest stays hand-edited at root.
+- [x] E4.2. Remove `src/.codex-plugin/plugin.json` source path; read `.codex-plugin/plugin.json` directly at root and stamp `.version` via `jq`.
+- [x] E4.3. Read version from root `.claude-plugin/plugin.json` (was `src/.claude-plugin/plugin.json`).
+- [x] E4.4. Add post-stamp validation: emitted Codex manifest version must equal Claude manifest version.
+- [x] E4.5. Re-run `bash -n scripts/compile-skills.sh` to confirm syntax, then full run to confirm idempotency.
+
+### E5. Project-level alignment
+
+- [x] E5.1. Update `.specshift/CONSTITUTION.md` Conventions / Plugin source layout: manifests live hand-edited at the repo root (not in `src/`); compile script stamps Codex version from Claude source. Bump constitution `template-version` only if `src/templates/constitution.md` (the consumer placeholder) gets edited too — it does not, so this stays at 1 and only the project's CONSTITUTION.md edits.
+- [x] E5.2. Update `.specshift/WORKFLOW.md` from edited `src/templates/workflow.md` (template-version sync).
+- [x] E5.3. Update root `AGENTS.md` and `CLAUDE.md` (the project's own bootstrap files) — both already exist; ensure rules align with extended scope (no behavioral change needed beyond verifying the agnostic File-Ownership entries describe `.codex-plugin/`, `src/marketplace/codex.json`, etc.).
+- [x] E5.4. Update `README.md`: any `src/.claude-plugin/` or `src/.codex-plugin/` references → root-manifest references; mention that fresh init now writes only AGENTS.md.
+
+### E6. Compile + Audit + Finalize
+
+- [x] E6.1. Run `bash scripts/compile-skills.sh`. Confirm exit 0, zero warnings, version stamped consistently. — clean, 45/45 requirements, version 0.2.5-beta stamped across Codex manifest + marketplace.
+- [x] E6.2. Verify `grep -rn "\${CLAUDE_PLUGIN_ROOT}" ./skills/specshift/` returns zero matches. — verified: 0 hits for `${CLAUDE_PLUGIN_ROOT}`, `Claude Code Web`, `.claude/worktrees`.
+- [x] E6.3. Regenerate `audit.md` by re-auditing the extended scope. — extension audit appended.
+- [ ] E6.4. Fix loop (skipped: no audit findings).
+- [ ] E6.5. Run `specshift finalize` for changelog entry, capability-doc updates, and recompile.
+- [ ] E6.6. Commit + push extension. Update PR body with extension summary.

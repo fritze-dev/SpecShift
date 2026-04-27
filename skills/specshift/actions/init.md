@@ -2,7 +2,7 @@
 
 
 ### Requirement: Install Workflow
-The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory (at `${CLAUDE_PLUGIN_ROOT}/templates/`) into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's workflow template at `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate both `AGENTS.md` and `CLAUDE.md` from the bootstrap templates at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` and `${CLAUDE_PLUGIN_ROOT}/templates/claude.md` (see "Bootstrap Files Generation" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
+The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's `templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate the bootstrap files (`AGENTS.md` always; `CLAUDE.md` only when one already exists) from the plugin's `templates/agents.md` and `templates/claude.md` (see "Bootstrap Files Generation" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
 
 The init command SHALL check for GitHub tooling availability (gh CLI, MCP tools, or API). If GitHub tooling is available and authenticated, the init command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the init command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The init command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge using available GitHub tooling.
 
@@ -15,7 +15,7 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 #### Scenario: First-time project initialization
 - **GIVEN** a project directory without the spec-driven workflow installed
 - **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL copy Smart Templates from `${CLAUDE_PLUGIN_ROOT}/templates/` to `.specshift/templates/`, copy WORKFLOW.md from `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md`, create `.specshift/CONSTITUTION.md` placeholder, generate `CLAUDE.md` from the bootstrap template, and verify the setup
+- **THEN** the system SHALL copy Smart Templates from the plugin's `templates/` directory to `.specshift/templates/`, copy WORKFLOW.md from the plugin's `templates/workflow.md`, create `.specshift/CONSTITUTION.md` placeholder, generate `AGENTS.md` from the bootstrap template, and verify the setup
 
 #### Scenario: Idempotent re-initialization
 - **GIVEN** a project that has already been initialized
@@ -24,7 +24,7 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 
 #### Scenario: WORKFLOW.md copied from template
 - **GIVEN** a project directory without `.specshift/WORKFLOW.md`
-- **AND** the plugin has `${CLAUDE_PLUGIN_ROOT}/templates/workflow.md`
+- **AND** the plugin ships `templates/workflow.md`
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL copy workflow.md to `.specshift/WORKFLOW.md`
 
@@ -42,7 +42,7 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 - **AND** SHALL leave the `worktree:` section commented out in WORKFLOW.md
 
 ### Requirement: Template Merge on Re-Init
-When `specshift init` runs on an already-initialized project (re-init after plugin update), the system SHALL use Smart Template `template-version` fields to detect user customizations and merge plugin updates instead of blindly overwriting. For each template file in `${CLAUDE_PLUGIN_ROOT}/templates/`:
+When `specshift init` runs on an already-initialized project (re-init after plugin update), the system SHALL use Smart Template `template-version` fields to detect user customizations and merge plugin updates instead of blindly overwriting. For each template file in the plugin's `templates/` directory:
 
 1. **Read** the plugin template's `template-version` field and the local template's `template-version` field at `.specshift/templates/<path>`.
 2. **Compare versions:**

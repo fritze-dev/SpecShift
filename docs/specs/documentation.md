@@ -205,7 +205,7 @@ The `specshift finalize` command SHALL determine the documentation language befo
 Translation rules:
 - YAML frontmatter **keys** SHALL remain in English (machine-readable identifiers)
 - YAML frontmatter **values** (`title`, `description`) SHALL be translated to the target language
-- Product names (Claude Code), commands (specshift commands), and file paths SHALL remain in English
+- Product names (Claude Code, Codex), commands (specshift commands), and file paths SHALL remain in English
 - If an existing doc is in a different language than the configured `docs_language`, the agent SHALL treat it as a full regeneration rather than an incremental update
 
 **User Story:** As a non-English-speaking team I want documentation generated in my language, so that the entire team can understand the project documentation without translation.
@@ -226,7 +226,7 @@ Translation rules:
 #### Scenario: Product names preserved in any language
 - **GIVEN** `docs_language` is set to a non-English language
 - **WHEN** the agent generates documentation
-- **THEN** product names (Claude Code), commands (`specshift finalize`, `specshift propose`), and file paths SHALL remain in English
+- **THEN** product names (Claude Code, Codex), commands (`specshift finalize`, `specshift propose`), and file paths SHALL remain in English
 
 #### Scenario: Language change triggers full regeneration
 - **GIVEN** existing capability docs were generated in English
@@ -379,7 +379,7 @@ The architecture overview content generated as part of `docs/README.md` by `spec
 - **AND** a constitution and completed changes' design.md files exist
 - **WHEN** the developer runs `specshift finalize`
 - **THEN** the architecture overview in `docs/README.md` SHALL have German headings (e.g., "Systemarchitektur", "Technologie-Stack") and German content
-- **AND** product names (Claude Code) and file paths SHALL remain in English
+- **AND** product names (Claude Code, Codex) and file paths SHALL remain in English
 
 #### Scenario: Design decisions table translated
 - **GIVEN** `docs_language: French`

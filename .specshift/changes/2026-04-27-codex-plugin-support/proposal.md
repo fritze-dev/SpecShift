@@ -1,10 +1,10 @@
 ---
-status: review
+status: active
 branch: codex-plugin-support
 worktree: .claude/worktrees/codex-plugin-support
 capabilities:
   new: [multi-target-distribution]
-  modified: [project-init]
+  modified: [project-init, release-workflow]
   removed: []
 ---
 
@@ -78,10 +78,53 @@ SpecShift today only ships as a Claude Code plugin. OpenAI Codex CLI now has a c
 - **Codex hooks setup** — Codex hooks live in user `~/.codex/config.toml`, not plugin-installable. Workflow-routing enforcement remains text-only via AGENTS.md (same as today on Claude side).
 - **Codex custom prompts** (`~/.codex/prompts/`) — upstream-deprecated; skill is the only entry point.
 - **MCP servers (`.mcp.json`)** — SpecShift currently uses no MCP tools.
-- **Branding assets** (`interface.logo`, `composerIcon`, `brandColor`) — Codex listing works without them; deferred to a follow-up change for polish.
 - **Cursor / Gemini / other targets** — Shopify ships those too; SpecShift stops at Claude + Codex for Phase 1.
 - **Single-file consolidation** (eliminating CLAUDE.md entirely) — keeps Claude Code's documented memory pattern, avoids breaking existing installs that expect CLAUDE.md.
 - **Environment detection in init** — both files always written; CLAUDE.md is a trivial stub that cannot drift.
-- **Changes to non-bootstrap templates** (research/proposal/specs/design/preflight/tests/tasks/audit) — these are tool-agnostic and need no edits.
-- **Changes to action files** (`src/actions/*.md`) — already tool-agnostic.
 - **Marketplace publishing automation** — manual `gh release` flow continues.
+
+## Scope Extension (2026-04-27 — second pass)
+
+After PR #45 review, gaps versus PR #44 surfaced. Rather than open a follow-up change, the scope is extended in place. The five items below align the implementation with the spirit of the original proposal (one shared skill body, two manifests, no Claude-only artifacts) and remove drift introduced during the first pass.
+
+### Why (Extension)
+
+The first-pass implementation produced one shared compiled skill tree, but the source content (SKILL.md, templates, action specs) still hard-codes Claude-Code-specific tokens (`${CLAUDE_PLUGIN_ROOT}`, `Claude Code Web`, `.claude/worktrees`). Codex skill bodies reach the model as instruction text and there is no Codex equivalent of `${CLAUDE_PLUGIN_ROOT}` (verified: `developers.openai.com/codex/skills` and `Shopify-AI-Toolkit` both use bare relative paths). The Codex-side skill therefore reads literal Claude tokens that the model cannot resolve. The agnostic baseline is to make the source itself tool-neutral so the same compiled artifact serves both targets without a per-target rewrite pass.
+
+Separately, plugin manifests live under `src/.claude-plugin/` and `src/.codex-plugin/` because of legacy single-target layout where `.claude-plugin/plugin.json` was generated *into* the compiled `.claude/` tree. After the Shopify-flat migration, both manifests are emitted at the repo root and the `src/` indirection no longer carries weight — `marketplace.json` is already hand-edited at the root, plugin manifests should follow.
+
+Finally, the `release-workflow` spec was not updated to reference the multi-target layout; `src/actions/finalize.md` still links only to single-target requirements; the Codex manifest is missing the metadata fields the Codex `/plugins` UI uses for discoverability.
+
+### What Changes (Extension)
+
+- **Tool-agnostic source content.** Replace tool-specific tokens in compiled-into-skill files with prose or neutral phrasing:
+  - `${CLAUDE_PLUGIN_ROOT}/templates/...` → "the plugin's `templates/` directory" (prose; resolved by the model at runtime against either runtime's plugin install location).
+  - `Claude Code Web` → "ephemeral agent sessions" or "stateless agent sessions" (User Story phrasing in `review-lifecycle.md`).
+  - `.claude/worktrees` (in spec scenarios that compile into the skill) → `.specshift/worktrees` or generic placeholder. Project-instance `.specshift/WORKFLOW.md` `path_pattern` is project config and remains as configured.
+  - `CLAUDE.md` references in compiled-into-skill files: where they refer to the bootstrap memory file pattern that AGENTS.md now satisfies, generalize to "AGENTS.md / CLAUDE.md"; where they refer specifically to Claude Code's own memory file, leave as-is.
+- **Compiler emits one agnostic skill tree.** The compiled skill tree under `./skills/specshift/` is the same artifact that both manifests reference. No per-target rewrite passes (no `write_codex_skill`, no `rewrite_codex_file`). If a residual Claude-only token slips through, it shows up in source review, not as a runtime divergence between targets.
+- **Plugin manifests at repo root.** Move `src/.claude-plugin/plugin.json` → `.claude-plugin/plugin.json` and `src/.codex-plugin/plugin.json` → `.codex-plugin/plugin.json`. Both become hand-edited authoritative sources at the root, side-by-side with `.claude-plugin/marketplace.json`. Compile script reduces to: read Claude manifest version → stamp into Codex manifest → stamp into `.agents/plugins/marketplace.json` → validate consistency. No `cp` of manifests.
+- **Codex manifest enriched with agnostic + UI fields.** `.codex-plugin/plugin.json` gains the same agnostic metadata the Claude manifest carries (`author`, `repository`, `license`, `keywords`) plus Codex-UI-specific fields (`longDescription`, `developerName`, `websiteURL`, `defaultPrompt[]`, `brandColor`, `screenshots[]`). `interface.capabilities` widened from `["Read", "Edit", "Write", "Bash"]` is already correct; agnostic fields stay in sync via review.
+- **`release-workflow` spec multi-target alignment.** Update `docs/specs/release-workflow.md` so its requirements (Auto Patch Version Bump, Version Sync Between Plugin Files, Manual Minor and Major Release Process, Source and Release Directory Structure, Marketplace Source Configuration, AOT Skill Compilation, Compiled Action File Contract, Repository Layout Separation, Dev Sync Script) describe the multi-target reality instead of `.claude/skills/specshift/`-only language. Add Codex-relevant requirement links to `src/actions/finalize.md`. Regenerate `docs/capabilities/release-workflow.md` after spec edits.
+- **Bootstrap fresh-init narrowed to AGENTS.md only.** First-pass behavior unconditionally generated both `AGENTS.md` and `CLAUDE.md`. New behavior: on a fresh project (neither file exists), generate only `AGENTS.md` (the agnostic single source of truth). Do not generate `CLAUDE.md` automatically — Claude Code consumers who want the documented memory-import pattern create `CLAUDE.md` themselves (the `claude.md` Smart Template stays in the plugin so users have a one-line stub to copy). On re-init, existing files are checked for standard sections and otherwise left untouched; the missing partner file is **not** auto-generated. This makes init's footprint minimal and avoids forcing a stub onto Codex-only or agnostic projects. The existing "AGENTS only exists" / "CLAUDE only exists" / "Both exist" scenarios are revised accordingly.
+
+### Capabilities (Extension)
+
+- **Modified**: `release-workflow` (multi-target alignment), `project-init` (agnostic phrasing of plugin-root references + bootstrap narrowed to AGENTS.md on fresh init, CLAUDE.md no longer auto-generated).
+
+### Impact (Extension)
+
+- **Sources changed**: `src/skills/specshift/SKILL.md` (if any tool-specific tokens), `src/templates/workflow.md`, `src/actions/finalize.md` (new requirement links), `docs/specs/project-init.md`, `docs/specs/release-workflow.md`, `docs/specs/multi-target-distribution.md`, `docs/specs/review-lifecycle.md` (User Story wording), `docs/specs/three-layer-architecture.md` (plugin-host wording), `docs/specs/documentation.md` (translation rule mentions both products).
+- **Manifests moved**: `src/.claude-plugin/`, `src/.codex-plugin/` deleted; `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json` hand-edited at root.
+- **Compile script simplified**: removes manifest copy block; adds version stamp + consistency check; drops the `src/` indirection and any per-target rewrite logic.
+- **Constitution updated**: Plugin source layout convention reflects manifest-at-root; release directory wording stays.
+- **README, AGENTS.md, capability docs**: align references to new manifest locations and agnostic descriptions.
+
+### Out of Scope (Extension)
+
+- **Per-target rewrite passes in the compiler.** Decided against. Source agnostic-ization is the right place to handle target neutrality.
+- **Auto-generation of CLAUDE.md on fresh init.** Decided against per A-variant: the plugin no longer forces a CLAUDE.md stub onto every consumer. Users who want Claude Code's documented memory pattern add `@AGENTS.md` to a hand-written CLAUDE.md (the plugin still ships `claude.md` as a copy-paste template).
+- **HTML-escape fix for nested `<!-- ASSUMPTION -->` / `<!-- REVIEW -->` markers** in templates — no rendering issues observed; not worth the template-version churn.
+- **Bootstrap-template approach change.** PR-45's pattern (`agents.md` shared, `claude.md` as `@AGENTS.md` import stub) stays; not reverted to PR-44's `src/codex/templates/agents.md` structure.
+- **Deletion of `multi-target-distribution.md` in favor of folding everything into `release-workflow.md`** — keep both, with `multi-target-distribution.md` describing the layout invariants and `release-workflow.md` describing the lifecycle mechanics.
+- **Version bump.** This is a scope extension within the running change; version stays `0.2.5-beta` until finalize.

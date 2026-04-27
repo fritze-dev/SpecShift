@@ -38,7 +38,7 @@ Search for `specshift` in the resulting list and install. The plugin manifest li
 ## Quick Start
 
 ```bash
-# Initialize a project — generates AGENTS.md (full body) and CLAUDE.md (@AGENTS.md import stub)
+# Initialize a project — generates AGENTS.md (full body, agnostic single source of truth)
 specshift init
 
 # Propose a new feature
@@ -76,8 +76,11 @@ your-project/
 │   ├── specs/                     # Requirements (flat .md files)
 │   ├── capabilities/              # Generated documentation
 │   └── decisions/                 # Architecture Decision Records
-├── AGENTS.md                      # Agent directives (Codex reads natively)
-└── CLAUDE.md                      # @AGENTS.md import (Claude Code)
+└── AGENTS.md                      # Agent directives (read by Codex natively;
+                                   #   Claude Code reads via the @AGENTS.md
+                                   #   import in a hand-maintained CLAUDE.md
+                                   #   if you want the documented memory pattern.
+                                   #   Init does not auto-generate CLAUDE.md.)
 ```
 
 ## Architecture
@@ -92,10 +95,10 @@ your-project/
 
 **Multi-target distribution:**
 
-The same plugin source under `src/` produces compiled artifacts for multiple AI-coding-tool targets:
+One agnostic plugin source serves both Claude Code and OpenAI Codex CLI from the same repository:
 
-- `.claude-plugin/plugin.json` (Claude Code) + `.claude-plugin/marketplace.json`
-- `.codex-plugin/plugin.json` (OpenAI Codex CLI) + `.agents/plugins/marketplace.json`
-- `./skills/specshift/` (shared skill body, used by both targets)
+- `.claude-plugin/plugin.json` (Claude manifest, hand-edited at the root, version source of truth) + `.claude-plugin/marketplace.json`
+- `.codex-plugin/plugin.json` (Codex manifest, hand-edited at the root; version stamped by the compile script) + `.agents/plugins/marketplace.json` (generated)
+- `./skills/specshift/` (one shared skill tree, served to both targets)
 
-The compile script (`bash scripts/compile-skills.sh`) emits all of the above from one source. Bootstrap content lives once in `src/templates/agents.md` and is loaded into Claude Code via the `@AGENTS.md` import in CLAUDE.md.
+The compile script (`bash scripts/compile-skills.sh`) builds the shared skill tree from `src/`, stamps the Claude version into the Codex manifest and Codex marketplace, and produces compiled action requirement files. Bootstrap content lives once in `src/templates/agents.md`. Codex consumers read AGENTS.md natively; Claude Code consumers can opt in to the documented `@AGENTS.md` memory-import pattern by hand-maintaining a one-line CLAUDE.md (the plugin ships `templates/claude.md` as a copy-paste template).

@@ -185,13 +185,114 @@
   - Action: run `specshift init`
   - Verify: AGENTS.md generation is skipped with a warning; init does not block; CLAUDE.md generation may also be skipped (since stub references non-existent agents.md)
 
+## Manual Test Plan — Scope Extension (2026-04-27)
+
+### multi-target-distribution (revised)
+
+#### Per-Target Plugin Manifest (manifests at root)
+
+- [ ] **Scenario: Manifests authored at repo root**
+  - Setup: repo as-is
+  - Action: `ls .claude-plugin/plugin.json .codex-plugin/plugin.json` and confirm no `src/.claude-plugin/` or `src/.codex-plugin/` directories
+  - Verify: both plugin.json files exist at the root; `src/` no longer carries manifest sources
+
+- [ ] **Scenario: Codex manifest enriched fields present**
+  - Setup: `.codex-plugin/plugin.json` after enrichment
+  - Action: `jq -r '.author, .repository, .license, .keywords, .interface.longDescription, .interface.developerName, .interface.websiteURL, .interface.defaultPrompt, .interface.brandColor, .interface.screenshots' .codex-plugin/plugin.json`
+  - Verify: each field returns a non-null value matching the design spec
+
+- [ ] **Scenario: Version mismatch corrected by compile script**
+  - Setup: temporarily edit `.codex-plugin/plugin.json` to a wrong version (e.g., `0.0.0-test`)
+  - Action: run `bash scripts/compile-skills.sh`
+  - Verify: `.codex-plugin/plugin.json` is restamped to the Claude manifest version; `.agents/plugins/marketplace.json` matches; non-version fields preserved
+
+#### Agnostic Skill Body (NEW)
+
+- [ ] **Scenario: Source has no Claude-specific environment variables**
+  - Setup: post-extension source tree
+  - Action: `grep -rn "\${CLAUDE_PLUGIN_ROOT}" src/skills src/templates src/actions docs/specs/project-init.md docs/specs/release-workflow.md docs/specs/multi-target-distribution.md`
+  - Verify: zero matches in compiled-into-skill files
+
+- [ ] **Scenario: Compiled skill tree is the same for both targets**
+  - Setup: post-compile state
+  - Action: `find ./skills/specshift -type f | sort` and confirm only one tree
+  - Verify: no per-target variants; both manifests reference `./skills/specshift/`
+
+- [ ] **Scenario: Product names appear only where target-scoped**
+  - Setup: post-extension source
+  - Action: `grep -rn "Claude Code" src/skills src/templates src/actions` (compiled-into-skill files)
+  - Verify: any remaining `Claude Code` mention is paired with a paragraph that explicitly describes Claude Code-specific behavior (e.g., the `@AGENTS.md` import). The agnostic bootstrap template `agents.md` may still mention "Claude Code" when describing the import pattern — this is intentional.
+
+#### Bootstrap SSOT (revised — manual-copy stub)
+
+- [ ] **Scenario: claude.md is the import-stub template (manual copy)**
+  - Setup: post-extension source
+  - Action: inspect `src/templates/claude.md`
+  - Verify: contains the `@AGENTS.md` import line; surrounding documentation/comment in the template describes that init does not auto-generate CLAUDE.md and that the stub is for manual copy
+
+### release-workflow (revised, multi-target)
+
+- [ ] **Scenario: Auto-bump after change completion (4-file matrix)**
+  - Setup: working tree with `.claude-plugin/plugin.json` at `1.0.3`, all other versioned manifests at `1.0.3`
+  - Action: trigger the auto-bump convention
+  - Verify: all four files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`) updated to `1.0.4`
+
+- [ ] **Scenario: Manual minor release via push includes Codex artifacts**
+  - Setup: maintainer ready to bump to `1.1.0`
+  - Action: edit `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` to `1.1.0`; run `bash scripts/compile-skills.sh`; commit + push
+  - Verify: pushed commit contains `1.1.0` in `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
+
+- [ ] **Scenario: Plugin root resolves to repo root (both targets, prose-based asset references)**
+  - Setup: install plugin in test projects (one Claude Code, one Codex)
+  - Action: invoke a skill action that references "the plugin's `templates/workflow.md`"
+  - Verify: both runtimes locate and read the file successfully without environment-variable interpolation
+
+- [ ] **Scenario: Compiled action file contains multi-target requirements**
+  - Setup: post-compile state
+  - Action: `grep -c "^### Requirement:" ./skills/specshift/actions/finalize.md`
+  - Verify: count includes Source-and-Release-Directory-Structure, Marketplace-Source-Configuration, AOT-Skill-Compilation, Compiled-Action-File-Contract, Dev-Sync-Script (the requirement-link extension applied to `src/actions/finalize.md`)
+
+- [ ] **Scenario: jq missing on dev machine**
+  - Setup: temporarily rename `jq` binary or run script in a container without `jq`
+  - Action: `bash scripts/compile-skills.sh`
+  - Verify: script exits with a clear error message naming `jq` as the missing dependency
+
+### project-init (revised — Option A bootstrap)
+
+- [ ] **Scenario: Fresh init generates only AGENTS.md**
+  - Setup: fresh test project with no `AGENTS.md` and no `CLAUDE.md`
+  - Action: run `specshift init`
+  - Verify: `AGENTS.md` exists with `## Workflow`, `## Planning`, `## Knowledge Management` sections; `CLAUDE.md` does NOT exist; init output mentions that a one-line `@AGENTS.md` `CLAUDE.md` may be added manually
+
+- [ ] **Scenario: AGENTS.md exists, CLAUDE.md missing (no auto-create)**
+  - Setup: test project where AGENTS.md is present but CLAUDE.md is absent
+  - Action: run `specshift init`
+  - Verify: AGENTS.md unchanged; CLAUDE.md is NOT created; standard-sections check on AGENTS.md reported
+
+- [ ] **Scenario: User-maintained CLAUDE.md import directive resolves correctly**
+  - Setup: project with generated `AGENTS.md`; user manually creates `CLAUDE.md` with the line `@AGENTS.md`
+  - Action: open the project in Claude Code; check `/memory` output
+  - Verify: CLAUDE.md is loaded; `@AGENTS.md` import is expanded; AGENTS.md content appears in session context
+
+### Replaced/Superseded Scenarios
+
+The following first-pass scenarios are superseded by the extension and SHALL be considered replaced by the revised scenarios above:
+
+- "Both files generated on fresh init" → replaced by "Fresh init generates only AGENTS.md"
+- "AGENTS.md exists but CLAUDE.md missing" → replaced by "AGENTS.md exists, CLAUDE.md missing (no auto-create)"
+- "CLAUDE.md import directive resolves correctly" → replaced by "User-maintained CLAUDE.md import directive resolves correctly"
+- "Both manifests emitted at repo root" (compile-driven) → replaced by "Manifests authored at repo root" (hand-edited)
+- "Codex manifest contains required Codex schema fields" — still applicable but now also enriched fields covered by "Codex manifest enriched fields present"
+
 ## Traceability Summary
 
 | Metric | Count |
 |--------|-------|
-| Total scenarios (new + modified) | 25 |
+| Total scenarios (first-pass + extension) | 38 |
+| First-pass scenarios still applicable | 19 |
+| First-pass scenarios superseded by extension | 6 |
+| New extension scenarios | 13 |
 | Automated tests | 0 |
-| Manual test items | 25 |
-| Preserved (@manual) | 0 |
-| Edge case tests | 5 |
+| Manual test items | 38 (32 active after supersession) |
+| Edge case tests | 5 (unchanged) |
 | Warnings | 0 |

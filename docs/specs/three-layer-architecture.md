@@ -129,11 +129,11 @@ The three layers SHALL be independently modifiable. WORKFLOW.md and Smart Templa
 
 - If the constitution is missing or empty, the router SHALL report an error rather than proceeding without rules.
 - If WORKFLOW.md is malformed YAML, the router SHALL report a read error rather than proceeding with invalid data.
-- If the router SKILL.md is missing, the Claude Code plugin system SHALL not register any commands.
+- If the router SKILL.md is missing, the host plugin system (Claude Code, Codex CLI, or any other supported runtime) SHALL not register any commands.
 - If a new action is added without updating documentation, the system still functions but documentation is stale (detected by audit.md generation during apply).
 
 ## Assumptions
 
-- The Claude Code plugin system discovers the router by scanning `skills/*/SKILL.md` files and uses YAML frontmatter for configuration. <!-- ASSUMPTION: Router discovery mechanism -->
+- The host plugin system (Claude Code, Codex CLI) discovers the router by scanning `skills/*/SKILL.md` files and uses YAML frontmatter for configuration. <!-- ASSUMPTION: Router discovery mechanism -->
 - The WORKFLOW.md `context` field reliably enforces constitution reading before action execution. <!-- ASSUMPTION: Context enforcement -->
 No further assumptions beyond those marked above.

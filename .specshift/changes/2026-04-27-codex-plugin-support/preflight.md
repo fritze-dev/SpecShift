@@ -113,3 +113,86 @@ All other specs in `docs/specs/` have `status: stable` and are not affected by D
 - Info: 0
 
 All seven dimensions (A–G) and Draft Spec Validation (H) pass cleanly. Proceed to test generation.
+
+---
+
+## Pre-Flight Re-Run (2026-04-27 — Scope Extension)
+
+The original change was reopened to fold five extension items into the existing artifacts (see `proposal.md` "Scope Extension"). Re-running A–G against the extended scope.
+
+### A. Traceability Matrix (Extension)
+
+| Capability | Requirement | Spec Scenario(s) | Design Component |
+|---|---|---|---|
+| multi-target-distribution | Per-Target Plugin Manifest (revised) | Manifests authored at repo root; Codex schema fields; Claude schema preserved; Version mismatch corrected by compile | Repo-root `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`; `scripts/compile-skills.sh` Version-Stamp Block |
+| multi-target-distribution | Codex Marketplace Entry (revised) | Codex marketplace file generated; Codex marketplace version stamped; Independent updates | `src/marketplace/codex.json`; compile-script Marketplace Block |
+| multi-target-distribution | Bootstrap Single Source of Truth (revised) | agents.md contains full content; claude.md is the import-stub template (manual copy); Update touches only agents.md; Both are Smart Templates | `src/templates/agents.md`; `src/templates/claude.md` (manual-copy stub) |
+| multi-target-distribution | Agnostic Skill Body (NEW) | Source has no Claude-specific environment variables; Compiled skill tree is the same for both targets; Product names appear only where target-scoped | Source agnostic-pass over `src/skills/specshift/SKILL.md`, `src/templates/`, action specs; compile script emits one shared tree |
+| release-workflow | Auto Patch Version Bump (revised) | Successful auto-bump after change completion (manifests-at-root variant) | `scripts/compile-skills.sh` Version-Stamp Block |
+| release-workflow | Version Sync Between Plugin Files (revised) | Files already in sync; Files out of sync (4-file matrix) | Compile-script jq stamping |
+| release-workflow | Manual Minor and Major Release Process (revised) | Manual minor release via push (compile + push variant) | Maintainer workflow + compile script |
+| release-workflow | Source and Release Directory Structure (revised) | Source directory contains editable files; Manifests at root; Shared release directory contains generated files; Plugin root resolves to repo root for both targets | Repo layout invariants enforced by compile script |
+| release-workflow | Marketplace Source Configuration (revised) | Claude marketplace `source: "./"`; Codex `skills: "./skills/"`; Version detection via root manifest; Local developer marketplace | `.claude-plugin/marketplace.json`; `.codex-plugin/plugin.json` |
+| release-workflow | Repository Layout Separation (revised) | Layout separation across `src/`, root manifests, `./skills/`, `.agents/plugins/`, project files | Repo layout invariants |
+| release-workflow | AOT Skill Compilation (revised) | Finalize triggers AOT compilation (multi-target variant); Count validation detects missing requirements | `scripts/compile-skills.sh` Compile Loop |
+| release-workflow | Compiled Action File Contract (revised) | Compiled file contains only requirements (`./skills/specshift/actions/propose.md` path); Compiled file with no requirement links | Compile-script Output Block |
+| release-workflow | Dev Sync Script (revised) | Dev script builds shared release tree and stamps per-target manifests; Dev script run outside repo root; jq missing on dev machine | `scripts/compile-skills.sh` Preflight + Main Loop |
+| project-init | Bootstrap Files Generation (revised — Option A) | Fresh init generates only AGENTS.md; AGENTS.md exists, CLAUDE.md missing (no auto-create); CLAUDE.md exists, AGENTS.md missing; Both exist; AGENTS.md missing standard section; AGENTS.md includes project rules; User-maintained CLAUDE.md import directive resolves correctly | `src/templates/workflow.md` `## Action: init` instruction (new template-version); compiled init action |
+| project-init | Install Workflow / WORKFLOW.md Template / Template Merge on Re-Init (wording) | Existing scenarios revalidated with prose-based plugin-templates references | `src/templates/workflow.md`; spec wording |
+| review-lifecycle | (User Story phrasing only) | Existing scenarios unchanged | n/a |
+| three-layer-architecture | (Wording: host plugin system) | Existing scenarios unchanged | n/a |
+| documentation | (Translation rule lists Claude Code, Codex) | Existing scenarios unchanged | n/a |
+
+Traceability check: every revised requirement has at least one scenario; every scenario maps to a design component. ✓
+
+### B. Gap Analysis (Extension)
+
+- **Edge case: SKILL.md still references `${CLAUDE_PLUGIN_ROOT}` after the agnostic pass.** **Mitigation:** the apply step adds a grep-based check that fails the audit if `${CLAUDE_PLUGIN_ROOT}` appears in any compiled-into-skill file (covered by tests.md scenario "Source has no Claude-specific environment variables").
+- **Edge case: Codex manifest version drifts when maintainer hand-edits the root file.** **Mitigation:** compile script restamps from Claude source on every run (verified by audit re-run).
+- **Edge case: `./skills/` already exists in `.gitignore` of a consumer project that adopted the plugin earlier.** **Mitigation:** documented in spec edge cases ("`./skills/` gitignore conflict") with the resolution; we do not modify consumer gitignore from the plugin.
+- **Edge case: bootstrap behavior change confuses existing CLAUDE.md users.** Existing CLAUDE.md is preserved (as before). Only fresh init now skips CLAUDE.md generation. The migration scenario in the spec covers this. **Mitigation:** captured in design Risks; CHANGELOG entry will call this out.
+
+No critical gaps.
+
+### C. Side-Effect Analysis (Extension)
+
+- **Plugin manifest move (`src/.{claude,codex}-plugin/` → root):** Local developer marketplaces that registered the plugin path are unaffected (root layout is the same). The `cp src/.claude-plugin/plugin.json` step in the compile script becomes a no-op and is removed. **Verification:** post-compile, `git status` shows the deletion of the `src/.{claude,codex}-plugin/` source files and zero changes inside `.claude-plugin/plugin.json` (since it already exists at root from first-pass output). The Codex manifest at root grows new fields (enrichment), which is an expected diff.
+- **Source agnostic-pass over compiled-into-skill files:** changes to `docs/specs/project-init.md`, `release-workflow.md`, `multi-target-distribution.md`, `review-lifecycle.md`, `three-layer-architecture.md`, `documentation.md` change the compiled action files (`./skills/specshift/actions/*.md`). Compile script must re-run after spec edits.
+- **Bootstrap behavior change (Option A):** existing CLAUDE.md files in this project (the SpecShift repo itself) are unaffected — they exist and stay. Future `specshift init` runs in fresh consumer projects produce only AGENTS.md; documented in CHANGELOG.
+- **`src/actions/finalize.md` requirement-link additions:** compiled `./skills/specshift/actions/finalize.md` grows in size; verified by audit's count-extraction check.
+- **GitHub Action that auto-tags on version push:** still watches `.claude-plugin/plugin.json` (not `src/.claude-plugin/plugin.json`). The Action workflow file references the correct path or needs a one-line update — verified during apply.
+
+### D. Constitution Check (Extension)
+
+The CONSTITUTION's "Plugin source layout" convention currently says manifests live in `src/.claude-plugin/` and `src/.codex-plugin/`. The extension retires that and updates the convention to "manifests live hand-edited at the repo root". This is a single-line edit, no new pattern.
+
+No new architectural pattern beyond what is already in the multi-target-distribution spec.
+
+### E. Duplication & Consistency (Extension)
+
+- `release-workflow.md` and `multi-target-distribution.md` now both reference manifests-at-root and the shared skill tree. Each spec covers a distinct angle: `multi-target-distribution.md` defines the layout invariants and per-target metadata; `release-workflow.md` defines the lifecycle (version bump, sync, compile, manual release, consumer update). No duplication of normative content, but cross-cutting facts (manifest paths, version source of truth) appear in both — intentional for spec self-containment.
+- `project-init.md` Bootstrap Files Generation now references "the plugin's `templates/agents.md`" prose. No conflict with `multi-target-distribution.md` Bootstrap SSOT — the latter describes what the templates are; the former describes how init uses them.
+
+### F. Assumption Audit (Extension)
+
+New assumption added to `multi-target-distribution.md`: "Both Claude Code and Codex resolve plugin-bundled assets referenced in skill prose relative to the skill's installed location" — visible text present, **Acceptable Risk** (verified against Shopify-AI-Toolkit and openai/skills which both use this convention).
+
+All other extension assumptions are restatements of existing ones at the more concrete root-manifests location.
+
+### G. Review Marker Audit (Extension)
+
+Searched `proposal.md`, `design.md`, all touched specs (`project-init.md`, `release-workflow.md`, `multi-target-distribution.md`, `review-lifecycle.md`, `three-layer-architecture.md`, `documentation.md`) for `<!-- REVIEW -->` markers. Zero found. ✓
+
+### H. Draft Spec Validation (Extension)
+
+`docs/specs/multi-target-distribution.md` is now `status: stable, version: 2`. No new draft specs added. ✓
+
+### Extension Verdict
+
+**PASS**
+
+- Blockers: 0
+- Warnings: 0
+- Info: 0
+
+All dimensions pass cleanly for the extended scope. Proceed to test generation extension.

@@ -1,23 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# AOT Skill Compiler for SpecShift (multi-target).
-# Plugin root = ./ (repo root). Both manifests sit side-by-side at the root,
-# the shared skill tree lives at ./skills/specshift/, and the Codex marketplace
-# entry is emitted under .agents/plugins/.
+# AOT Skill Compiler for SpecShift (multi-target, agnostic).
+# Plugin root = ./ (repo root). Both target manifests are hand-edited at the root
+# (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`); the shared skill
+# tree compiles to ./skills/specshift/; the Codex marketplace entry is generated
+# at .agents/plugins/marketplace.json.
+#
+# This script does NOT copy plugin manifests from src/ — they live at the root.
+# It reads the version from .claude-plugin/plugin.json (the source of truth) and
+# stamps it into .codex-plugin/plugin.json and .agents/plugins/marketplace.json.
 #
 # Run from the repository root: bash scripts/compile-skills.sh
 
 SKILL_SRC="src/skills/specshift/SKILL.md"
 ACTIONS_SRC="src/actions"
-CLAUDE_PLUGIN_JSON="src/.claude-plugin/plugin.json"
-CODEX_PLUGIN_JSON="src/.codex-plugin/plugin.json"
 CODEX_MARKETPLACE_SRC="src/marketplace/codex.json"
+
 PLUGIN_ROOT="."
 SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
-CLAUDE_MANIFEST_DIR="$PLUGIN_ROOT/.claude-plugin"
-CODEX_MANIFEST_DIR="$PLUGIN_ROOT/.codex-plugin"
+CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
+CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
 CODEX_MARKETPLACE_DIR="$PLUGIN_ROOT/.agents/plugins"
+CODEX_MARKETPLACE="$CODEX_MARKETPLACE_DIR/marketplace.json"
 LEGACY_SKILL_DIR=".claude/skills"
 
 # --- Preflight ---
@@ -32,8 +37,13 @@ if [[ ! -d "$ACTIONS_SRC" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$CLAUDE_PLUGIN_JSON" ]]; then
-  echo "Error: $CLAUDE_PLUGIN_JSON not found." >&2
+if [[ ! -f "$CLAUDE_MANIFEST" ]]; then
+  echo "Error: $CLAUDE_MANIFEST not found (the Claude plugin manifest is the version source of truth and must be hand-edited at the repository root)." >&2
+  exit 1
+fi
+
+if [[ ! -f "$CODEX_MANIFEST" ]]; then
+  echo "Error: $CODEX_MANIFEST not found (the Codex plugin manifest must be hand-edited at the repository root)." >&2
   exit 1
 fi
 
@@ -82,27 +92,26 @@ else
   echo "Skipping template-version check (no main branch for comparison)."
 fi
 
-# --- Read plugin version (Claude manifest is the source of truth) ---
+# --- Read plugin version from the Claude manifest (source of truth) ---
 
-PLUGIN_VERSION=$(jq -r '.version // empty' "$CLAUDE_PLUGIN_JSON")
+PLUGIN_VERSION=$(jq -r '.version // empty' "$CLAUDE_MANIFEST")
 if [[ -z "$PLUGIN_VERSION" ]]; then
-  echo "Error: could not read .version from $CLAUDE_PLUGIN_JSON" >&2
+  echo "Error: could not read .version from $CLAUDE_MANIFEST" >&2
   exit 1
 fi
 
 # --- Clean previous build outputs ---
-# Note: .claude-plugin/marketplace.json is hand-maintained (not compiled),
-# so we only remove generated files inside .claude-plugin/, not the whole directory.
+# Plugin manifests are hand-edited at the root and SHALL NOT be removed.
+# Only generated outputs are cleaned: the shared skill tree, the Codex marketplace
+# directory, and any legacy compiled tree from the pre-multi-target layout.
 
-echo "Building release at $PLUGIN_ROOT/ ..."
+echo "Building release at $PLUGIN_ROOT/ (version: $PLUGIN_VERSION) ..."
 rm -rf "$SKILL_DIR"
-rm -f "$CLAUDE_MANIFEST_DIR/plugin.json"
-rm -rf "$CODEX_MANIFEST_DIR"
 rm -rf "$CODEX_MARKETPLACE_DIR"
 # Remove legacy compiled tree from the pre-multi-target layout, if present.
 rm -rf "$LEGACY_SKILL_DIR"
 
-# --- Copy shared skill tree ---
+# --- Copy shared skill tree (one tree, served to both targets) ---
 
 mkdir -p "$SKILL_DIR/actions"
 cp "$SKILL_SRC" "$SKILL_DIR/SKILL.md"
@@ -113,31 +122,31 @@ cp -r src/templates/ "$SKILL_DIR/templates/"
 sed -i "s/^plugin-version: \"\"$/plugin-version: $PLUGIN_VERSION/" "$SKILL_DIR/templates/workflow.md"
 echo "Stamped plugin-version: $PLUGIN_VERSION into compiled workflow template"
 
-# --- Emit Claude Code manifest ---
+# --- Stamp Codex manifest version (preserve all other fields) ---
 
-mkdir -p "$CLAUDE_MANIFEST_DIR"
-cp "$CLAUDE_PLUGIN_JSON" "$CLAUDE_MANIFEST_DIR/plugin.json"
-echo "Emitted Claude manifest at $CLAUDE_MANIFEST_DIR/plugin.json"
-
-# --- Emit Codex manifest (with version stamped from Claude source) ---
-
-if [[ -f "$CODEX_PLUGIN_JSON" ]]; then
-  mkdir -p "$CODEX_MANIFEST_DIR"
-  out="$CODEX_MANIFEST_DIR/plugin.json"
-  jq --arg v "$PLUGIN_VERSION" '.version = $v' "$CODEX_PLUGIN_JSON" > "$out.tmp" && mv "$out.tmp" "$out"
-  echo "Emitted Codex manifest at $out (version stamped: $PLUGIN_VERSION)"
+CODEX_CURRENT_VERSION=$(jq -r '.version // empty' "$CODEX_MANIFEST")
+if [[ "$CODEX_CURRENT_VERSION" != "$PLUGIN_VERSION" ]]; then
+  jq --arg v "$PLUGIN_VERSION" '.version = $v' "$CODEX_MANIFEST" > "$CODEX_MANIFEST.tmp" \
+    && mv "$CODEX_MANIFEST.tmp" "$CODEX_MANIFEST"
+  echo "Stamped Codex manifest version: $CODEX_CURRENT_VERSION → $PLUGIN_VERSION ($CODEX_MANIFEST)"
 else
-  echo "WARNING: $CODEX_PLUGIN_JSON not found — skipping Codex manifest" >&2
-  ((warnings++)) || true
+  echo "Codex manifest version already at $PLUGIN_VERSION ($CODEX_MANIFEST)"
+fi
+
+# Cross-check: emitted Codex manifest version must equal Claude source version.
+CODEX_STAMPED_VERSION=$(jq -r '.version // empty' "$CODEX_MANIFEST")
+if [[ "$CODEX_STAMPED_VERSION" != "$PLUGIN_VERSION" ]]; then
+  echo "Error: Codex manifest version ($CODEX_STAMPED_VERSION) does not match Claude source version ($PLUGIN_VERSION) after stamping." >&2
+  exit 1
 fi
 
 # --- Emit Codex marketplace entry ---
 
 if [[ -f "$CODEX_MARKETPLACE_SRC" ]]; then
   mkdir -p "$CODEX_MARKETPLACE_DIR"
-  out="$CODEX_MARKETPLACE_DIR/marketplace.json"
-  jq --arg v "$PLUGIN_VERSION" '(.plugins[] | .version) = $v' "$CODEX_MARKETPLACE_SRC" > "$out.tmp" && mv "$out.tmp" "$out"
-  echo "Emitted Codex marketplace at $out (version stamped: $PLUGIN_VERSION)"
+  jq --arg v "$PLUGIN_VERSION" '(.plugins[] | .version) = $v' "$CODEX_MARKETPLACE_SRC" \
+    > "$CODEX_MARKETPLACE.tmp" && mv "$CODEX_MARKETPLACE.tmp" "$CODEX_MARKETPLACE"
+  echo "Emitted Codex marketplace at $CODEX_MARKETPLACE (version stamped: $PLUGIN_VERSION)"
 else
   echo "WARNING: $CODEX_MARKETPLACE_SRC not found — skipping Codex marketplace" >&2
   ((warnings++)) || true
@@ -244,9 +253,9 @@ echo "Total requirements: $total_requirements"
 echo "Warnings: $warnings"
 echo "Plugin version: $PLUGIN_VERSION"
 echo "Outputs:"
-echo "  - $CLAUDE_MANIFEST_DIR/plugin.json (Claude Code)"
-echo "  - $CODEX_MANIFEST_DIR/plugin.json (Codex)"
-echo "  - $CODEX_MARKETPLACE_DIR/marketplace.json (Codex marketplace)"
+echo "  - $CLAUDE_MANIFEST (Claude Code, hand-edited; version: $PLUGIN_VERSION)"
+echo "  - $CODEX_MANIFEST (Codex, hand-edited + version-stamped: $PLUGIN_VERSION)"
+echo "  - $CODEX_MARKETPLACE (Codex marketplace, generated)"
 echo "  - $SKILL_DIR/ (shared skill tree)"
 echo ""
 

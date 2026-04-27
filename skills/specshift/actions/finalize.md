@@ -46,35 +46,36 @@ The post-apply workflow output SHALL include a "Next steps" section guiding the 
 
 ### Requirement: Auto Patch Version Bump
 
-The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/.claude-plugin/plugin.json` after a successful change completion. The convention SHALL also require syncing the `version` field in `.claude-plugin/marketplace.json` to match. The output SHALL display the new version.
+The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `.claude-plugin/plugin.json` (the Claude manifest at the repository root, treated as the version source of truth) after a successful change completion. The convention SHALL require the compile script to stamp the bumped Claude version into `.codex-plugin/plugin.json` and into `.agents/plugins/marketplace.json` so that all per-target manifests agree. The `version` field in the hand-edited `.claude-plugin/marketplace.json` SHALL be synced to match. The output SHALL display the new version.
 
-**User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed, so that consumers can detect updates without manual version bumps.
+**User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed and propagate to every per-target manifest, so that consumers on either Claude Code or Codex detect updates without manual version bumps.
 
 #### Scenario: Successful auto-bump after change completion
 
-- **GIVEN** a plugin project with `src/.claude-plugin/plugin.json` containing version `1.0.3`
-- **AND** `.claude-plugin/marketplace.json` containing version `1.0.3`
+- **GIVEN** a plugin project with `.claude-plugin/plugin.json` containing version `1.0.3`
+- **AND** `.codex-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.agents/plugins/marketplace.json` all containing version `1.0.3`
 - **AND** the constitution defines the post-completion auto-bump convention
 - **WHEN** the post-apply workflow runs for a completed change
-- **THEN** the system SHALL increment the patch version to `1.0.4` in `plugin.json`
-- **AND** SHALL update `marketplace.json` to version `1.0.4`
+- **THEN** the system SHALL increment the patch version to `1.0.4` in `.claude-plugin/plugin.json`
+- **AND** SHALL update `.claude-plugin/marketplace.json` to `1.0.4` and re-run the compile script
+- **AND** the compile script SHALL stamp `1.0.4` into `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
 - **AND** SHALL display the new version
 
 ### Requirement: Version Sync Between Plugin Files
 
-The `version` field in `.claude-plugin/marketplace.json` MUST always match the `version` field in `src/.claude-plugin/plugin.json`. The auto-bump convention SHALL update both files together. If they are found out of sync before bumping, the system SHALL sync them to the plugin.json version first, then apply the patch bump.
+The `version` field in `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` MUST always match the `version` field in `.claude-plugin/plugin.json`. The Claude plugin manifest is the version source of truth. The auto-bump convention SHALL update the Claude manifest and Claude marketplace together; the compile script SHALL stamp the same version into the Codex manifest and the Codex marketplace whenever it runs. If any of the four files are found out of sync before a bump, the system SHALL realign them to the Claude manifest version first, then apply the patch bump.
 
 #### Scenario: Files already in sync
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.3`
+- **GIVEN** all four versioned plugin files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`) are at `1.0.3`
 - **WHEN** the auto-bump runs
-- **THEN** both files SHALL be updated to `1.0.4`
+- **THEN** all four files SHALL be updated to `1.0.4`
 
 #### Scenario: Files out of sync
 
-- **GIVEN** `plugin.json` version is `1.0.3` and `marketplace.json` version is `1.0.0`
+- **GIVEN** the Claude manifest is at `1.0.3` and any of the Claude marketplace, Codex manifest, or Codex marketplace is at `1.0.0`
 - **WHEN** the auto-bump runs
-- **THEN** both files SHALL be bumped to `1.0.4` (based on plugin.json as source of truth)
+- **THEN** all four files SHALL be bumped to `1.0.4` (based on the Claude manifest as the source of truth)
 
 ### Requirement: Generate Enriched Capability Documentation
 The `specshift finalize` command SHALL generate user-facing documentation from the specs located in `docs/specs/<capability>.md`. The command SHALL produce one documentation file per capability, placed under `docs/capabilities/<capability>.md`. The agent SHALL read the capability doc template at `.specshift/templates/docs/capability.md` for the expected output format. Generated documentation SHALL use clear, user-facing language that explains what the capability does, how to use it, and what behavior to expect. Documentation SHALL NOT include implementation details, internal architecture references, or normative specification language (SHALL/MUST). The agent SHALL transform requirement descriptions into natural explanations, convert Gherkin scenarios into readable usage examples or behavioral descriptions, and organize content with appropriate headings. If a User Story is present in the spec, the agent SHALL use it to inform the documentation's framing and context. The `docs/capabilities/` directory SHALL be created if it does not exist.
@@ -453,7 +454,7 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 #### Scenario: Cleanup after successful local merge
 
-- **GIVEN** the agent is working inside a worktree at `.claude/worktrees/fix-auth` on branch `fix-auth`
+- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
 - **AND** the agent merges the PR which succeeds
 - **WHEN** the merge completes
 - **THEN** the system SHALL switch the working directory to the main worktree

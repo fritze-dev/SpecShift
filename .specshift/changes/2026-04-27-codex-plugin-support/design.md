@@ -152,6 +152,128 @@ skills/specshift/{SKILL.md, templates/, actions/}
    This is the same update flow they already use for any update.
 6. **Rollback strategy**: if a critical issue is found in the first 24 hours after merge, revert the merge commit. The Codex consumers (if any) lose access; Claude consumers stay on the previous version after one more `marketplace update`.
 
+## Design Extension (2026-04-27 — second pass)
+
+### Context (Extension)
+
+After PR-#45 self-review, three architectural drifts surfaced in the first-pass implementation:
+
+1. **Tool-specific tokens leak into the shared skill tree.** The compiled action files (`./skills/specshift/actions/*.md`) and templates carry `${CLAUDE_PLUGIN_ROOT}`, `Claude Code Web`, and `.claude/worktrees` — strings that only resolve under Claude Code. Codex skill bodies are model instruction text and have no equivalent of `${CLAUDE_PLUGIN_ROOT}` (verified against `developers.openai.com/codex/skills` and Shopify-AI-Toolkit). The first pass therefore ships a Claude-flavored skill body that Codex cannot resolve.
+
+2. **Plugin manifests live in `src/` for legacy reasons that no longer apply.** Pre-Shopify-flat, `.claude-plugin/plugin.json` was generated *into* the compiled `.claude/` tree, so the source of truth had to live elsewhere — `src/.claude-plugin/`. Post-migration, both manifests live at the repository root as final artifacts. `src/.claude-plugin/` and `src/.codex-plugin/` are pure indirection: edit `src/...` → run compile → see at root. `marketplace.json` is already hand-edited at the root; manifests should follow.
+
+3. **`release-workflow.md` spec describes a single-target world.** Pre-existing requirements still reference `.claude/skills/specshift/`, `${CLAUDE_PLUGIN_ROOT}`, `source: "./.claude"`, and a single plugin.json copy. `src/actions/finalize.md` carries no Codex-aware requirement links, so the compiled finalize action under `./skills/specshift/actions/finalize.md` ships without multi-target context.
+
+These are all wording or structural issues, not behavioral. The extension fixes them in the running change rather than deferring to a follow-up.
+
+### Architecture (Extension)
+
+**Source layout after extension** (deltas vs. first-pass):
+
+```
+src/
+├── .claude-plugin/                 (REMOVED — manifest moves to repo root)
+├── .codex-plugin/                  (REMOVED — manifest moves to repo root)
+├── skills/specshift/SKILL.md       (existing — verified agnostic)
+├── actions/                        (existing; finalize.md gets new links)
+├── templates/                      (existing; agnostic-pass over compiled-into-skill files)
+└── marketplace/codex.json          (existing)
+
+.claude-plugin/
+├── plugin.json                     (NEW location — moved from src/)
+└── marketplace.json                (existing — hand-edited at root)
+
+.codex-plugin/
+└── plugin.json                     (NEW location — moved from src/, enriched)
+
+./skills/specshift/                 (compiled, agnostic, served to both targets)
+.agents/plugins/marketplace.json    (compiled)
+```
+
+**Compile script (`scripts/compile-skills.sh`) deltas**:
+
+- Drop `cp src/.claude-plugin/plugin.json .claude-plugin/plugin.json` — manifest is hand-edited at root.
+- Drop `src/.codex-plugin/` source path; read `.codex-plugin/plugin.json` directly at root, stamp version in place via `jq`.
+- Read version from `.claude-plugin/plugin.json` at root (was `src/.claude-plugin/plugin.json`).
+- Drop any per-target rewrite functions — single shared compile output.
+- Add validation: emitted Codex manifest version must equal Claude manifest version after stamping.
+
+**Codex manifest schema after enrichment** (`.codex-plugin/plugin.json`):
+
+```json
+{
+  "name": "specshift",
+  "version": "0.2.5-beta",
+  "description": "...",
+  "author": { "name": "fritze.dev", "url": "https://github.com/fritze-dev" },
+  "homepage": "https://github.com/fritze-dev/specshift",
+  "repository": "https://github.com/fritze-dev/specshift",
+  "license": "MIT",
+  "keywords": ["spec-driven", "documentation", "workflow", "bdd", "gherkin", "codex"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SpecShift",
+    "shortDescription": "...",
+    "longDescription": "...",
+    "developerName": "fritze.dev",
+    "category": "Coding",
+    "capabilities": ["Read", "Edit", "Write", "Bash"],
+    "websiteURL": "https://github.com/fritze-dev/specshift",
+    "defaultPrompt": [
+      "Initialize SpecShift in this repository.",
+      "Use SpecShift to propose a new change.",
+      "Apply the active SpecShift change."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
+```
+
+**Bootstrap behavior change (Option A)**: `specshift init` no longer auto-generates `CLAUDE.md`. Fresh init writes only `AGENTS.md`. The `claude.md` Smart Template stays in the plugin payload so users can copy it manually. Existing `CLAUDE.md` files are inspected with WARNING-only standard-sections checks but never modified.
+
+**Spec deltas**:
+
+- `docs/specs/multi-target-distribution.md` — manifests-at-root requirement, agnostic-skill-body requirement, bootstrap-pattern wording (claude.md no longer auto-generated), version bump 1 → 2.
+- `docs/specs/release-workflow.md` — Auto Patch Version Bump / Version Sync / Manual Release / Source-and-Release-Directory-Structure / Marketplace Source Configuration / AOT Skill Compilation / Compiled Action File Contract / Repository Layout Separation / Dev Sync Script — all rewritten to describe the multi-target reality with manifests at repo root, shared `./skills/specshift/` tree, and `jq`-based version stamping. Version bump 3 → 4.
+- `docs/specs/project-init.md` — `${CLAUDE_PLUGIN_ROOT}/templates/...` → "the plugin's `templates/` directory" prose; Bootstrap Files Generation requirement rewritten for fresh-init-AGENTS-only behavior; `Purpose` updated. Version bump 6 → 7.
+- `docs/specs/review-lifecycle.md` — User Story phrasing generalized from "Claude Code Web" to "ephemeral / stateless agent sessions". (No version bump — wording-only in a non-template doc.)
+- `docs/specs/three-layer-architecture.md` — "Claude Code plugin system" → "the host plugin system (Claude Code, Codex CLI)". (No version bump.)
+- `docs/specs/documentation.md` — translation rule lists both product names. (No version bump.)
+
+`src/actions/finalize.md` — add Codex-aware requirement links (Source and Release Directory Structure, Marketplace Source Configuration, AOT Skill Compilation, Compiled Action File Contract, Dev Sync Script) so the compiled `./skills/specshift/actions/finalize.md` carries the multi-target requirement set.
+
+### Decisions (Extension)
+
+| Decision | Rationale | Alternatives |
+|----------|-----------|--------------|
+| Make the source skill body agnostic; emit a single shared compiled tree for both targets | Codex has no `${CLAUDE_PLUGIN_ROOT}` equivalent (verified). Bare relative paths and prose work in both runtimes (Shopify and openai/skills both use this convention). One artifact = no per-target divergence at runtime, no rewrite passes to maintain. | (a) Compile-time per-target rewrite (PR-44 approach: `write_codex_skill`, `rewrite_codex_file`) — adds two emit paths and a substitution maintenance burden for every new tool-specific token. (b) Two skill trees emitted side-by-side — disk duplication, double-compile cost. |
+| Move plugin manifests from `src/` to the repo root, hand-edited | Post-Shopify-flat, root *is* the plugin root for both targets. `marketplace.json` is already hand-edited at root; making `plugin.json` follow eliminates a dead `cp` step in the compiler and removes an indirection that confuses contributors. Compiler reduces to: read root manifest version → stamp Codex outputs. | Keep in `src/`, copy in compiler — preserves consistency with "everything under `src/` is hand-edited", but adds friction for no behavioral benefit. |
+| Enrich `.codex-plugin/plugin.json` with `author`, `repository`, `license`, `keywords` (agnostic parity with Claude) plus Codex-UI-specific fields | Codex `/plugins` UI uses `longDescription`, `defaultPrompt`, `brandColor`, `screenshots` for discoverability. Agnostic fields keep manifests symmetric and let consumers see consistent metadata regardless of runtime. | Stay minimal — leaves Codex listing barren and harder to discover. |
+| Align `release-workflow.md` to multi-target reality and link Codex-relevant requirements from `src/actions/finalize.md` | The spec is the source from which `finalize.md` is compiled; if it stays single-target, Codex consumers receive a finalize action that does not describe their world. | Keep `release-workflow.md` Claude-only and document multi-target only in `multi-target-distribution.md` — leaves spec-drift between the two specs and means `finalize.md` never reflects the multi-target reality. |
+| Fresh init writes only AGENTS.md (Option A); CLAUDE.md is opt-in via the still-shipped `claude.md` template | Minimal footprint, no stub forced onto Codex-only or agnostic projects. CLAUDE.md is one line — users who want it know what to do. Existing CLAUDE.md files are still detected on re-init with WARNING-only standard-section checks. | (B) Fresh-init writes both — first-pass behavior; over-eager and creates a stub on every consumer. (C) Auto-detect environment and pick which file to write — env detection was already declared out of scope. |
+| Stamp Codex manifest version via `jq` updates anchored on `.version` (instead of `cp` from a source manifest) | The Codex manifest at root is hand-edited and contains additional fields (UI metadata) that source-copy would clobber. `jq -r '.version' | jq '.version = $v'` is a precise, drift-free in-place edit. | (a) Source-copy from `src/.codex-plugin/plugin.json` — re-introduces the indirection we just removed. (b) `sed` global substitution — may match nested `version` fields in unrelated objects. |
+
+### Risks & Trade-offs (Extension)
+
+- **Manifest field drift between Claude and Codex.** Both manifests now live at the root and are hand-edited. Agnostic fields like `author`, `repository`, `license`, `keywords` could drift between targets if a maintainer updates one without the other. **Mitigation:** the audit step verifies parity manually; the compile script enforces only `version` parity. A future enhancement could add a CI check.
+- **Existing CLAUDE.md projects expect auto-generation.** A consumer that previously ran `specshift init` on a stale CLAUDE.md and expected it to be regenerated will now see a WARNING but no rewrite. **Mitigation:** documented in the migration scenario; consumers can manually delete CLAUDE.md to opt back in to a clean re-bootstrap (which still writes only AGENTS.md, leaving them to re-add CLAUDE.md if desired).
+- **Source-of-truth ambiguity for the version field.** Two files now store the version (`.claude-plugin/plugin.json` is canonical, `.codex-plugin/plugin.json` derives). A maintainer who edits the Codex manifest version directly will see it stamped back to the Claude version on next compile. **Mitigation:** documented; the compile script reports the version it stamps; the constitution names `.claude-plugin/plugin.json` as the source of truth.
+- **Tool-agnostic phrasing may obscure runtime-specific details.** Generalizing "Claude Code Web" to "ephemeral agent sessions" loses the specific product context for Claude consumers reading the spec. **Mitigation:** the User Story is illustrative, not normative; the requirement body uses concrete terms where needed.
+
+### Migration Plan (Extension)
+
+1. **Edit specs and source files** (no implementation yet) — proposal/spec/design/preflight/tests/tasks first, then code.
+2. **Move plugin manifests from `src/` to root** — `git mv src/.claude-plugin/plugin.json .claude-plugin/plugin.json` (already at root from first pass — verify; remove the `src/` copy). Same for Codex.
+3. **Enrich Codex manifest** — add agnostic + UI fields.
+4. **Agnostic-pass over source skill body** — replace `${CLAUDE_PLUGIN_ROOT}`, `Claude Code Web`, `.claude/worktrees` (in compiled-into-skill files) with prose / configured patterns / agnostic terms.
+5. **Update `src/actions/finalize.md`** — add Codex-aware requirement links.
+6. **Update `src/templates/workflow.md` `## Action: init` instruction** — fresh-init AGENTS-only.
+7. **Simplify `scripts/compile-skills.sh`** — drop manifest `cp`s, read version from root, stamp via `jq`, single shared output.
+8. **Update CONSTITUTION.md, AGENTS.md (project-level), README.md** — reflect manifest-at-root and agnostic phrasing.
+9. **Sync `.specshift/WORKFLOW.md`** from updated `src/templates/workflow.md`.
+10. **Run compile, audit, fix-loop, finalize-chain.**
+
 ## Open Questions
 
 No open questions — all design decisions have been made based on verified Shopify and Codex documentation.

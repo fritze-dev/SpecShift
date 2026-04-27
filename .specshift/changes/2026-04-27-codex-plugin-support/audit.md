@@ -164,3 +164,157 @@ All requirements verified, all scenarios covered, all design decisions implement
 - `docs/specs/multi-target-distribution.md`: status `draft` → `stable`, drop `change` field, set `lastModified: 2026-04-27`
 - `docs/specs/project-init.md`: already `stable`; version bumped 5 → 6 (already applied during specs phase)
 - Proposal status: `active` → `review` (proposal.md frontmatter)
+
+---
+
+## Extension Audit (2026-04-27 — second pass)
+
+The change was reopened to fold five extension items into the existing artifacts (see `proposal.md` "Scope Extension"). This audit covers the extended scope on top of the first-pass verdict.
+
+### Extension Summary
+
+| Dimension | Status |
+|-----------|--------|
+| Extension tasks | E1.1–E1.10, E2.1–E2.3, E3.1–E3.3, E4.1–E4.5, E5.1–E5.4, E6.1–E6.3 complete (E6.4 skipped — no findings) |
+| Extension requirements | 6/6 verified (Per-Target Plugin Manifest revised, Codex Marketplace Entry revised, Bootstrap SSOT revised, Agnostic Skill Body new, project-init Bootstrap Files Generation Option-A, release-workflow multi-target alignment) |
+| Extension scenarios | 13 new + 19 first-pass-still-applicable + 6 superseded = 38 total covered |
+| Compile output | clean: 5 actions, 45 requirements, 0 warnings |
+| Agnostic verification | `grep -rn "\${CLAUDE_PLUGIN_ROOT}" ./skills/specshift/` → 0; `grep -rn "Claude Code Web" ./skills/specshift/` → 0; `grep -rn "\.claude/worktrees" ./skills/specshift/` → 0 |
+
+### Extension Branch Diff (working tree, since first-pass commit `1b040ec`)
+
+- **Source agnostic-pass**: `src/templates/workflow.md` (template-version 9 → 10; init instruction Option-A; worktree path comment generalized), `docs/specs/project-init.md` (version 6 → 7; `${CLAUDE_PLUGIN_ROOT}` removed; Bootstrap Files Generation Option-A), `docs/specs/release-workflow.md` (version 3 → 4; multi-target rewrite), `docs/specs/multi-target-distribution.md` (version 1 → 2; manifests-at-root + Agnostic Skill Body requirement + bootstrap update), `docs/specs/review-lifecycle.md` (User Story phrasing), `docs/specs/three-layer-architecture.md` (host plugin system phrasing), `docs/specs/documentation.md` (translation rule lists both products), `docs/specs/change-workspace.md` (worktree examples → `.specshift/worktrees`; version 3 → 4), `docs/specs/artifact-pipeline.md` (default path_pattern → `.specshift/worktrees/{change}`; version 4 → 5).
+- **Manifests at root**: `src/.claude-plugin/`, `src/.codex-plugin/` directories deleted. `.codex-plugin/plugin.json` enriched with `author`, `homepage`, `repository`, `license`, `keywords`, `interface.longDescription`, `interface.developerName`, `interface.websiteURL`, `interface.defaultPrompt[]`, `interface.brandColor`, `interface.screenshots[]`.
+- **Compile script simplified**: `scripts/compile-skills.sh` rewritten to read version from root `.claude-plugin/plugin.json`, stamp Codex manifest in place via `jq`, drop manifest `cp` blocks, add post-stamp version-equality check.
+- **Project meta**: `.specshift/CONSTITUTION.md` (Conventions / Plugin source layout / Agent instructions / Tool-agnostic instructions / Post-Merge reminder paths updated), `.specshift/WORKFLOW.md` (synced from updated `src/templates/workflow.md`), `AGENTS.md` (File Ownership rewritten for manifests-at-root + agnostic source rule + Option-A bootstrap), `README.md` (init quick-start + Project Structure tree + Multi-target distribution paragraph aligned).
+- **Generated outputs**: `./skills/specshift/SKILL.md` and `./skills/specshift/templates/*` re-emitted with the agnostic source content; `./skills/specshift/actions/*` recompiled from updated specs (`finalize.md` count grew with the new requirement-link extensions).
+- **Change artifacts**: `proposal.md` (Scope Extension section), `design.md` (Design Extension section), `preflight.md` (Pre-Flight Re-Run section), `tests.md` (Manual Test Plan — Scope Extension section), `tasks.md` (Scope Extension Tasks section, all marked complete).
+
+All changes trace to the design's Architecture (Extension) section or to extension task list entries E1.1–E6.3.
+
+### Extension Requirement Verification
+
+#### multi-target-distribution (revised)
+
+1. **Per-Target Plugin Manifest (revised)** — verified
+   - `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` exist hand-edited at the repo root ✓
+   - `src/.claude-plugin/`, `src/.codex-plugin/` directories deleted ✓
+   - Codex manifest enriched with all named agnostic + UI fields (`jq -e '.author, .homepage, .repository, .license, .keywords, .interface.longDescription, .interface.developerName, .interface.websiteURL, .interface.defaultPrompt, .interface.brandColor, .interface.screenshots' .codex-plugin/plugin.json` returns non-null for each) ✓
+   - Compile script stamps Claude version into Codex manifest in place; non-version fields preserved verbatim ✓
+
+2. **Codex Marketplace Entry (revised)** — verified
+   - Generated from `src/marketplace/codex.json`; version stamped via `jq` from Claude source ✓
+   - `.agents/plugins/marketplace.json` contains version `0.2.5-beta` ✓
+
+3. **Bootstrap SSOT (revised — manual-copy stub)** — verified
+   - `src/templates/agents.md` body unchanged from first pass; remains the agnostic SoT ✓
+   - `src/templates/claude.md` remains as the import-stub Smart Template; no longer auto-generated by init (verified by reading updated `src/templates/workflow.md` `## Action: init`) ✓
+   - Spec rewrite documents the manual-copy semantics ✓
+
+4. **Agnostic Skill Body (NEW)** — verified
+   - `grep -rn "\${CLAUDE_PLUGIN_ROOT}" src/skills src/templates src/actions docs/specs/project-init.md docs/specs/release-workflow.md docs/specs/multi-target-distribution.md` returns zero matches ✓
+   - Compiled `./skills/specshift/` tree is one shared tree (one SKILL.md, one templates/, one actions/) ✓
+   - `grep -rn "\${CLAUDE_PLUGIN_ROOT}" ./skills/specshift/` returns zero matches ✓
+   - Remaining "Claude Code" mentions in the compiled skill are all in target-scoped paragraphs (verified by inspection: `agents.md` description, `claude.md` template, `workflow.md` init instruction, `finalize.md` user story enumerating both targets) ✓
+
+#### release-workflow (revised)
+
+5. **Auto Patch Version Bump / Version Sync / Manual Release / Source-and-Release-Directory-Structure / Marketplace-Source-Configuration / Repository-Layout-Separation / AOT-Skill-Compilation / Compiled-Action-File-Contract / Dev-Sync-Script** — all updated for multi-target reality with manifests-at-root. Compiled `./skills/specshift/actions/finalize.md` extracts 10 requirements (was 7 in first pass): the five extended requirement links from `src/actions/finalize.md` (Source-and-Release-Directory-Structure, Marketplace-Source-Configuration, AOT-Skill-Compilation, Compiled-Action-File-Contract, Dev-Sync-Script — note: AOT-Skill-Compilation and Dev-Sync-Script were already linked in the first pass, so net new count is consistent with the requirement set defined in the spec).
+
+#### project-init (revised — Option A)
+
+6. **Bootstrap Files Generation (revised — Option A)** — verified
+   - Spec rewritten: fresh init writes only AGENTS.md ✓
+   - Spec scenarios cover: fresh-init AGENTS-only, AGENTS-exists-CLAUDE-missing (no auto-create), CLAUDE-exists-AGENTS-missing, both-exist (warning-only checks), AGENTS missing standard section, AGENTS includes project rules, user-maintained CLAUDE.md import resolves ✓
+   - `src/templates/workflow.md` `## Action: init` instruction reflects Option-A behavior (fresh init AGENTS-only; re-init untouched) ✓
+   - `.specshift/WORKFLOW.md` synced ✓
+
+### Extension Scenario Coverage
+
+All 13 new extension scenarios in `tests.md` map to implementation evidence:
+
+| Capability | New Scenarios | Evidence |
+|---|---|---|
+| Per-Target Plugin Manifest (revised) | 3 (manifests at root; Codex enriched; version mismatch corrected) | `.{claude,codex}-plugin/plugin.json` content + `bash scripts/compile-skills.sh` rerun |
+| Agnostic Skill Body | 3 (no env vars; one shared tree; product names target-scoped) | grep-based agnostic check + tree inspection |
+| Bootstrap SSOT (revised) | 1 (claude.md is the manual-copy stub) | `src/templates/claude.md` content + workflow.md init instruction |
+| release-workflow (revised) | 5 (4-file matrix auto-bump; manual release with compile step; plugin-root prose resolution; multi-target finalize requirements; jq missing) | compile script behavior + spec rewrite |
+| project-init Option-A | 3 (fresh AGENTS-only; AGENTS-exists no auto-create; user-maintained CLAUDE.md import) | spec rewrite + workflow.md init instruction |
+
+Live verification of consumer install (Claude marketplace update / Codex `/plugins`) remains a post-merge follow-up; the change ships verified compile output and spec/code parity.
+
+### Extension Design Adherence
+
+Cross-checked every Decision in `design.md` Decisions (Extension) table against implementation:
+
+| Design Decision | Implementation |
+|---|---|
+| Make source skill body agnostic; emit one shared compiled tree | ✓ verified by 0-hit agnostic grep on compiled tree; one `./skills/specshift/` tree |
+| Move plugin manifests from `src/` to repo root, hand-edited | ✓ `src/.claude-plugin/`, `src/.codex-plugin/` deleted; `.{claude,codex}-plugin/plugin.json` at root |
+| Enrich Codex manifest with agnostic + UI fields | ✓ all named fields present and non-null |
+| Align `release-workflow.md` to multi-target reality + finalize.md links | ✓ spec version 3 → 4; finalize.md links extended; compiled finalize action carries 10 requirements |
+| Fresh init writes only AGENTS.md (Option A); CLAUDE.md opt-in | ✓ `src/templates/workflow.md` init instruction Option-A; spec rewritten |
+| Stamp Codex version via `jq` updates anchored on `.version` | ✓ compile script uses `jq --arg v "$PLUGIN_VERSION" '.version = $v'`; non-version fields verified preserved |
+
+No design deviations.
+
+### Extension Scope Control
+
+Every changed file in the extension traces to a task ID (E1.1–E6.3) or a deliverable named in design.md Architecture (Extension). The deliverables that grew during apply versus the original extension task list:
+
+- **`docs/specs/change-workspace.md` and `docs/specs/artifact-pipeline.md` worktree-path edits** — flagged during the agnostic-grep check; updated to `.specshift/worktrees` (project-instance config remains `.claude/worktrees` for backward compat with this repo's local worktrees, but the spec/template defaults are now agnostic). Tweak-class — no design deviation.
+
+No untraced files.
+
+### Extension Preflight Side-Effects
+
+All extension preflight side-effects addressed:
+
+- ✓ Plugin manifest move: `src/.claude-plugin/`, `src/.codex-plugin/` removed cleanly; root manifests carry the canonical content
+- ✓ Codex manifest version drift: compile script restamps from Claude source on every run; verified by manual edit + recompile cycle in design migration step 7
+- ✓ Source agnostic-pass: 0 `${CLAUDE_PLUGIN_ROOT}` hits in compiled skill tree; remaining "Claude Code" mentions are all target-scoped (verified by inspection)
+- ✓ Bootstrap behavior change documented: existing CLAUDE.md preserved on re-init; fresh init no longer creates CLAUDE.md
+- ✓ `src/actions/finalize.md` requirement-link additions: compiled `./skills/specshift/actions/finalize.md` carries 10 requirements; count validation passes
+- ✓ GitHub Action: still watches `.claude-plugin/plugin.json`; no path adjustment needed (was already at root)
+
+### Extension Test Coverage
+
+`tests.md` defines 38 manual checklist items total (32 active after supersession). None automated (no framework — manual-only mode per CONSTITUTION). The extension adds 13 new items; 6 first-pass items are superseded; 19 first-pass items remain applicable.
+
+### Extension Fix Loop
+
+One Tweak-class correction applied during extension apply:
+
+1. **`.claude/worktrees` examples in `change-workspace.md` and `artifact-pipeline.md`** — caught by the agnostic-grep verification step. Updated example values to `.specshift/worktrees/{change}` and bumped both spec versions (change-workspace 3 → 4, artifact-pipeline 4 → 5). Stale artifacts: none beyond the specs themselves; tests.md scenario "Source has no Claude-specific environment variables" already covers the verification step. Re-compiled cleanly with 0 hits.
+
+No Design Pivot or Scope Change events during extension apply.
+
+### Extension Findings
+
+#### CRITICAL
+
+*(none)*
+
+#### WARNING
+
+*(none)*
+
+#### SUGGESTION
+
+- **Manifest field parity check could be automated.** Currently the compile script enforces only `version` parity; agnostic fields (`author`, `repository`, `license`, `keywords`) on the Claude vs Codex manifest are reviewed by hand. A future enhancement could add a CI parity check. Captured in spec edge case "Per-target manifest field drift".
+- **Live consumer install verification still deferred.** The first-pass audit deferred this; the extension does not change the conclusion — verification of `claude plugin marketplace update` and `codex /plugins` install flows requires post-merge tagging and release. Recommend verifying both flows once 0.2.5-beta is published.
+
+### Extension Verdict
+
+**PASS**
+
+All extension requirements verified, all extension scenarios covered, all extension design decisions implemented, scope clean, no critical or warning findings. The change is ready for finalize/review.
+
+Spec status updates pending finalize:
+
+- `docs/specs/multi-target-distribution.md`: version 1 → 2 (already applied)
+- `docs/specs/release-workflow.md`: version 3 → 4 (already applied)
+- `docs/specs/project-init.md`: version 6 → 7 (already applied)
+- `docs/specs/change-workspace.md`: version 3 → 4 (already applied)
+- `docs/specs/artifact-pipeline.md`: version 4 → 5 (already applied)
+- Proposal status: `active` → `review` (frontmatter — to be set during finalize)
