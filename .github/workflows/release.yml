@@ -18,6 +18,39 @@ jobs:
           VERSION=$(tr -d '[:space:]' < src/VERSION)
           echo "Detected version: ${VERSION}"
 
+          # Cross-check: every per-target manifest/marketplace at the repo root
+          # MUST already declare the same version as src/VERSION. The maintainer
+          # is expected to run bash scripts/compile-skills.sh before pushing the
+          # version bump, which stamps src/VERSION into all four files. If they
+          # forgot, fail loudly here rather than publishing a tag for a version
+          # the manifests do not actually carry.
+          MISMATCH=0
+          for entry in \
+            ".claude-plugin/plugin.json|.version|Claude manifest" \
+            ".claude-plugin/marketplace.json|.plugins[0].version|Claude marketplace" \
+            ".codex-plugin/plugin.json|.version|Codex manifest" \
+            ".agents/plugins/marketplace.json|.plugins[0].version|Codex marketplace"; do
+            file="${entry%%|*}"
+            rest="${entry#*|}"
+            jq_path="${rest%%|*}"
+            label="${rest#*|}"
+            if [ ! -f "$file" ]; then
+              echo "Error: $file not found ($label)" >&2
+              MISMATCH=1
+              continue
+            fi
+            stamped=$(jq -r "$jq_path // empty" "$file")
+            if [ "$stamped" != "$VERSION" ]; then
+              echo "Error: $label at $file declares version '$stamped', expected '$VERSION' (from src/VERSION)" >&2
+              echo "Maintainer: run 'bash scripts/compile-skills.sh' to stamp src/VERSION into all four root files, then push." >&2
+              MISMATCH=1
+            fi
+          done
+          if [ "$MISMATCH" -ne 0 ]; then
+            exit 1
+          fi
+          echo "Version cross-check passed: src/VERSION and all four root manifest/marketplace files agree on $VERSION."
+
           # Skip if tag already exists
           if git ls-remote --tags origin | grep -q "refs/tags/v${VERSION}$"; then
             echo "Tag v${VERSION} already exists, skipping"

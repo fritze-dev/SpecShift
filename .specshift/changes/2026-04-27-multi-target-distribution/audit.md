@@ -110,3 +110,58 @@ No untraced files. Scope clean.
 ### Verdict
 
 **PASS** — proceed to `specshift finalize` (auto-dispatched per `auto_approve: true`).
+
+---
+
+## Audit Fix Loop (Pass 2 — Review-Driven)
+
+### Trigger
+
+PR #46 received Copilot automated review (5 comments, all wording/scope around `jq`'s preservation guarantees and the `LEGACY_SKILL_DIR` rm-rf scope) and a follow-up self-review pass that surfaced four additional findings (1 HIGH, 2 MEDIUM, 2 LOW) plus a recommendation to verify the Codex `skills` path interpretation against the Shopify-AI-Toolkit reference.
+
+### Findings Resolved
+
+#### Pass-2 #1 — Copilot review batch (5 comments, Tweak class)
+
+Addressed in commit `b2fac81`. Wording adjusted across `scripts/compile-skills.sh`, `docs/specs/multi-target-distribution.md` (v1 → v2), `docs/decisions/adr-003-shopify-flat-multi-target-distribution.md`, and cascaded cleanup in `.specshift/CONSTITUTION.md`, `AGENTS.md`, `README.md`, `proposal.md`, capability docs (`multi-target-distribution.md`, `release-workflow.md`), `design.md`, `tests.md`. `LEGACY_SKILL_DIR` narrowed from `.claude/skills` to `.claude/skills/specshift`. All 5 review threads marked resolved. **PASS.**
+
+#### Pass-2 #2 — Self-review HIGH: Codex `skills` path interpretation (RESOLVED via Shopify reference)
+
+`gh api repos/Shopify/Shopify-AI-Toolkit/contents/.codex-plugin/plugin.json` confirms the Shopify pattern uses `"skills": "./skills/"` paired with `skills/` at the **repo root** (not under `.codex-plugin/`). This matches our layout exactly: `.codex-plugin/plugin.json` declares `"skills": "./skills/"` and the compiled tree lives at `./skills/specshift/` at the repo root. Interpretation (b) from the self-review is correct — the `skills` field resolves relative to the plugin install root (= repo root), not the manifest's directory. **No code change required.** Audit's lone SUGGESTION about live install verification narrows to: smoke-test on a real Codex session as a follow-up, but the path resolution is verified against the gold-standard reference. **PASS.**
+
+#### Pass-2 #3 — New observation from Shopify abgleich: `.agents/plugins/marketplace.json` not in Shopify repo
+
+`gh api repos/Shopify/Shopify-AI-Toolkit/contents/.agents/plugins/marketplace.json` returns `404 Not Found`. Shopify ships the plugin without an `.agents/plugins/marketplace.json` file. Two interpretations:
+
+- **(a)** Shopify is a marketplace-listed plugin, so the marketplace registry is hosted elsewhere (centralized OpenAI registry) — `.agents/plugins/marketplace.json` is for marketplace-aggregator repos that list other plugins, not for individual plugin repos.
+- **(b)** Shopify just doesn't bother with this file; the plugin is installable by direct path (`codex /plugins add github:Shopify/Shopify-AI-Toolkit`).
+
+Our `.agents/plugins/marketplace.json` was added based on a documentation-interpretation in `research.md`, not against verified upstream behavior. It does not break anything (worst case: ignored), and it does provide a self-describing entry that consumers can point at. **Decision: keep the file for now**, document this as a SUGGESTION (revisit if the file turns out to cause confusion or if Codex updates its discovery model). Add a follow-up issue to verify on a real Codex install whether the file is read or ignored. **PASS with SUGGESTION.**
+
+#### Pass-2 #4 — Self-review MEDIUM: `release.yml` trusts manifests are pre-stamped (FIXED)
+
+`.github/workflows/release.yml` now runs a four-file cross-check before tag/release creation: reads `.version` (manifests) and `.plugins[0].version` (marketplaces) from each of the four root files via `jq`, compares each to `src/VERSION`, fails the workflow with a descriptive error naming the offending file if any mismatch. The error message tells the maintainer to run `bash scripts/compile-skills.sh` and re-push. Closes the foot-gun where a bare `src/VERSION` push would publish a tag with stale manifests. **PASS.**
+
+#### Pass-2 #5 — Self-review MEDIUM: `src/VERSION` SemVer not validated (FIXED)
+
+`scripts/compile-skills.sh` now validates `PLUGIN_VERSION` against the SemVer 2.0 regex (`^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$`) after the empty-line check. Negative-path tested: `src/VERSION = "0..2.5"` fails the build with a descriptive error before any stamping; `src/VERSION = "0.2.5-beta"` passes. **PASS.**
+
+#### Pass-2 #6 — Self-review LOW: CHANGELOG BREAKING-note placement + release.yml sed pipeline robustness
+
+Both filed as GitHub Issues for follow-up (cosmetic / latent fragility, not regressions in this change). See Pass-2 SUGGESTION list below. **DEFERRED.**
+
+### Re-Run of Verifiable Metrics
+
+- G1 (single-source bootstrap): unchanged, **PASS**.
+- G2 (symmetric versions): all 5 locations (4 root + `src/VERSION`) at `0.2.5-beta`, **PASS**.
+- G4 (cross-check enforces consistency): now also enforced in CI via `release.yml` cross-check step before tag creation, **PASS** stronger.
+- G5 / G6 / G8 / G9: unchanged, **PASS**.
+- New: SemVer-regex test (positive + negative) executed in this session, **PASS**.
+
+### Verdict (Pass 2)
+
+**PASS**, 0 CRITICAL, 0 WARNING, 2 SUGGESTIONS (both filed as GitHub Issues):
+1. Live Codex install smoke test — verify `.agents/plugins/marketplace.json` is read (or ignored) by `codex /plugins`; if ignored, decide whether to keep, remove, or replace with the Shopify direct-install pattern.
+2. CHANGELOG BREAKING-note promotion + `release.yml` sed pipeline robustness against deeper headers.
+
+The pass closes all blocking items from the self-review and the Copilot review. Layout decisions are now confirmed against the Shopify-AI-Toolkit reference (skills path resolution interpretation (b) is canonical).

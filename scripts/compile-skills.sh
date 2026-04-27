@@ -77,6 +77,14 @@ if [[ "$line_count" -gt 1 ]]; then
   exit 1
 fi
 
+# SemVer 2.0 validation: catch typos before they get stamped into JSON.
+# Pattern: MAJOR.MINOR.PATCH with optional pre-release (-foo.bar) and build (+meta).
+if ! [[ "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+  echo "Error: $VERSION_FILE value '$PLUGIN_VERSION' is not a valid SemVer 2.0 string." >&2
+  echo "Expected format: MAJOR.MINOR.PATCH[-pre-release][+build] (e.g. 0.2.5-beta, 1.0.0)." >&2
+  exit 1
+fi
+
 # --- Template-version enforcement ---
 # Modified templates must have their template-version bumped.
 # Compares working tree against main to detect unbumped versions.
