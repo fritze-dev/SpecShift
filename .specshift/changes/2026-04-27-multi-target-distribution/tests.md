@@ -62,7 +62,7 @@
 - [ ] **Scenario: Independent marketplace updates**
   - Setup: edit `.claude-plugin/marketplace.json` description (or unrelated metadata)
   - Action: `bash scripts/compile-skills.sh`
-  - Verify: `.agents/plugins/marketplace.json` is byte-identical to its pre-compile state (only its own version field would change if `src/VERSION` changed; description is untouched)
+  - Verify: `.agents/plugins/marketplace.json` non-version fields semantically unchanged (`jq -S 'del(.plugins[].version)'` before/after compare-equal); only its own version field would change if `src/VERSION` changed
 
 #### Bootstrap Single Source of Truth Pattern
 

@@ -10,9 +10,10 @@ set -euo pipefail
 #
 # Version source of truth: src/VERSION (plain text, single line, SemVer).
 # This script reads that value and stamps it into all four root manifest /
-# marketplace files via `jq` (preserving every other field verbatim). After
-# stamping, it re-reads each file and verifies the stamped value matches
-# src/VERSION; any mismatch fails the build.
+# marketplace files via `jq` (preserving all non-version fields and values;
+# JSON formatting may be normalized by jq's pretty-printer). After stamping,
+# it re-reads each file and verifies the stamped value matches src/VERSION;
+# any mismatch fails the build.
 #
 # Run from the repository root: bash scripts/compile-skills.sh
 
@@ -26,7 +27,7 @@ CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 CLAUDE_MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
 CODEX_MARKETPLACE="$PLUGIN_ROOT/.agents/plugins/marketplace.json"
-LEGACY_SKILL_DIR=".claude/skills"
+LEGACY_SKILL_DIR=".claude/skills/specshift"
 
 warnings=0
 

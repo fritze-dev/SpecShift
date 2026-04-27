@@ -81,7 +81,7 @@ Pseudocode of the rewritten flow:
 11. Print summary: actions compiled, requirements extracted, warnings count
 ```
 
-The script SHALL exit non-zero on any cross-check failure. The flow is idempotent — re-running on a clean tree produces byte-identical output.
+The script SHALL exit non-zero on any cross-check failure. The flow is idempotent — re-running on a clean tree (after at least one prior compile) produces no diff (`git status --porcelain` empty), since `jq` is deterministic on already-normalized input.
 
 ### `specshift init` action
 

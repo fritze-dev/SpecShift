@@ -2,7 +2,7 @@
 order: 16
 category: distribution
 status: stable
-version: 1
+version: 2
 lastModified: 2026-04-27
 ---
 
@@ -231,7 +231,7 @@ The `specshift finalize` version-bump step SHALL edit only `src/VERSION`. Manife
 
 ### Requirement: Symmetric Version Stamping with Cross-Check
 
-The compile script SHALL read the version string from `src/VERSION` and stamp it into all four root manifest/marketplace files: `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). The script SHALL use `jq` to update only the version field in each file, preserving every other key, ordering, and formatting verbatim. After stamping, the script SHALL re-read each of the four files and verify that the stamped version equals the SoT. Any mismatch SHALL fail the build with an error naming the offending file.
+The compile script SHALL read the version string from `src/VERSION` and stamp it into all four root manifest/marketplace files: `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). The script SHALL use `jq` to update only the version field in each file, preserving all non-version keys and values semantically. JSON formatting (whitespace, indentation, key ordering) may be normalized by `jq`'s pretty-printer; consumers depend on the JSON's semantic content, not on byte-level formatting. After stamping, the script SHALL re-read each of the four files and verify that the stamped version equals the SoT. Any mismatch SHALL fail the build with an error naming the offending file.
 
 The script SHALL also stamp the version into the compiled workflow template's `plugin-version` frontmatter field (existing behavior, retained).
 
@@ -243,7 +243,7 @@ The script SHALL also stamp the version into the compiled workflow template's `p
 - **AND** the four root manifest/marketplace files declare arbitrary prior versions
 - **WHEN** the compile script runs
 - **THEN** all four files SHALL declare version `0.3.0`
-- **AND** every other field in each file SHALL be byte-identical to its pre-stamp content
+- **AND** every other key/value pair in each file SHALL be semantically equal to its pre-stamp content (JSON formatting may be normalized by `jq`)
 
 #### Scenario: Post-stamp cross-check fails on drift
 
