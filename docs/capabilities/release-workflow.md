@@ -1,48 +1,51 @@
 ---
 title: "Release Workflow"
 capability: "release-workflow"
-description: "Version management, automated releases, plugin distribution, changelog generation, and consumer update process."
-lastUpdated: "2026-04-15"
+description: "Multi-target version management, automated releases, plugin distribution to Claude Code and Codex, changelog generation, and consumer update process."
+lastUpdated: "2026-04-27"
 ---
 # Release Workflow
 
-The release workflow handles version management for the plugin, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, consumer version pinning, developer local marketplace workflow, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates.
+The release workflow handles version management for the plugin across both supported targets, including automatic patch bumps during the post-apply workflow, automated GitHub Releases via CI, plugin source distribution from the `src/` subdirectory, hand-edited per-target manifests at the repo root with `jq`-based version stamping, consumer version pinning, developer local marketplace workflow, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates on Claude Code and Codex CLI.
 
 ## Purpose
 
-Without an automated release workflow, version bumps are a manual step that is regularly forgotten, causing consumers to miss updates even after changes are pushed. Additionally, version fields across plugin files can drift out of sync, and there is no structured process for generating changelogs or guiding consumers through updates.
+Without an automated release workflow, version bumps are a manual step that is regularly forgotten, causing consumers to miss updates even after changes are pushed. With multi-target distribution, version drift between the Claude and Codex manifests would mean releasing inconsistent versions across runtimes; without a single source of truth, manifests can disagree on which release they represent. There is also no structured process for generating changelogs or guiding consumers on either target through updates.
 
 ## Rationale
 
-The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes without frontmatter) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities (falling back to parsing the Capabilities section). It also reads `.specshift/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
+The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The Claude manifest at `.claude-plugin/plugin.json` is the single version source of truth — the compile script reads its version and stamps it into the Codex manifest in place via `jq` (preserving every other Codex field) and into the Codex marketplace, so per-target versions cannot disagree across a release. Per-target manifests are hand-edited at the repo root to keep target-specific metadata (display name, capabilities, branding, default prompts) where the host CLI expects it. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes without frontmatter) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities (falling back to parsing the Capabilities section). It also reads `.specshift/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
 
 ## Features
 
-- **Automatic patch version bump** -- the patch version increments automatically after each completed change during the post-apply workflow
-- **Version synchronization** -- `plugin.json` and `marketplace.json` stay in sync automatically
-- **Automated GitHub Releases** -- a GitHub Action creates git tags and releases automatically when a version bump is pushed to `main`
-- **Plugin source separation** -- plugin files live in `src/`, consumer caches contain only plugin files (no docs, CI, or project files)
-- **Consumer version pinning** -- consumers can pin to a specific version using a tag reference when adding the marketplace
-- **Developer local marketplace** -- developers register the local repo as marketplace source for live plugin development in VS Code and CLI
-- **Manual minor/major releases** -- documented process for intentional version changes; the Action handles tagging automatically
-- **Consumer update guidance** -- clear steps for consumers to get the latest plugin version
-- **Changelog generation** -- `specshift finalize` produces release notes from completed changes in Keep a Changelog format, using proposal frontmatter for change detection
-- **Language-aware changelog** -- changelog entries can be generated in the language configured in `docs_language`
-- **Post-apply next steps** -- apply output includes guidance for the complete post-apply workflow
+- **Automatic patch version bump** — the patch version increments automatically after each completed change during the post-apply workflow
+- **Per-target version synchronization** — `.claude-plugin/plugin.json` (source of truth), `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` stay in sync via the compile script's `jq`-based stamping
+- **Automated GitHub Releases** — a GitHub Action creates git tags and releases automatically when a version bump is pushed to `main`
+- **Multi-target plugin distribution** — one shared agnostic skill tree at `./skills/specshift/` is served to both Claude Code (via `.claude-plugin/marketplace.json` `source: "./"`) and Codex CLI (via `.codex-plugin/plugin.json` `skills: "./skills/"`)
+- **Hand-edited per-target manifests** — `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live at the repo root and carry target-specific metadata; only the `version` field is enforced by the compile script
+- **Consumer version pinning** — Claude Code consumers can pin to a specific version using a tag reference when adding the marketplace
+- **Developer local marketplace** — developers register the local repo as marketplace source for live plugin development
+- **Manual minor/major releases** — documented process for intentional version changes; the Action handles tagging automatically
+- **Per-target consumer update guidance** — clear steps for consumers on Claude Code and on Codex CLI to get the latest plugin version
+- **Changelog generation** — `specshift finalize` produces release notes from completed changes in Keep a Changelog format, using proposal frontmatter for change detection
+- **Language-aware changelog** — changelog entries can be generated in the language configured in `docs_language`
+- **Post-apply next steps** — apply output includes guidance for the complete post-apply workflow
 
 ## Behavior
 
 ### Automatic Patch Bump
 
-During the post-apply workflow, the patch version in `src/.claude-plugin/plugin.json` is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The `version` field in `.claude-plugin/marketplace.json` is synced to match. The new version is displayed in the summary.
+During the post-apply workflow, the patch version in `.claude-plugin/plugin.json` (the source of truth, hand-edited at the repo root) is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The `version` field in `.claude-plugin/marketplace.json` is synced to match. Running `bash scripts/compile-skills.sh` then stamps the same version into `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json` in place via `jq`, preserving every other field verbatim. The new version is displayed in the summary.
 
 ### Automated GitHub Releases
 
 When a version bump is pushed to `main`, a GitHub Action automatically creates a git tag (`v<version>`) and a GitHub Release. The release body contains the latest changelog entry from `CHANGELOG.md`. If the tag already exists, the Action skips silently (idempotent).
 
-### Plugin Source Directory
+### Plugin Source and Manifest Layout
 
-Plugin source code (skills, templates, manifest) lives in the `src/` subdirectory. Consumer plugin caches contain only `src/` contents -- documentation, CI workflows, project spec files, and changelogs are not downloaded. The marketplace uses `source: "./src"` to reference the plugin subdirectory.
+Plugin source code (skills, templates, action specs, Codex marketplace template) lives in the `src/` subdirectory. Plugin manifests live hand-edited at the repo root: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json`. The Codex marketplace template lives at `src/marketplace/codex.json` and is rendered to `.agents/plugins/marketplace.json` by the compile script.
+
+Consumer plugin caches contain only the compiled release artifacts — documentation, CI workflows, project spec files, and changelogs are not downloaded.
 
 ### Consumer Version Pinning
 
@@ -50,19 +53,19 @@ Consumers can pin to a specific plugin version by adding the marketplace with a 
 
 ### Developer Local Marketplace
 
-Developers register the local repository path as a marketplace source for live plugin development. This works in both the VS Code extension and CLI, unlike `--plugin-dir` which is CLI-only. Skill changes reload instantly via `/reload-plugins`. Version changes require an explicit `claude plugin update`.
+Developers register the local repository path as a marketplace source for live plugin development. Skill changes reload via `/reload-plugins`. Version changes require an explicit `claude plugin update`. After editing source files, running `bash scripts/compile-skills.sh` regenerates the shared `./skills/specshift/` tree and re-stamps Codex manifest/marketplace versions.
 
 ### Version Synchronization
 
-The `version` field in `marketplace.json` always matches `src/.claude-plugin/plugin.json`. Both files are updated together during the auto-bump. If they are found out of sync beforehand, they are aligned to the `plugin.json` version first, then the patch bump is applied.
+The `version` fields in `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` always match `.claude-plugin/plugin.json`. The compile script enforces this on every run: it reads the Claude version, stamps it into the Codex manifest in place (preserving non-version fields), generates the Codex marketplace from `src/marketplace/codex.json` with the stamped version, and verifies that the emitted Codex manifest version equals the Claude source after stamping. If any are out of sync beforehand, they are realigned to the Claude version automatically.
 
 ### Manual Minor and Major Releases
 
-For intentional minor or major version changes, you manually set the version in both `src/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, then push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, you can manually create and push a tag.
+For intentional minor or major version changes, you manually set the version in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, run `bash scripts/compile-skills.sh` to stamp the Codex manifest and marketplace, then push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, you can manually create and push a tag.
 
 ### Consumer Update Process
 
-When a new plugin version is available, consumers run `claude plugin marketplace update specshift` to refresh the listing, then `claude plugin update specshift@specshift` to install the update, and restart Claude Code to load the new version.
+When a new plugin version is available, Claude Code consumers run `claude plugin marketplace update specshift` to refresh the listing, then `claude plugin update specshift@specshift` to install the update, and restart Claude Code to load the new version. Codex consumers open the Codex `/plugins` UI, refresh or reinstall SpecShift, and restart the Codex session.
 
 ### Update Not Detected
 
@@ -78,19 +81,19 @@ When project-specific post-apply behavior is needed (such as version bumps), it 
 
 ### End-to-End Install Flow
 
-The complete install path is: `claude plugin marketplace add` followed by `claude plugin install` followed by `specshift init`.
+For Claude Code: `claude plugin marketplace add fritze-dev/specshift` followed by `claude plugin install specshift` followed by `specshift init`. For Codex: `codex /plugins`, browse for SpecShift and install, then run `specshift init` in the target repository.
 
 ### End-to-End Update Flow
 
-The complete update path is: `claude plugin marketplace update` followed by `claude plugin update`. Running `specshift init` again is safe (idempotent) and ensures schema updates are picked up.
+For Claude Code: `claude plugin marketplace update specshift` followed by `claude plugin update specshift@specshift`. For Codex: `codex /plugins`, refresh or reinstall SpecShift. Running `specshift init` again is safe (idempotent) and ensures schema updates are picked up.
 
 ### Post-Push Developer Plugin Update
 
-For developers using the local marketplace, running `claude plugin update specshift@specshift` detects the local version change and updates the cached plugin. For developers using the GitHub marketplace, the existing `marketplace update` + `plugin update` flow applies.
+For developers using the Claude local marketplace, running `claude plugin update specshift@specshift` detects the local version change and updates the cached plugin. For developers using the GitHub marketplace, the existing `marketplace update` + `plugin update` flow applies. Codex local-development setups update through the Codex `/plugins` UI's refresh.
 
 ### Post-Apply Workflow Next Steps
 
-After a completed change, the post-apply workflow includes next steps: verify, changelog, docs, version bump, and commit.
+After a completed change, the post-apply workflow includes next steps: verify, changelog, docs, version bump (compile re-stamps Codex outputs), and commit.
 
 ### Changelog from Single Change
 
@@ -114,11 +117,11 @@ If a completed change describes purely internal refactoring with no user-visible
 
 ### Changelog Version Headers
 
-Each changelog entry uses a version-anchored header in the format `## [v<version>] — <date>`, where `<version>` is the plugin version from `src/.claude-plugin/plugin.json` at the time of finalization and `<date>` is the release date in ISO format. Individual changes within a version use `### <Title>` sub-headers. When multiple changes are included in a single version (for example, due to multiple merges between releases), all changes are grouped under one `## [v<version>]` header with separate `### <Title>` sub-headers for each change. This format ensures compatibility with the `release.yml` extraction pattern, which captures the first `## ` block as the release body. Date-only headers without version numbers are not used, as they prevent mapping changelog entries to specific releases.
+Each changelog entry uses a version-anchored header in the format `## [v<version>] — <date>`, where `<version>` is the plugin version from `.claude-plugin/plugin.json` at the time of finalization and `<date>` is the release date in ISO format. Individual changes within a version use `### <Title>` sub-headers. When multiple changes are included in a single version (for example, due to multiple merges between releases), all changes are grouped under one `## [v<version>]` header with separate `### <Title>` sub-headers for each change. This format ensures compatibility with the `release.yml` extraction pattern, which captures the first `## ` block as the release body. Date-only headers without version numbers are not used, as they prevent mapping changelog entries to specific releases.
 
 ### Changelog in Configured Language
 
-When `.specshift/WORKFLOW.md` contains a `docs_language` setting (for example, `German`), `specshift finalize` generates section headers and entry descriptions in that language. Dates remain in ISO format and product names stay in English.
+When `.specshift/WORKFLOW.md` contains a `docs_language` setting (for example, `German`), `specshift finalize` generates section headers and entry descriptions in that language. Dates remain in ISO format and product names (Claude Code, Codex) stay in English.
 
 ### Default Language
 
@@ -130,18 +133,22 @@ If the documentation language is changed after entries have already been generat
 
 ## Known Limitations
 
-- Does not support automatic minor or major version bumps -- these require a manual process (but the Action handles tagging automatically after push).
-- Consumer migration from the old flat layout to the new `src/` layout requires a `plugin update` -- there is no automatic migration.
+- Does not support automatic minor or major version bumps — these require a manual process (but the Action handles tagging automatically after push).
+- Does not enforce non-version manifest field parity across targets — only the `version` field is enforced; agnostic metadata fields (`author`, `repository`, `license`, `keywords`) are reviewed manually.
+- Consumer migration from the old flat layout to the new `src/`-plus-root-manifests layout requires a `marketplace update` + `plugin update` — there is no automatic migration.
 
 ## Future Enhancements
 
+- CI parity check for non-version manifest fields across targets.
 - A `specshift status` skill for checking the current project and plugin state.
 - Sparse checkout via `git-subdir` for even more efficient consumer downloads.
 
 ## Edge Cases
 
-- If `src/.claude-plugin/plugin.json` does not exist (consumer projects without plugin manifests), the version bump step is silently skipped.
+- If `.claude-plugin/plugin.json` does not exist (consumer projects without plugin manifests), the version bump step is silently skipped.
 - If `CHANGELOG.md` is missing when the release Action runs, the release is created with a minimal body instead of failing.
-- If a consumer adds the marketplace before the `src/` restructuring, the old cache is replaced on the next `plugin update`.
+- If a consumer adds the marketplace before the multi-target restructuring, the old cache is replaced on the next `plugin update` (Claude) or refresh (Codex).
 - If the version field contains a non-semver value, the system warns and skips the bump rather than producing an invalid version.
 - If the change directory contains changes with only internal refactoring, the changelog agent either omits the entry or uses a minimal note to avoid fabricating user-facing changes.
+- If `jq` is missing on a developer machine, the compile script fails preflight with an instructive message naming the missing dependency.
+- If the Codex manifest at the root carries a different version than the Claude manifest, the compile script restamps Codex `.version` to the Claude source and verifies equality post-stamp, preventing inconsistent releases.
