@@ -74,14 +74,14 @@ Layout-level changes — file-system shape only, no behavioral changes yet.
 
 ## 4. Standard Tasks (Post-Implementation)
 
-- [ ] 4.1. Run `specshift finalize`:
+- [x] 4.1. Run `specshift finalize`:
   - Generate the new `## [v0.2.5-beta] — 2026-04-27` CHANGELOG entry covering the Codex Plugin Support / Multi-Target Distribution rollout, with the BREAKING marketplace-path note for Claude Code consumers.
   - Generate / update capability docs: new `docs/capabilities/multi-target-distribution.md`; updated `docs/capabilities/project-init.md` and `docs/capabilities/release-workflow.md`.
   - Generate `docs/decisions/adr-003-shopify-flat-multi-target-distribution.md` (or next available ADR number) capturing the layout decision and the version-SoT decision.
   - Bump `src/VERSION` per the post-apply auto-bump convention: `0.2.4-beta` → `0.2.5-beta`.
   - Run `bash scripts/compile-skills.sh` to stamp the new version into all four root files and refresh the shared skill tree.
-- [ ] 4.2. Verify the bumped version is consistent across `src/VERSION` and all four root files (one final cross-check).
-- [ ] 4.3. Commit and push to remote (the open PR #46 picks up the finalize commits).
+- [x] 4.2. Verify the bumped version is consistent across `src/VERSION` and all four root files (one final cross-check).
+- [x] 4.3. Commit and push to remote (the open PR #46 picks up the finalize commits).
 
 ### Pre-Merge (from CONSTITUTION Standard Tasks)
 

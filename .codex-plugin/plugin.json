@@ -1,6 +1,6 @@
 {
   "name": "specshift",
-  "version": "0.2.4-beta",
+  "version": "0.2.5-beta",
   "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
   "author": {
     "name": "fritze.dev",

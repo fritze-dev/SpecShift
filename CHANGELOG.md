@@ -3,6 +3,37 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.5-beta] — 2026-04-27
+
+### Multi-Target Distribution (Claude Code + Codex CLI)
+
+SpecShift now ships from a single repository to two AI-coding-tool targets — Claude Code and OpenAI Codex CLI — via a Shopify-flat layout, with one shared agnostic skill tree at `./skills/specshift/` consumed by both targets through their respective root manifests. Bootstrap content lives once in `AGENTS.md` (read by Codex natively, by Claude Code via the `@AGENTS.md` import expanded from `CLAUDE.md`). The plugin version is now sourced from a single agnostic file at `src/VERSION` and stamped into all four root manifest/marketplace files at compile time, with a post-stamp cross-check that fails the build on drift.
+
+#### Added
+- Codex CLI plugin support: `.codex-plugin/plugin.json` (hand-edited at repo root, full Codex schema including `skills`, `interface`, `category`, `capabilities`, `defaultPrompt`, `brandColor`)
+- Codex marketplace entry: `.agents/plugins/marketplace.json` for `codex /plugins` discovery
+- Agnostic version source of truth: `src/VERSION` (plain text, single line, SemVer) — the only file the maintainer edits to bump the plugin version
+- Symmetric version stamping with cross-check across `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json` (compile script reads `src/VERSION`, jq-stamps each, re-reads and verifies; any mismatch fails the build)
+- Bootstrap single source of truth: `src/templates/agents.md` carries the full body; `src/templates/claude.md` is reduced to a one-line `@AGENTS.md` import stub. `specshift init` generates both `AGENTS.md` and `CLAUDE.md` on fresh init
+- New spec `docs/specs/multi-target-distribution.md` with 8 requirements (per-target manifests, shared skill tree, Codex marketplace entry, bootstrap SoT pattern, agnostic skill body, multi-target install docs, version SoT, symmetric stamping)
+
+#### Changed
+- **BREAKING (marketplace path):** `.claude-plugin/marketplace.json` `source` field changed from `./.claude` to `./`. The compiled skill tree moved from `.claude/skills/specshift/` to `./skills/specshift/`. Existing Claude Code installs run `claude plugin marketplace update specshift && claude plugin update specshift@specshift` once after upgrading
+- Plugin manifests moved from `src/.claude-plugin/` to the repo root (`.claude-plugin/plugin.json`); `src/.claude-plugin/` deleted. Per-target manifests are now hand-edited at the root and carry per-target metadata only — their `version` is stamped from `src/VERSION`
+- Compile script (`scripts/compile-skills.sh`) rewritten: reads `src/VERSION`, stamps all four root files via `jq` with post-stamp cross-check, emits one shared agnostic skill tree at `./skills/specshift/`, removes legacy `.claude/skills/specshift/`. `jq` is now a hard preflight requirement
+- `specshift finalize` version-bump step now edits only `src/VERSION` — manifest version fields are stamped at compile time
+- `specshift init` now generates both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub) instead of just `CLAUDE.md` on fresh init
+- `.github/workflows/release.yml` now triggers on `src/VERSION` changes and reads the version from `src/VERSION` instead of from a manifest
+- Worktree default path pattern: `.claude/worktrees/{change}` → `.specshift/worktrees/{change}` (tool-agnostic; specs and project WORKFLOW.md updated)
+- `README.md` restructured with per-target install sections (Claude Code + Codex), updated project-structure tree, new Multi-Target Distribution section
+- `.specshift/CONSTITUTION.md` Architecture Rules and Conventions updated for the new layout, version SoT, and agent-instructions SoT
+
+#### Specs
+- New: `multi-target-distribution.md` v1
+- Modified: `project-init.md` v6 (Bootstrap Files Generation requirement replaces CLAUDE.md Bootstrap; tool-agnostic prose for plugin paths)
+- Modified: `release-workflow.md` v4 (Auto-Patch-Bump, Version-Sync, Manual-Release, Source/Release-Directory-Structure, Marketplace-Source-Configuration, Repository-Layout-Separation, AOT-Skill-Compilation, Compiled-Action-File-Contract, Dev-Sync-Script, Automated-GitHub-Release-via-CI, Changelog-Version-Headers, Developer-Local-Marketplace, Consumer-Update-Process, End-to-End-Install-and-Update-Checklist all rewritten for the multi-target reality)
+- Modified: `artifact-pipeline.md` v5, `change-workspace.md` v4 (worktree path-pattern agnostic update)
+
 ## [v0.2.4-beta] — 2026-04-15
 
 ### Fix Review Action Friction Issues

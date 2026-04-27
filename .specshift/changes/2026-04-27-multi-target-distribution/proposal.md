@@ -1,5 +1,5 @@
 ---
-status: active
+status: review
 branch: codex-plugin-clean
 capabilities:
   new: [multi-target-distribution]

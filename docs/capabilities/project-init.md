@@ -1,29 +1,30 @@
 ---
 title: "Project Init"
 capability: "project-init"
-description: "One-command project initialization with template merge, codebase scanning, constitution generation, CLAUDE.md bootstrap, Claude Code Web settings generation, and health checks"
-lastUpdated: "2026-04-15"
+description: "One-command project initialization with template merge, codebase scanning, constitution generation, agnostic bootstrap-file generation (AGENTS.md + CLAUDE.md), Claude Code Web settings generation, and health checks"
+lastUpdated: "2026-04-27"
 ---
 
 # Project Init
 
-Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution and CLAUDE.md from your codebase, generating Claude Code Web settings for cloud sessions, configuring optional worktree isolation, and running health checks for spec and documentation drift.
+Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution from your codebase, generating both bootstrap files (`AGENTS.md` as the agnostic source of truth and `CLAUDE.md` as a one-line `@AGENTS.md` import stub), generating Claude Code Web settings for cloud sessions, configuring optional worktree isolation, and running health checks for spec and documentation drift.
 
 ## Purpose
 
-Without a structured setup process, adopting spec-driven development requires manually creating configuration files, writing a constitution from scratch, and hoping the environment supports the features you need. Existing projects that drift from their specs have no way to detect the gap. Project Init handles all of this in a single command, whether you are starting fresh, migrating from a legacy layout, or checking the health of an established project.
+Without a structured setup process, adopting spec-driven development requires manually creating configuration files, writing a constitution from scratch, wiring up agent-instruction files for whichever AI tool runs the project, and hoping the environment supports the features you need. Existing projects that drift from their specs have no way to detect the gap. Project Init handles all of this in a single command, whether you are starting fresh, migrating from a legacy layout, or checking the health of an established project.
 
 ## Rationale
 
-A single `specshift init` command covers fresh installs, legacy migrations, and re-initialization after plugin updates because these are all variations of the same concern: ensuring the project has the right files in the right state. Template merge detection uses a `template-version` field rather than blind overwrites so that user customizations survive plugin updates. The codebase scan runs on first setup to generate a project-specific constitution rather than a generic placeholder, since the constitution drives all subsequent AI behavior. CLAUDE.md is generated from a bootstrap template to ensure every consumer project gets agent-level directives for workflow compliance and knowledge transparency from the start. Drift detection for specs and docs runs as a health check rather than auto-fixing, keeping the user in control of resolution decisions.
+A single `specshift init` command covers fresh installs, legacy migrations, and re-initialization after plugin updates because these are all variations of the same concern: ensuring the project has the right files in the right state. Template merge detection uses a `template-version` field rather than blind overwrites so that user customizations survive plugin updates. The codebase scan runs on first setup to generate a project-specific constitution rather than a generic placeholder, since the constitution drives all subsequent AI behavior. The bootstrap pattern generates both `AGENTS.md` (full body, agnostic source of truth — Codex reads it natively) and `CLAUDE.md` (one-line `@AGENTS.md` import stub — Claude Code reads it and expands the documented memory-import) so consumers get working setups for either AI tool from a single init run. The CLAUDE.md stub is a pointer, not a content duplicate, so single source of truth is preserved while both runtimes work without manual setup. Drift detection for specs and docs runs as a health check rather than auto-fixing, keeping the user in control of resolution decisions.
 
 ## Features
 
-- **One-command setup** via `specshift init` -- copies Smart Templates, installs WORKFLOW.md, creates CONSTITUTION.md placeholder, generates CLAUDE.md from bootstrap template, and validates the result
-- **CLAUDE.md bootstrap** -- generates CLAUDE.md from a plugin template containing Workflow, Planning (with scope commitment and workflow routing), and Knowledge Management sections, adapted with project-specific rules from the codebase scan
+- **One-command setup** via `specshift init` -- copies Smart Templates, installs WORKFLOW.md, creates CONSTITUTION.md placeholder, generates both bootstrap files (AGENTS.md + CLAUDE.md), and validates the result
+- **Agnostic bootstrap files** -- `AGENTS.md` carries the full body (Workflow, Planning with scope commitment and workflow routing, Knowledge Management) adapted with project-specific rules from the codebase scan; `CLAUDE.md` is a one-line `@AGENTS.md` import stub. Generated unconditionally on fresh init — no environment detection
+- **Re-init preserves existing bootstrap files** -- existing `AGENTS.md` and `CLAUDE.md` are never overwritten; standard-section completeness is reported as WARNING only
+- **Mid-migration recovery** -- if only `CLAUDE.md` exists (legacy single-target install), `AGENTS.md` is generated alongside it; if only `AGENTS.md` exists, the `CLAUDE.md` import stub is generated
 - **Version-aware template merge** -- uses `template-version` fields to detect user customizations and merge plugin updates instead of overwriting
 - **Constitution section-level merge** -- detects missing sections from newer template versions and offers to generate content for them based on the codebase
-- **CLAUDE.md section-level check** -- during re-init, compares CLAUDE.md against bootstrap template section headings and reports missing standard sections as WARNING without modifying the file
 - **Codebase scanning** -- analyzes tech stack, frameworks, languages, file structure, and coding conventions to populate the constitution with project-specific values
 - **Constitution generation** -- produces Tech Stack, Architecture Rules, Code Style, Constraints, Conventions, and Standard Tasks sections from scan results
 - **Environment checks** -- detects GitHub tooling availability, git version (2.5+ for worktree support), and `.gitignore` configuration
