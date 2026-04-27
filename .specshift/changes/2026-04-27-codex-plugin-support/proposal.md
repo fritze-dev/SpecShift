@@ -123,8 +123,39 @@ Finally, the `release-workflow` spec was not updated to reference the multi-targ
 ### Out of Scope (Extension)
 
 - **Per-target rewrite passes in the compiler.** Decided against. Source agnostic-ization is the right place to handle target neutrality.
-- **Auto-generation of CLAUDE.md on fresh init.** Decided against per A-variant: the plugin no longer forces a CLAUDE.md stub onto every consumer. Users who want Claude Code's documented memory pattern add `@AGENTS.md` to a hand-written CLAUDE.md (the plugin still ships `claude.md` as a copy-paste template).
 - **HTML-escape fix for nested `<!-- ASSUMPTION -->` / `<!-- REVIEW -->` markers** in templates — no rendering issues observed; not worth the template-version churn.
 - **Bootstrap-template approach change.** PR-45's pattern (`agents.md` shared, `claude.md` as `@AGENTS.md` import stub) stays; not reverted to PR-44's `src/codex/templates/agents.md` structure.
 - **Deletion of `multi-target-distribution.md` in favor of folding everything into `release-workflow.md`** — keep both, with `multi-target-distribution.md` describing the layout invariants and `release-workflow.md` describing the lifecycle mechanics.
 - **Version bump.** This is a scope extension within the running change; version stays `0.2.5-beta` until finalize.
+
+## Scope Reversal (2026-04-27 — third pass)
+
+The second pass narrowed fresh init to write only `AGENTS.md` (Option A — CLAUDE.md is opt-in via the still-shipped `claude.md` stub). On reflection of ADR-003's rationale, that narrowing was rejected before the PR merged. The reversal restores the symmetric behavior described in the original proposal (lines 23–24 above).
+
+### Why (Reversal)
+
+The narrowing was maintainer-zentriert ("narrower bootstrap"), not user-centered:
+
+1. **Stille Nicht-Funktion**: A user running `specshift init` under Claude Code without `CLAUDE.md` does not get an active `@AGENTS.md` memory-import — Claude Code reads no rules, silently. The fix (copy a one-line stub) is trivial, but the failure mode is invisible.
+2. **Asymmetry**: one file always, the other never — no coherent mental model.
+3. **Zero-Cost Symmetry**: a one-line `CLAUDE.md` containing `@AGENTS.md` in a Codex-only project costs nothing — Codex does not read it. If the user later adds Claude Code, the memory-import pattern works without touch-up.
+4. **SSOT preserved**: the stub is a *pointer*, not a content duplicate. Normative rules live only in `AGENTS.md`. ADR-003's core decision ("no runtime detection") stays untouched.
+
+### What Changes (Reversal)
+
+- **`specshift init` fresh-init behavior** (in `src/templates/workflow.md` `## Action: init`): on a project with no `AGENTS.md` and no `CLAUDE.md`, generate **both** files — `AGENTS.md` from `templates/agents.md` (full body) and `CLAUDE.md` from `templates/claude.md` (one-line `@AGENTS.md` stub). On re-init, existing files are never overwritten; standard-sections checks remain passive WARNING-only (the user decides in dialog with the agent whether to run a follow-up `specshift propose` to add missing sections).
+- **`docs/specs/project-init.md`** §5 "Bootstrap Files Generation" rewritten to specify both files on fresh init; v7 → v8.
+- **`docs/specs/multi-target-distribution.md`** §4 "Bootstrap Single Source of Truth Pattern" updated to describe both-file generation while preserving SSOT through the stub-as-pointer model; v2 → v3.
+- **`src/templates/workflow.md`** init-Action instruction updated; template-version 10 → 11. `.specshift/WORKFLOW.md` synced.
+- **README, project AGENTS.md, .specshift/CONSTITUTION.md, CHANGELOG.md (Hardening Pass entry)** updated to remove "init does not auto-generate CLAUDE.md" wording and document the symmetric behavior.
+
+### Capabilities (Reversal)
+
+- **Modified**: `project-init` (Bootstrap Files Generation), `multi-target-distribution` (Bootstrap SSOT Pattern). No new or removed capabilities.
+
+### Out of Scope (Reversal)
+
+- **Runtime detection** (Claude Code vs Codex via env vars) — remains rejected by ADR-003.
+- **Auto-merge or confirmed-merge of existing bootstrap files** on re-init — re-init stays passive (WARNING-only). User edits remain authoritative.
+- **Routing-pflicht in the WARNING output** ("run `specshift propose` now") — WARNING is a passive signal; the user decides next steps in dialog with the agent.
+- **Version bump.** Reversal lands within the same `codex-plugin-support` change, in PR #45, before merge — version stays `0.2.5-beta`. No `0.2.6-beta`, no separate ADR.

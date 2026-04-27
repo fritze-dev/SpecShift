@@ -87,12 +87,12 @@ The change is reopened to fold five extension items into the existing implementa
 
 - [x] E1.1. `docs/specs/project-init.md` — replace every `${CLAUDE_PLUGIN_ROOT}/templates/...` reference with prose ("the plugin's `templates/` directory" or "the plugin's `templates/<file>`"). Bump spec version to 7.
 - [x] E1.2. `docs/specs/release-workflow.md` — rewrite Source-and-Release-Directory-Structure / Marketplace-Source-Configuration / Repository-Layout-Separation / AOT-Skill-Compilation / Compiled-Action-File-Contract / Dev-Sync-Script / Auto-Patch-Version-Bump / Version-Sync-Between-Plugin-Files / Manual-Release-Process / Consumer-Update-Process for multi-target reality and root-manifest layout. Bump version to 4.
-- [x] E1.3. `docs/specs/multi-target-distribution.md` — rewrite Per-Target-Plugin-Manifest for hand-edited root manifests with enrichment; rewrite Bootstrap-SSOT for manual-copy claude.md; add new Agnostic-Skill-Body requirement; add agnostic-asset-resolution assumption. Bump version to 2.
+- [x] E1.3. `docs/specs/multi-target-distribution.md` — rewrite Per-Target-Plugin-Manifest for hand-edited root manifests with enrichment; Bootstrap-SSOT updated (third pass: fresh init generates both AGENTS.md and the CLAUDE.md `@AGENTS.md` import stub); add new Agnostic-Skill-Body requirement; add agnostic-asset-resolution assumption. Bump version to 3.
 - [x] E1.4. `docs/specs/review-lifecycle.md` — User Story phrasing: "Claude Code Web" → "ephemeral / stateless agent sessions".
 - [x] E1.5. `docs/specs/three-layer-architecture.md` — "Claude Code plugin system" → "the host plugin system (Claude Code, Codex CLI)".
 - [x] E1.6. `docs/specs/documentation.md` — translation rule lists both product names: "Product names (Claude Code, Codex)".
 - [x] E1.7. `src/skills/specshift/SKILL.md` — verify no Claude-specific tokens; agnostic phrasing for any plugin-asset references.
-- [x] E1.8. `src/templates/workflow.md` — `## Action: init` instruction: write only AGENTS.md on fresh init; the existing CLAUDE.md detection (warn-only) stays. Bump template-version to 10.
+- [x] E1.8. `src/templates/workflow.md` — `## Action: init` instruction: fresh init generates both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub); existing files never overwritten on re-init; standard-sections checks remain passive WARNING-only. Bump template-version to 11 (third-pass reversal of the second-pass narrowing).
 - [x] E1.9. `src/templates/agents.md` — verify body still works as agnostic SoT; no edits expected unless wording drifts.
 - [x] E1.10. `src/actions/finalize.md` — add requirement links: Source-and-Release-Directory-Structure, Marketplace-Source-Configuration, AOT-Skill-Compilation, Compiled-Action-File-Contract, Dev-Sync-Script (already partially linked; verify final list).
 
@@ -121,7 +121,7 @@ The change is reopened to fold five extension items into the existing implementa
 - [x] E5.1. Update `.specshift/CONSTITUTION.md` Conventions / Plugin source layout: manifests live hand-edited at the repo root (not in `src/`); compile script stamps Codex version from Claude source. Bump constitution `template-version` only if `src/templates/constitution.md` (the consumer placeholder) gets edited too — it does not, so this stays at 1 and only the project's CONSTITUTION.md edits.
 - [x] E5.2. Update `.specshift/WORKFLOW.md` from edited `src/templates/workflow.md` (template-version sync).
 - [x] E5.3. Update root `AGENTS.md` and `CLAUDE.md` (the project's own bootstrap files) — both already exist; ensure rules align with extended scope (no behavioral change needed beyond verifying the agnostic File-Ownership entries describe `.codex-plugin/`, `src/marketplace/codex.json`, etc.).
-- [x] E5.4. Update `README.md`: any `src/.claude-plugin/` or `src/.codex-plugin/` references → root-manifest references; mention that fresh init now writes only AGENTS.md.
+- [x] E5.4. Update `README.md`: any `src/.claude-plugin/` or `src/.codex-plugin/` references → root-manifest references; document that fresh init generates both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub).
 
 ### E6. Compile + Audit + Finalize
 
@@ -131,3 +131,34 @@ The change is reopened to fold five extension items into the existing implementa
 - [ ] E6.4. Fix loop (skipped: no audit findings).
 - [ ] E6.5. Run `specshift finalize` for changelog entry, capability-doc updates, and recompile.
 - [ ] E6.6. Commit + push extension. Update PR body with extension summary.
+
+## Third Pass — Bootstrap Symmetry Restoration
+
+Reversal of the second-pass AGENTS-only narrowing. Fresh init generates both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub). See proposal §"Scope Reversal (2026-04-27 — third pass)".
+
+### T1. Specs and Templates
+
+- [x] T1.1. `src/templates/workflow.md` — `## Action: init` rewritten: fresh init generates both bootstrap files; existing files never overwritten; standard-sections checks remain passive WARNING-only. Bump `template-version` 10 → 11.
+- [x] T1.2. `.specshift/WORKFLOW.md` — synced from updated `src/templates/workflow.md`.
+- [x] T1.3. `docs/specs/project-init.md` — Purpose updated to describe both-file generation; "Install Workflow" §1 updated; **Bootstrap Files Generation** requirement rewritten with new generation matrix and scenarios; Edge Cases updated. Bump `version` 7 → 8.
+- [x] T1.4. `docs/specs/multi-target-distribution.md` — **Bootstrap Single Source of Truth Pattern** rewritten: fresh init generates both AGENTS.md and the CLAUDE.md `@AGENTS.md` import stub (the stub is a pointer, not a duplicate, so SSOT is preserved); new "Fresh init generates both bootstrap files" scenario; Edge Cases updated. Bump `version` 2 → 3.
+
+### T2. Project-level alignment
+
+- [x] T2.1. Update project-level `AGENTS.md` File-Ownership block (line 40) to reflect both-file generation.
+- [x] T2.2. Update `.specshift/CONSTITUTION.md` Conventions ("Agent instructions") to reflect both-file generation.
+- [x] T2.3. Update `README.md` (Quick Start comment, Project Structure tree, Architecture paragraph) to reflect both-file generation.
+- [x] T2.4. Update `CHANGELOG.md` 0.2.5-beta "Codex Plugin Support — Hardening Pass" entry: remove the "BREAKING (init bootstrap behavior)" item; rewrite the lead-in paragraph and `src/templates/workflow.md` line; update spec version bumps (`multi-target-distribution.md` 1 → 3, `project-init.md` 6 → 8, `src/templates/workflow.md` 9 → 11).
+
+### T3. Change-artifact updates
+
+- [x] T3.1. Append "Scope Reversal (third pass)" section to proposal.md and remove the rejected narrowing item from "Out of Scope (Extension)".
+- [x] T3.2. Update design.md stale references: Bootstrap-behavior block, spec-delta lines, decision row, risk-mitigation, migration step.
+- [x] T3.3. Update tasks.md stale wordings (E1.3, E1.8, E5.4) and append this Third Pass section.
+
+### T4. Compile + Audit + Commit
+
+- [x] T4.1. Run `bash scripts/compile-skills.sh`. Confirm exit 0, version stamped consistently, template-version validation passes for `workflow.md` v11. — clean: 45/45 requirements, 0 warnings, version 0.2.5-beta stamped consistently, template-version validation passed.
+- [x] T4.2. Read-through verification: spec text + workflow.md init instruction match the both-file fresh-init behavior; re-init scenarios (AGENTS-exists, CLAUDE-exists, both-exist) leave existing files untouched with passive WARNING-only standard-sections checks.
+- [x] T4.3. Regenerate `audit.md` with the third-pass scope. Verdict: **PASS**, 0 CRITICAL, 0 WARNING, 1 SUGGESTION (live consumer install verification deferred — carried over from first/second pass).
+- [ ] T4.4. Commit on `codex-plugin-support` branch with conventional message and push so PR #45 picks up the third-pass commit.

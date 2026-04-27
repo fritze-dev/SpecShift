@@ -312,9 +312,130 @@ All extension requirements verified, all extension scenarios covered, all extens
 
 Spec status updates pending finalize:
 
-- `docs/specs/multi-target-distribution.md`: version 1 → 2 (already applied)
+- `docs/specs/multi-target-distribution.md`: version 1 → 3 (third-pass bump applied)
 - `docs/specs/release-workflow.md`: version 3 → 4 (already applied)
-- `docs/specs/project-init.md`: version 6 → 7 (already applied)
+- `docs/specs/project-init.md`: version 6 → 8 (third-pass bump applied)
 - `docs/specs/change-workspace.md`: version 3 → 4 (already applied)
 - `docs/specs/artifact-pipeline.md`: version 4 → 5 (already applied)
 - Proposal status: `active` → `review` (frontmatter — to be set during finalize)
+
+---
+
+## Third-Pass Audit (2026-04-27 — bootstrap symmetry restoration)
+
+The change was reopened a second time to reverse the second-pass narrowing of fresh init (Option A → "AGENTS.md only"). The third pass restores symmetric behavior: fresh init generates both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub). See `proposal.md` §"Scope Reversal (2026-04-27 — third pass)". This audit covers the third-pass scope on top of the prior two passes.
+
+### Third-Pass Summary
+
+| Dimension | Status |
+|-----------|--------|
+| Third-pass tasks | T1.1–T1.4, T2.1–T2.4, T3.1–T3.3 complete; T4.1 complete (compile clean); T4.2–T4.4 in progress (audit + commit) |
+| Third-pass requirements | 2/2 verified (project-init Bootstrap Files Generation revised; multi-target-distribution Bootstrap SSOT revised) |
+| Compile result | 45/45 requirements, 0 warnings, version 0.2.5-beta stamped consistently |
+| Scope adherence | All file changes traced to T1–T3 task IDs |
+| Findings | 0 CRITICAL, 0 WARNING, 1 SUGGESTION |
+
+### Third-Pass Branch Diff (working tree, against second-pass commit `2d7c8d5`)
+
+| File | Change |
+|---|---|
+| `src/templates/workflow.md` | template-version 10 → 11; init Action body rewritten for both-file generation |
+| `.specshift/WORKFLOW.md` | synced from updated template |
+| `docs/specs/project-init.md` | version 7 → 8; Purpose, Install Workflow §1, Bootstrap Files Generation requirement (rules + 4 scenarios), Edge Cases — all rewritten for both-file fresh init |
+| `docs/specs/multi-target-distribution.md` | version 2 → 3; Bootstrap SSOT Pattern requirement + scenarios + Edge Case "Mixed-target consumer project" updated |
+| `README.md` | Quick Start comment, Project Structure tree (added CLAUDE.md row), Architecture paragraph |
+| `AGENTS.md` (project) | File-Ownership block updated |
+| `.specshift/CONSTITUTION.md` | Conventions "Agent instructions" line updated |
+| `CHANGELOG.md` | 0.2.5-beta "Hardening Pass" entry: removed "BREAKING (init bootstrap behavior)" item; rewrote lead-in paragraph + workflow.md line; updated spec version bump notations |
+| `.specshift/changes/2026-04-27-codex-plugin-support/proposal.md` | Appended "Scope Reversal (third pass)" section; removed rejected narrowing item from "Out of Scope (Extension)" |
+| `.specshift/changes/2026-04-27-codex-plugin-support/design.md` | Updated 6 stale references (Bootstrap-behavior block, spec-delta lines, decision row, risk-mitigation, migration step) |
+| `.specshift/changes/2026-04-27-codex-plugin-support/tasks.md` | Updated 3 stale wordings (E1.3, E1.8, E5.4); appended "Third Pass" section with T1–T4 items |
+| `.specshift/changes/2026-04-27-codex-plugin-support/audit.md` | this section |
+
+No source-code changes outside the listed files; no manifest changes; no compiled-tree manual edits.
+
+### Third-Pass Requirement Verification
+
+#### project-init (revised — both-file fresh init)
+
+1. **Bootstrap Files Generation (third pass)** — verified
+   - Spec rewritten: fresh init writes both `AGENTS.md` (full body) and `CLAUDE.md` (one-line `@AGENTS.md` import stub) ✓
+   - Spec scenarios cover: fresh-init both-files, AGENTS-exists-CLAUDE-missing (CLAUDE generated, AGENTS unchanged), CLAUDE-exists-AGENTS-missing (AGENTS generated, CLAUDE unchanged), both-exist (no-op + standard-sections checks) ✓
+   - Edge Cases revised: bootstrap-template-missing handles both files symmetrically; legacy CLAUDE-md-only project gets AGENTS.md added without CLAUDE.md mutation ✓
+   - `src/templates/workflow.md` `## Action: init` instruction reflects both-file behavior; template-version 11 ✓
+   - `.specshift/WORKFLOW.md` synced ✓
+
+#### multi-target-distribution (revised — Bootstrap SSOT third pass)
+
+2. **Bootstrap Single Source of Truth Pattern (third pass)** — verified
+   - Spec text updated: fresh init generates both bootstrap files; SSOT preserved because the CLAUDE.md stub is a pointer, not a content duplicate ✓
+   - New scenario "Fresh init generates both bootstrap files" covers AGENTS.md full body + CLAUDE.md one-line stub generation ✓
+   - Removed obsolete scenario "claude.md is the import stub template (manual copy)"; replaced with "claude.md is the import stub template" ✓
+   - Edge Case "Mixed-target consumer project" updated to reflect both-file generation ✓
+   - Spec version 2 → 3 ✓
+
+### Third-Pass Scenario Coverage
+
+| Capability | Third-Pass Scenarios | Evidence |
+|---|---|---|
+| project-init Bootstrap Files Generation | 4 (fresh both, AGENTS-exists, CLAUDE-exists, both-exist) | Spec text + workflow.md init instruction match; existing first-pass tests in tests.md still apply (the third pass restores the original first-pass behavior) |
+| multi-target-distribution Bootstrap SSOT | 4 (agents.md full body, claude.md stub, shared-rule update, fresh init both, both Smart Templates) | Spec text + workflow.md init instruction match |
+
+The third pass restores behavior that was tested in the first-pass tests.md (item "fresh consumer project, `specshift init` produces both `AGENTS.md` and `CLAUDE.md` (≤ 5 lines, contains `@AGENTS.md`)" — first-pass tasks E2.6.1, design.md success criteria, audit.md first-pass scenario coverage). No new test items required.
+
+### Third-Pass Design Adherence
+
+The design decision for the third pass is captured in proposal.md §"Scope Reversal" and recorded in design.md Decisions (Extension) row "Fresh init writes both AGENTS.md and CLAUDE.md (one-line `@AGENTS.md` stub) — third-pass reversal". The implementation matches that decision exactly:
+
+- Fresh init generates both files ✓
+- Stub is a pointer, not a content duplicate (one line, exactly `@AGENTS.md`) ✓
+- Re-init never overwrites existing files; standard-sections checks remain passive WARNING-only ✓
+- ADR-003's "no runtime detection" stays untouched (no env-detection added) ✓
+
+### Third-Pass Scope Control
+
+Every file in the Third-Pass Branch Diff traces to a T1, T2, or T3 task ID. No untraced files; no source-code changes outside spec/template/doc + change-artifact files; no compile-tree manual edits.
+
+### Third-Pass Compile Verification
+
+`bash scripts/compile-skills.sh` ran clean:
+- 45/45 requirements extracted (no count change vs second pass — third pass touches spec body wording, not the requirement-extraction surface)
+- 0 warnings
+- template-version validation passed for `src/templates/workflow.md` (10 → 11)
+- version 0.2.5-beta stamped into `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
+- Compiled `./skills/specshift/templates/workflow.md` reflects new init instruction body
+
+### Third-Pass Test Coverage
+
+No new test items needed. The first-pass `tests.md` already covers both-file fresh-init behavior (it was the originally specified behavior; the second-pass narrowing introduced an Option-A test variant that is now obsolete). Re-running the first-pass scenarios verifies the restored behavior.
+
+### Third-Pass Fix Loop
+
+No fix-loop iterations during the third pass. All edits land cleanly; compile passes on first run.
+
+### Third-Pass Findings
+
+#### CRITICAL
+
+*(none)*
+
+#### WARNING
+
+*(none)*
+
+#### SUGGESTION
+
+- **Live consumer install verification remains deferred** (carried over from first and second pass). Recommend verifying `claude plugin marketplace update specshift` + `codex /plugins` flows once 0.2.5-beta is tagged and released. Not a third-pass-specific concern.
+
+### Third-Pass Verdict
+
+**PASS**
+
+All third-pass requirements verified, all third-pass scenarios covered, design decision "Fresh init writes both AGENTS.md and CLAUDE.md" implemented end-to-end, scope clean, no critical or warning findings. The change is ready for commit + push to the `codex-plugin-support` branch so PR #45 picks up the third-pass commit.
+
+Spec status updates already applied:
+
+- `docs/specs/multi-target-distribution.md`: version 2 → 3 ✓
+- `docs/specs/project-init.md`: version 7 → 8 ✓
+- `src/templates/workflow.md`: template-version 10 → 11 ✓ (validated by compile script)
+- `.specshift/WORKFLOW.md`: synced ✓

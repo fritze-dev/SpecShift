@@ -1,5 +1,5 @@
 ---
-template-version: 10
+template-version: 11
 plugin-version: 0.2.5-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
@@ -52,10 +52,10 @@ audit artifact: stop before audit and suggest specshift apply.
 
 Project initialization and health check.
 Mode detection:
-- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution, generate AGENTS.md (full body)
+- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution, generate AGENTS.md (full body) and CLAUDE.md (one-line @AGENTS.md import stub)
 - Update (templates outdated): merge plugin template updates with local customizations
 - Re-sync (all installed): detect spec drift (code vs specs) + docs drift (docs vs specs)
-Bootstrap files: AGENTS.md is the agnostic single source of truth for agent directives (read by Codex natively, by Claude Code via the documented @AGENTS.md memory-import in a hand-maintained CLAUDE.md). On fresh init, generate AGENTS.md only — do NOT auto-generate CLAUDE.md. The plugin still ships templates/claude.md as a one-line @AGENTS.md import stub for users who explicitly want Claude Code's memory pattern; users copy it into a hand-maintained CLAUDE.md themselves. On re-init: never overwrite existing AGENTS.md or CLAUDE.md. If AGENTS.md exists, run a standard-sections check and report WARNING per missing section. If CLAUDE.md exists, run a WARNING-only standard-sections check (CLAUDE.md content is intentionally minimal). If only CLAUDE.md exists (legacy project), generate AGENTS.md alongside it and suggest the user reduce CLAUDE.md to the @AGENTS.md import stub manually.
+Bootstrap files: AGENTS.md is the agnostic single source of truth for agent directives (read by Codex natively, by Claude Code via the documented @AGENTS.md memory-import). On fresh init (neither file exists), generate both AGENTS.md (full body, from templates/agents.md) and CLAUDE.md (one-line @AGENTS.md import stub, from templates/claude.md). The CLAUDE.md stub is a pointer, not a content duplicate — SSOT is preserved. On re-init: never overwrite existing AGENTS.md or CLAUDE.md. If AGENTS.md exists, run a standard-sections check and report WARNING per missing section (passive — no auto-edit). If CLAUDE.md exists, run a WARNING-only standard-sections check (CLAUDE.md content is intentionally minimal). If only CLAUDE.md exists (legacy project), generate AGENTS.md alongside it and leave the existing CLAUDE.md untouched. If only AGENTS.md exists, generate the CLAUDE.md import stub.
 Report findings, suggest specshift propose for changes needed.
 
 ## Action: apply

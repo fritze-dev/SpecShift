@@ -2,7 +2,7 @@
 order: 16
 category: distribution
 status: stable
-version: 2
+version: 3
 lastModified: 2026-04-27
 ---
 
@@ -112,11 +112,11 @@ The plugin SHALL ship a Codex-marketplace entry file at `.agents/plugins/marketp
 
 ### Requirement: Bootstrap Single Source of Truth Pattern
 
-The plugin SHALL maintain a single bootstrap content source at `src/templates/agents.md` containing the full set of agent directives (workflow rules, plan-mode regulation, workflow-routing rule, knowledge-management rules). This file is the agnostic single source of truth: Codex CLI reads `AGENTS.md` natively at session start, and Claude Code reads `AGENTS.md` via the documented `@AGENTS.md` import directive in a hand-maintained `CLAUDE.md`. The plugin SHALL also ship `src/templates/claude.md` as a Smart Template containing only the `@AGENTS.md` import line — but `specshift init` SHALL NOT auto-generate `CLAUDE.md` from it. The `claude.md` template exists so users who explicitly want Claude Code's documented memory pattern can copy the stub into their own `CLAUDE.md`. Both templates SHALL be tracked with `template-version` discipline. Updates to shared bootstrap content (rules that apply to all agents) SHALL be made only in `agents.md`. The `claude.md` stub SHALL NOT contain duplicated content from `agents.md`. Project-specific content (such as a File Ownership section reflecting the consumer project's directory layout) is added by the agent during `specshift init`'s codebase scan, not in the bootstrap template.
+The plugin SHALL maintain a single bootstrap content source at `src/templates/agents.md` containing the full set of agent directives (workflow rules, plan-mode regulation, workflow-routing rule, knowledge-management rules). This file is the agnostic single source of truth: Codex CLI reads `AGENTS.md` natively at session start, and Claude Code reads `AGENTS.md` via the documented `@AGENTS.md` import directive in `CLAUDE.md`. The plugin SHALL also ship `src/templates/claude.md` as a Smart Template containing only the `@AGENTS.md` import line. On fresh init, `specshift init` SHALL generate both `AGENTS.md` (full body) and `CLAUDE.md` (one-line import stub) so that the documented Claude Code memory-import pattern is active without requiring the user to copy the stub manually. Single source of truth is preserved because the import stub is a pointer, not a content duplicate — normative rules live only in AGENTS.md. Both templates SHALL be tracked with `template-version` discipline. Updates to shared bootstrap content (rules that apply to all agents) SHALL be made only in `agents.md`. The `claude.md` stub SHALL NOT contain duplicated content from `agents.md`. Project-specific content (such as a File Ownership section reflecting the consumer project's directory layout) is added by the agent during `specshift init`'s codebase scan, not in the bootstrap template.
 
-The compile script SHALL place both templates into the compiled `templates/` directory so that `specshift init` can read `agents.md` at runtime and so the `claude.md` stub is available for users who want to copy it manually.
+The compile script SHALL place both templates into the compiled `templates/` directory so that `specshift init` can read `agents.md` and `claude.md` at runtime to generate the bootstrap files.
 
-**User Story:** As a maintainer I want bootstrap rules authored once, so that updates like the workflow-routing rule never need to be applied twice — and I want users to opt in to a Claude-specific `CLAUDE.md` rather than have one forced onto every project.
+**User Story:** As a maintainer I want bootstrap rules authored once, so that updates like the workflow-routing rule never need to be applied twice — and I want fresh init to set up both bootstrap files in one shot so consumers do not have to manually wire up Claude Code's documented memory-import pattern.
 
 #### Scenario: agents.md contains full bootstrap content
 
@@ -124,20 +124,28 @@ The compile script SHALL place both templates into the compiled `templates/` dir
 - **WHEN** the file is inspected
 - **THEN** it SHALL contain at minimum sections covering Workflow, Planning, and Knowledge Management rules
 
-#### Scenario: claude.md is the import stub template (manual copy)
+#### Scenario: claude.md is the import stub template
 
 - **GIVEN** the source `src/templates/claude.md`
 - **WHEN** the file is inspected
 - **THEN** it SHALL contain a line invoking the Claude Code import syntax `@AGENTS.md`
 - **AND** SHALL NOT duplicate normative rules from `agents.md`
-- **AND** the surrounding documentation SHALL clarify that init does not auto-generate CLAUDE.md and that the stub is a copy-paste template for users who want it
 
 #### Scenario: Updating a shared rule touches only agents.md
 
 - **GIVEN** a maintainer needs to update the workflow-routing rule
 - **WHEN** the update is made
 - **THEN** only `src/templates/agents.md` SHALL be modified
-- **AND** the change SHALL apply to both Claude Code and Codex consumers (Codex reads AGENTS.md natively; Claude Code reads it via the `@AGENTS.md` import for users who maintain a CLAUDE.md)
+- **AND** the change SHALL apply to both Claude Code and Codex consumers (Codex reads AGENTS.md natively; Claude Code reads it via the `@AGENTS.md` import expanded from the generated CLAUDE.md stub)
+
+#### Scenario: Fresh init generates both bootstrap files
+
+- **GIVEN** a project with no `AGENTS.md` and no `CLAUDE.md`
+- **WHEN** the user runs `specshift init`
+- **THEN** the system SHALL generate `AGENTS.md` (full body, from `templates/agents.md`)
+- **AND** SHALL generate `CLAUDE.md` (one-line `@AGENTS.md` import stub, from `templates/claude.md`)
+- **AND** Claude Code SHALL load CLAUDE.md and expand the `@AGENTS.md` import at next session start
+- **AND** Codex SHALL load AGENTS.md natively at next session start
 
 #### Scenario: Both templates are Smart Templates
 
@@ -208,7 +216,7 @@ The README SHALL document install instructions for every supported target. There
 - **Existing Claude install with old marketplace source**: When existing Claude Code consumers run `claude plugin marketplace update specshift` after the migration, the new marketplace.json with `source: "./"` SHALL be picked up and the new skill tree at `./skills/specshift/` SHALL resolve correctly.
 - **Codex marketplace API path drift**: The exact filesystem location of the Codex marketplace file (`.agents/plugins/marketplace.json`) is governed by the Codex CLI documentation; if the upstream path changes, the compile script SHALL be updated to match.
 - **Branding assets absent**: If `interface.logo`, `composerIcon`, `brandColor`, or `screenshots` are not provided, the Codex listing SHALL still install correctly, displaying without branding rather than rejecting the manifest.
-- **Mixed-target consumer project**: A consumer project may use both Claude Code and Codex. AGENTS.md is the single agnostic source of truth — Codex reads it natively. Claude Code consumers who want the documented memory-import pattern add `@AGENTS.md` to a hand-maintained `CLAUDE.md`; init does not generate CLAUDE.md automatically.
+- **Mixed-target consumer project**: A consumer project may use both Claude Code and Codex. AGENTS.md is the single agnostic source of truth — Codex reads it natively. Claude Code reads CLAUDE.md and expands the `@AGENTS.md` import. Both files are generated on fresh init so a project that adds the second target later requires no additional bootstrap setup.
 - **Per-target manifest field drift**: Hand-edited per-target manifests carry agnostic metadata (`name`, `description`, `author`, `repository`, `license`, `keywords`) that SHALL be reviewed manually for parity. Only the `version` field is enforced by the compile script — drift in other fields is a maintainer-review concern, not a compile-time error.
 - **Skill compilation produces files for unsupported target**: The compile script SHALL only emit files for targets it knows about. Files for unknown targets SHALL NOT be created speculatively.
 

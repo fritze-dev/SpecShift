@@ -2,7 +2,7 @@
 
 
 ### Requirement: Install Workflow
-The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's `templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate the bootstrap files (`AGENTS.md` always; `CLAUDE.md` only when one already exists) from the plugin's `templates/agents.md` and `templates/claude.md` (see "Bootstrap Files Generation" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
+The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's `templates/workflow.md` (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate the bootstrap files (`AGENTS.md` always on fresh init; `CLAUDE.md` always on fresh init as a one-line `@AGENTS.md` import stub) from the plugin's `templates/agents.md` and `templates/claude.md` (see "Bootstrap Files Generation" requirement). The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps and SHALL NOT overwrite existing bootstrap files.
 
 The init command SHALL check for GitHub tooling availability (gh CLI, MCP tools, or API). If GitHub tooling is available and authenticated, the init command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the init command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The init command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge using available GitHub tooling.
 
@@ -15,7 +15,7 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 #### Scenario: First-time project initialization
 - **GIVEN** a project directory without the spec-driven workflow installed
 - **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL copy Smart Templates from the plugin's `templates/` directory to `.specshift/templates/`, copy WORKFLOW.md from the plugin's `templates/workflow.md`, create `.specshift/CONSTITUTION.md` placeholder, generate `AGENTS.md` from the bootstrap template, and verify the setup
+- **THEN** the system SHALL copy Smart Templates from the plugin's `templates/` directory to `.specshift/templates/`, copy WORKFLOW.md from the plugin's `templates/workflow.md`, create `.specshift/CONSTITUTION.md` placeholder, generate `AGENTS.md` from the bootstrap template and `CLAUDE.md` from the import-stub template, and verify the setup
 
 #### Scenario: Idempotent re-initialization
 - **GIVEN** a project that has already been initialized
