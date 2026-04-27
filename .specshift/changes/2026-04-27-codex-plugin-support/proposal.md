@@ -159,3 +159,35 @@ The narrowing was maintainer-zentriert ("narrower bootstrap"), not user-centered
 - **Auto-merge or confirmed-merge of existing bootstrap files** on re-init — re-init stays passive (WARNING-only). User edits remain authoritative.
 - **Routing-pflicht in the WARNING output** ("run `specshift propose` now") — WARNING is a passive signal; the user decides next steps in dialog with the agent.
 - **Version bump.** Reversal lands within the same `codex-plugin-support` change, in PR #45, before merge — version stays `0.2.5-beta`. No `0.2.6-beta`, no separate ADR.
+
+## Codex Marketplace Consolidation (2026-04-27 — fourth pass)
+
+The second pass moved plugin manifests from `src/.claude-plugin/` and `src/.codex-plugin/` to the repo root (hand-edited), but **the Codex marketplace template at `src/marketplace/codex.json` was not migrated** — it stayed as a templated file that the compile script rendered into `.agents/plugins/marketplace.json`. That asymmetry is the same friction class as the manifest-at-root migration: hand-editing the source template *and* knowing about the rendered output creates dual-edit risk where a single hand-edit at the root would suffice.
+
+### Why (Marketplace Consolidation)
+
+The diff between `src/marketplace/codex.json` and the rendered `.agents/plugins/marketplace.json` is exactly **one line**: the `version` field (`"0.0.0"` placeholder → stamped value). Every other field (name, owner, metadata, plugins[].name/source/description) is authored verbatim. The compile script's whole job for the marketplace is therefore identical to what it already does for the Codex *manifest*: read Claude version → `jq`-stamp `.plugins[].version` in place → cross-check.
+
+Consolidating is cheaper than maintaining the indirection: the marketplace file is 13 lines of JSON, lives at a fixed path Codex CLI dictates, and gains nothing from a `src/` template layer.
+
+### What Changes (Marketplace Consolidation)
+
+- **Delete `src/marketplace/codex.json`** (and the now-empty `src/marketplace/` directory).
+- **`.agents/plugins/marketplace.json`** becomes the hand-edited source of truth at the repo root, alongside `.claude-plugin/marketplace.json`. All metadata (name, owner, plugins[].source, description) authored directly there.
+- **`scripts/compile-skills.sh`** simplified: drop the `cp + jq` rendering block; replace with an in-place `jq` version-stamp on the existing root file (mirror the existing Codex-manifest-stamping logic). Drop `CODEX_MARKETPLACE_SRC` and `CODEX_MARKETPLACE_DIR` variables; cleanup block no longer rms the marketplace directory.
+- **`docs/specs/release-workflow.md`** §"Source and Release Directory Structure", §"AOT Skill Compilation": rewrite the marketplace handling description; `version` 4 → 5.
+- **`docs/specs/multi-target-distribution.md`** §"Codex Marketplace Entry": revise to describe hand-edited at root + `jq`-stamping; rewrite the "marketplace generated" scenario into "marketplace lives at repository root"; `version` 3 → 4.
+- **`docs/capabilities/multi-target-distribution.md`, `docs/capabilities/release-workflow.md`**: align prose.
+- **`AGENTS.md`** File-Ownership block: remove `src/marketplace/codex.json` from the `src/` list; merge `.agents/plugins/marketplace.json` into the per-target manifests/marketplaces block as hand-edited.
+- **`.specshift/CONSTITUTION.md`** Plugin source layout convention + the related Architecture Rules entry: align with hand-edited-at-root.
+- **`CHANGELOG.md`** 0.2.5-beta entries: Codex marketplace Added line + Hardening Pass BREAKING entry rewritten to reflect that marketplace files are hand-edited at root too.
+
+### Capabilities (Marketplace Consolidation)
+
+- **Modified**: `multi-target-distribution` (Codex Marketplace Entry), `release-workflow` (Source and Release Directory Structure, AOT Skill Compilation).
+
+### Out of Scope (Marketplace Consolidation)
+
+- **Manifest-field-parity automation across Claude and Codex** — same as before, manual review concern.
+- **Cursor or Gemini marketplace files** — separate roadmap.
+- **Version bump.** Lands in PR #45, version stays `0.2.5-beta`.

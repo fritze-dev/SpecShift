@@ -439,3 +439,118 @@ Spec status updates already applied:
 - `docs/specs/project-init.md`: version 7 → 8 ✓
 - `src/templates/workflow.md`: template-version 10 → 11 ✓ (validated by compile script)
 - `.specshift/WORKFLOW.md`: synced ✓
+
+---
+
+## Fourth-Pass Audit (2026-04-27 — Codex marketplace consolidation)
+
+The change was reopened a third time to consolidate the Codex marketplace template (`src/marketplace/codex.json`) into the hand-edited root file (`.agents/plugins/marketplace.json`), eliminating the last `src/`-based indirection for plugin distribution artifacts. See `proposal.md` §"Codex Marketplace Consolidation (2026-04-27 — fourth pass)". This audit covers the fourth-pass scope on top of the prior three passes.
+
+### Fourth-Pass Summary
+
+| Dimension | Status |
+|-----------|--------|
+| Fourth-pass tasks | M1.1–M1.2, M2.1–M2.4, M3.1–M3.3 complete; M4.1 complete (compile clean); M4.2–M4.4 in progress |
+| Fourth-pass requirements | 2/2 verified (multi-target-distribution Codex Marketplace Entry revised; release-workflow Source-and-Release-Directory-Structure + AOT-Skill-Compilation revised) |
+| Compile result | 45/45 requirements, 0 warnings, version 0.2.5-beta stamped on Codex manifest AND marketplace |
+| Scope adherence | All file changes traced to M1–M3 task IDs |
+| Findings | 0 CRITICAL, 0 WARNING, 0 SUGGESTION |
+
+### Fourth-Pass Branch Diff (working tree, against third-pass commit `e1a2ce3`)
+
+| File | Change |
+|---|---|
+| `src/marketplace/codex.json` | **DELETED** (and the empty `src/marketplace/` directory) |
+| `scripts/compile-skills.sh` | header comment updated; `CODEX_MARKETPLACE_SRC` and `CODEX_MARKETPLACE_DIR` vars removed; cleanup-block `rm -rf "$CODEX_MARKETPLACE_DIR"` removed; "Emit Codex marketplace entry" replaced with "Stamp Codex marketplace version (preserve all other fields)" — analogous to the existing Codex-manifest stamping logic with cross-check; summary line wording updated |
+| `docs/specs/release-workflow.md` | version 4 → 5; §"Source and Release Directory Structure" rewritten (Source-dir entry no longer mentions Codex marketplace template; manifests + marketplace files grouped at root; Codex marketplace entry described as hand-edited); §"AOT Skill Compilation" steps merged (manifest+marketplace stamping in one step, separate "Emit Codex marketplace" step removed); scenario "Source directory contains editable files" tightened |
+| `docs/specs/multi-target-distribution.md` | version 3 → 4; §"Codex Marketplace Entry" rewritten; "Codex marketplace file generated" scenario rewritten as "Codex marketplace lives at repository root" with the explicit `no src/marketplace/ template` clause |
+| `docs/capabilities/multi-target-distribution.md` | Compilation prose updated to reflect both stamps + no marketplace generation |
+| `docs/capabilities/release-workflow.md` | Plugin Source and Manifest Layout + Version Synchronization sections updated |
+| `AGENTS.md` (project) | File-Ownership block: removed `src/marketplace/codex.json` from `src/` list; consolidated `.agents/plugins/marketplace.json` into the hand-edited per-target manifests/marketplaces line; removed the now-obsolete generated-Codex-marketplace bullet |
+| `.specshift/CONSTITUTION.md` | Architecture Rules + Plugin source layout convention rewritten for hand-edited-at-root marketplace |
+| `CHANGELOG.md` | first-pass "Added" line for Codex marketplace + Hardening-Pass BREAKING entry rewritten to reflect hand-edited marketplace; spec version-bump notations updated (`multi-target-distribution.md` 1 → 4, `release-workflow.md` 3 → 5) |
+| `.specshift/changes/2026-04-27-codex-plugin-support/proposal.md` | Appended "Codex Marketplace Consolidation (fourth pass)" section |
+| `.specshift/changes/2026-04-27-codex-plugin-support/tasks.md` | Marked T4.4 complete with commit hashes; appended "Fourth Pass" section with M1–M4 items |
+| `.specshift/changes/2026-04-27-codex-plugin-support/audit.md` | this section |
+
+### Fourth-Pass Requirement Verification
+
+#### multi-target-distribution (revised — Codex Marketplace Entry)
+
+1. **Codex Marketplace Entry (fourth pass)** — verified
+   - Spec rewritten: marketplace file is hand-edited at root (no `src/` indirection); compile script stamps `plugins[].version` via `jq` ✓
+   - "Codex marketplace lives at repository root" scenario asserts that `.agents/plugins/marketplace.json` exists hand-edited and that no `src/marketplace/` template exists ✓
+   - "Independent marketplace updates" scenario unchanged (still valid: Claude marketplace and Codex marketplace are independent) ✓
+   - Spec version 3 → 4 ✓
+
+#### release-workflow (revised — Source-and-Release-Directory-Structure + AOT-Skill-Compilation)
+
+2. **Source and Release Directory Structure (fourth pass)** — verified
+   - "Source directory" no longer mentions `src/marketplace/codex.json` ✓
+   - "Plugin manifests and marketplace files at the repository root" lists all four hand-edited files (Claude manifest, Claude marketplace, Codex manifest, Codex marketplace) ✓
+   - "Codex marketplace entry" paragraph explicitly states hand-edited + `jq`-stamped, no rendering from a template ✓
+   - Scenario "Source directory contains editable files" updated to assert `src/marketplace/` does not exist ✓
+
+3. **AOT Skill Compilation (fourth pass)** — verified
+   - Step list compressed from 7 to 6 steps (manifest + marketplace stamping now in one step; "Emit Codex marketplace entry" step removed) ✓
+   - "Stamp per-target manifest and marketplace versions" describes the consolidated `jq` stamping ✓
+   - Final paragraph names `.codex-plugin/` and `.agents/plugins/` as authoritative locations alongside `.claude-plugin/` ✓
+   - Spec version 4 → 5 ✓
+
+### Fourth-Pass Scenario Coverage
+
+| Capability | Fourth-Pass Scenarios | Evidence |
+|---|---|---|
+| multi-target-distribution Codex Marketplace Entry | 3 (lives at repo root, version stamped, independent updates) | `.agents/plugins/marketplace.json` content + compile-script behavior |
+| release-workflow Source-and-Release-Directory-Structure | 1 (Source directory excludes `src/marketplace/`) | `ls src/` shows only `actions`, `skills`, `templates` |
+| release-workflow AOT-Skill-Compilation | covered by spec text + compile script run | compile clean: 45/45, marketplace stamped at 0.2.5-beta |
+
+### Fourth-Pass Design Adherence
+
+The consolidation extends the second-pass design decision "Move plugin manifests from `src/` to the repo root, hand-edited" (design.md Decisions Extension table) to the marketplace files. ADR-003 is reaffirmed: the root **is** the plugin root for both targets, hand-edited authoritative source, version stamped via `jq`. No design pivot — this is finishing what the second pass started.
+
+### Fourth-Pass Scope Control
+
+Every file in the Fourth-Pass Branch Diff traces to an M1, M2, or M3 task ID. No untraced files; only one source-code file changed (`scripts/compile-skills.sh`); no compiled-tree manual edits.
+
+### Fourth-Pass Compile Verification
+
+`bash scripts/compile-skills.sh` ran clean:
+- 45/45 requirements extracted (no count change — fourth pass touches spec body wording, not requirement-extraction surface)
+- 0 warnings
+- Codex manifest version stamped: `0.2.5-beta` (no-op since already current)
+- **`.agents/plugins/marketplace.json` version stamped: `0.2.5-beta`** (no-op since already current — first run after consolidation; future runs will stamp on each Claude-side version bump)
+- Cross-check passed: emitted Codex versions equal Claude source
+
+### Fourth-Pass Test Coverage
+
+No new test items needed. The behavior is identical from a consumer-install perspective (`.agents/plugins/marketplace.json` content remains the same, only the *source* of the file changed from "rendered from template" to "hand-edited"). Existing first-pass test scenarios for the Codex marketplace remain valid.
+
+### Fourth-Pass Fix Loop
+
+No fix-loop iterations. The compile-script edit + spec rewrites + delete were straightforward. No `.agents/plugins/marketplace.json` content change required (it was already 13 lines of authored JSON; the delete just removed the upstream template).
+
+### Fourth-Pass Findings
+
+#### CRITICAL
+
+*(none)*
+
+#### WARNING
+
+*(none)*
+
+#### SUGGESTION
+
+*(none — the previous "Live consumer install verification" suggestion remains carried over from prior passes; it is not a fourth-pass-specific concern)*
+
+### Fourth-Pass Verdict
+
+**PASS**
+
+All fourth-pass requirements verified, all fourth-pass scenarios covered, scope clean, no findings. The change is ready for commit + push to the `codex-plugin-support` branch so PR #45 picks up the fourth-pass commit.
+
+Spec status updates already applied:
+
+- `docs/specs/multi-target-distribution.md`: version 3 → 4 ✓
+- `docs/specs/release-workflow.md`: version 4 → 5 ✓

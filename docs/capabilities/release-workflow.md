@@ -43,7 +43,7 @@ When a version bump is pushed to `main`, a GitHub Action automatically creates a
 
 ### Plugin Source and Manifest Layout
 
-Plugin source code (skills, templates, action specs, Codex marketplace template) lives in the `src/` subdirectory. Plugin manifests live hand-edited at the repo root: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json`. The Codex marketplace template lives at `src/marketplace/codex.json` and is rendered to `.agents/plugins/marketplace.json` by the compile script.
+Plugin source code (skills, templates, action specs) lives in the `src/` subdirectory. Plugin manifests and marketplace files all live hand-edited at the repo root: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json`.
 
 Consumer plugin caches contain only the compiled release artifacts — documentation, CI workflows, project spec files, and changelogs are not downloaded.
 
@@ -57,7 +57,7 @@ Developers register the local repository path as a marketplace source for live p
 
 ### Version Synchronization
 
-The `version` fields in `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` always match `.claude-plugin/plugin.json`. The compile script enforces this on every run: it reads the Claude version, stamps it into the Codex manifest in place (preserving non-version fields), generates the Codex marketplace from `src/marketplace/codex.json` with the stamped version, and verifies that the emitted Codex manifest version equals the Claude source after stamping. If any are out of sync beforehand, they are realigned to the Claude version automatically.
+The `version` fields in `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` always match `.claude-plugin/plugin.json`. The compile script enforces this on every run: it reads the Claude version and stamps it via `jq` into both the Codex manifest and the Codex marketplace in place (preserving every other field verbatim), then verifies that the emitted Codex versions equal the Claude source after stamping. If any are out of sync beforehand, they are realigned to the Claude version automatically.
 
 ### Manual Minor and Major Releases
 

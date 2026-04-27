@@ -29,7 +29,7 @@ The plugin keeps target-specific surface (manifest schemas, marketplace files) t
 
 ### Compilation
 
-The compile script (`bash scripts/compile-skills.sh`) runs from the repo root and produces all distribution artifacts in one pass. It reads the version from `.claude-plugin/plugin.json` (the source of truth, hand-edited at the root), copies the shared skill tree from `src/` to `./skills/specshift/`, stamps the version into `.codex-plugin/plugin.json` in place via `jq` (preserving every other Codex field verbatim), generates the Codex marketplace file at `.agents/plugins/marketplace.json` from the `src/marketplace/codex.json` template, removes any legacy compiled tree from before the migration, and verifies that the emitted Codex version equals the Claude source after stamping. The script does not copy plugin manifests from `src/` — manifests live at the root and are hand-edited.
+The compile script (`bash scripts/compile-skills.sh`) runs from the repo root and produces all distribution artifacts in one pass. It reads the version from `.claude-plugin/plugin.json` (the source of truth, hand-edited at the root), copies the shared skill tree from `src/` to `./skills/specshift/`, stamps the version into `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json` in place via `jq` (preserving every other field verbatim), removes any legacy compiled tree from before the migration, and verifies that the emitted Codex version equals the Claude source after stamping. The script does not copy plugin manifests or marketplace files from `src/` — they all live at the root and are hand-edited.
 
 ### Installation per Target
 

@@ -161,4 +161,33 @@ Reversal of the second-pass AGENTS-only narrowing. Fresh init generates both `AG
 - [x] T4.1. Run `bash scripts/compile-skills.sh`. Confirm exit 0, version stamped consistently, template-version validation passes for `workflow.md` v11. — clean: 45/45 requirements, 0 warnings, version 0.2.5-beta stamped consistently, template-version validation passed.
 - [x] T4.2. Read-through verification: spec text + workflow.md init instruction match the both-file fresh-init behavior; re-init scenarios (AGENTS-exists, CLAUDE-exists, both-exist) leave existing files untouched with passive WARNING-only standard-sections checks.
 - [x] T4.3. Regenerate `audit.md` with the third-pass scope. Verdict: **PASS**, 0 CRITICAL, 0 WARNING, 1 SUGGESTION (live consumer install verification deferred — carried over from first/second pass).
-- [ ] T4.4. Commit on `codex-plugin-support` branch with conventional message and push so PR #45 picks up the third-pass commit.
+- [x] T4.4. Commit on `codex-plugin-support` branch with conventional message and push so PR #45 picks up the third-pass commit. — `20f9024` `bootstrap symmetry restoration` + `67d1769` `remove legacy .claude/.claude-plugin/plugin.json` + `e1a2ce3` `regenerate capability docs` pushed.
+
+## Fourth Pass — Codex Marketplace Consolidation
+
+The second pass moved plugin manifests from `src/` to the repo root, but the Codex marketplace template at `src/marketplace/codex.json` was missed. Fourth pass: delete the template, make `.agents/plugins/marketplace.json` the hand-edited source of truth at the repo root, and have the compile script `jq`-stamp version in place (analogous to Codex manifest handling). See `proposal.md` §"Codex Marketplace Consolidation (2026-04-27 — fourth pass)".
+
+### M1. Compile script + source deletion
+
+- [x] M1.1. `scripts/compile-skills.sh` — drop `CODEX_MARKETPLACE_SRC` and `CODEX_MARKETPLACE_DIR` vars; remove the `rm -rf "$CODEX_MARKETPLACE_DIR"` cleanup line; replace the "Emit Codex marketplace entry" block with an in-place `jq` version-stamp on `.agents/plugins/marketplace.json` (mirror of the existing Codex-manifest stamping); update header comment + summary line.
+- [x] M1.2. `git rm src/marketplace/codex.json`. The empty `src/marketplace/` directory is auto-removed by git.
+
+### M2. Specs and capability docs
+
+- [x] M2.1. `docs/specs/release-workflow.md` — §"Source and Release Directory Structure" (Source dir Codex template line removed, manifests/marketplace at root grouped, Codex marketplace entry described as hand-edited); §"AOT Skill Compilation" (steps merged: stamp manifest + marketplace combined into one step, "Emit Codex marketplace" step removed); scenario "Source directory contains editable files" tightened (`src/marketplace/` excluded). Bump `version` 4 → 5.
+- [x] M2.2. `docs/specs/multi-target-distribution.md` — §"Codex Marketplace Entry" rewritten to describe hand-edited-at-root + `jq` version-stamp; "Codex marketplace file generated" scenario rewritten as "Codex marketplace lives at repository root". Bump `version` 3 → 4.
+- [x] M2.3. `docs/capabilities/multi-target-distribution.md` § Compilation prose updated.
+- [x] M2.4. `docs/capabilities/release-workflow.md` § Plugin Source and Manifest Layout + § Version Synchronization prose updated.
+
+### M3. Project-level alignment
+
+- [x] M3.1. `AGENTS.md` File-Ownership block — remove `src/marketplace/codex.json` from `src/` list; consolidate `.agents/plugins/marketplace.json` into the hand-edited per-target manifests/marketplaces line; remove the now-obsolete generated-Codex-marketplace bullet.
+- [x] M3.2. `.specshift/CONSTITUTION.md` Architecture Rules + Conventions Plugin source layout — align with hand-edited-at-root for both manifests and marketplaces.
+- [x] M3.3. `CHANGELOG.md` 0.2.5-beta — first-pass "Added" line for the Codex marketplace + Hardening Pass BREAKING entry both reflect hand-edited-at-root + spec version-bump notations.
+
+### M4. Compile + Audit + Commit
+
+- [x] M4.1. Run `bash scripts/compile-skills.sh`. Confirm exit 0, version 0.2.5-beta stamped on Codex manifest AND `.agents/plugins/marketplace.json`, no template-version validation failure. — clean: 45/45 requirements, 0 warnings, both Codex outputs already at 0.2.5-beta (no-op stamps), cross-check passed.
+- [x] M4.2. Read-through verification: `.agents/plugins/marketplace.json` content unchanged (name, owner, metadata, plugins[].name/source/description identical to pre-consolidation state; version `0.2.5-beta` preserved).
+- [x] M4.3. Append Fourth-Pass audit section to `audit.md`. Verdict: **PASS**, 0 CRITICAL, 0 WARNING, 0 SUGGESTION.
+- [ ] M4.4. Commit on `codex-plugin-support` and push so PR #45 picks up the fourth-pass commit.
