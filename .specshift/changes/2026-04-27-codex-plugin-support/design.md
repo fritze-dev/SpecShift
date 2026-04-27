@@ -73,7 +73,7 @@ skills/specshift/{SKILL.md, templates/, actions/}
 
 4. **`src/templates/agents.md`** — new Smart Template carrying the full body of today's `claude.md`:
    - YAML frontmatter: `id: agents`, `template-version: 1`, `description: AGENTS.md bootstrap (full body)`, `generates: AGENTS.md`, `requires: []`, `instruction: ...`
-   - Body: identical to current `src/templates/claude.md` body (Workflow / Planning / Knowledge Management / File Ownership sections, plus the workflow-routing rule from commit 3d3f89f).
+   - Body: identical to current `src/templates/claude.md` body (Workflow / Planning / Knowledge Management sections, plus the workflow-routing rule from commit 3d3f89f). File-ownership content is project-specific and added during init's codebase scan, not part of the template body.
 
 5. **`src/templates/claude.md`** — body collapsed; only frontmatter + 1–2 lines remain:
    - Frontmatter `template-version` bumps from 4 → 5.
@@ -101,7 +101,7 @@ skills/specshift/{SKILL.md, templates/, actions/}
 * `skills/specshift/templates/agents.md` and `skills/specshift/templates/claude.md` both exist after compile.
 * `.claude/skills/` (legacy path) does NOT exist after compile.
 * `claude plugin marketplace update specshift && claude plugin update specshift@specshift` resolves the new layout without manual intervention.
-* In a fresh consumer project, `specshift init` produces both `AGENTS.md` (full body, all four standard sections) and `CLAUDE.md` (≤ 5 lines, contains `@AGENTS.md`).
+* In a fresh consumer project, `specshift init` produces both `AGENTS.md` (full body, the three standard sections — Workflow, Planning, Knowledge Management — plus any project-specific sections from the codebase scan) and `CLAUDE.md` (≤ 5 lines, contains `@AGENTS.md`).
 * `grep -c "@AGENTS.md" CLAUDE.md` returns `1` in the generated CLAUDE.md.
 * `wc -l < CLAUDE.md` returns ≤ 10 in the generated CLAUDE.md.
 

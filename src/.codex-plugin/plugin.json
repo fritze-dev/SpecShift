@@ -1,0 +1,12 @@
+{
+  "name": "specshift",
+  "version": "0.0.0",
+  "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SpecShift",
+    "shortDescription": "Spec-driven workflow: research, propose, apply, finalize, review.",
+    "category": "Productivity",
+    "capabilities": ["Read"]
+  }
+}

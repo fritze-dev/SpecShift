@@ -1,5 +1,5 @@
 ---
-status: active
+status: review
 branch: codex-plugin-support
 worktree: .claude/worktrees/codex-plugin-support
 capabilities:

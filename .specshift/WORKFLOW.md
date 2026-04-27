@@ -1,5 +1,5 @@
 ---
-template-version: 8
+template-version: 9
 plugin-version: 0.2.1-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
@@ -50,9 +50,10 @@ audit artifact: stop before audit and suggest running the specshift skill with `
 
 Project initialization and health check.
 Mode detection:
-- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution and CLAUDE.md
+- Fresh (no WORKFLOW.md): install templates, scan codebase, generate constitution, generate AGENTS.md (full body) and CLAUDE.md (@AGENTS.md import stub)
 - Update (templates outdated): merge plugin template updates with local customizations
 - Re-sync (all installed): detect spec drift (code vs specs) + docs drift (docs vs specs)
+Bootstrap files: AGENTS.md is the single source of truth for agent directives (read by Codex natively, by Claude Code via the @AGENTS.md import in CLAUDE.md). Generate both files unconditionally on fresh init. If only one exists, generate the missing one and leave the other untouched. Never overwrite an existing AGENTS.md or CLAUDE.md. On re-init, run a standard-sections check on existing AGENTS.md and report WARNING per missing section.
 Report findings, suggest running the specshift skill with `propose` for changes needed.
 
 ## Action: apply

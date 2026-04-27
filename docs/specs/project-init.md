@@ -273,7 +273,7 @@ The `specshift init` command SHALL generate a `CONSTITUTION.md` file based on th
 ### Requirement: Bootstrap Files Generation
 The `specshift init` command SHALL generate both `AGENTS.md` and `CLAUDE.md` at the project root to support both Codex CLI (which reads `AGENTS.md` natively) and Claude Code (which reads `CLAUDE.md`). Generation SHALL operate as follows:
 
-1. **AGENTS.md (full content)**: Generated from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md`. The generated AGENTS.md SHALL contain at minimum: (a) a `## Workflow` section directing all changes through the spec-driven workflow, (b) a `## Planning` section requiring explicit scope commitment before exiting plan mode and workflow routing through the specshift skill for implementation steps, (c) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge, and (d) a `## File Ownership` section describing project-specific file responsibilities. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan, using REVIEW markers for uncertain items.
+1. **AGENTS.md (full content)**: Generated from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md`. The generated AGENTS.md SHALL contain at minimum: (a) a `## Workflow` section directing all changes through the spec-driven workflow, (b) a `## Planning` section requiring explicit scope commitment before exiting plan mode and workflow routing through the specshift skill for implementation steps, and (c) a `## Knowledge Management` section directing the agent to use transparent artifacts instead of auto-memory for project knowledge. The agent SHALL adapt the template content to include project-specific rules discovered during the codebase scan (for example, adding a `## File Ownership` section reflecting the consumer project's directory layout), using REVIEW markers for uncertain items.
 
 2. **CLAUDE.md (import stub)**: Generated from the bootstrap template at `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`. The generated CLAUDE.md SHALL be a small stub containing an `@AGENTS.md` import directive (Claude Code's documented memory-import syntax) plus optional Claude-Code-specific instructions that do not apply to other targets. CLAUDE.md SHALL NOT duplicate normative rules from AGENTS.md.
 
@@ -287,7 +287,7 @@ When an existing AGENTS.md is detected, init SHALL check it against the bootstra
 - **GIVEN** a project with no `AGENTS.md` and no `CLAUDE.md`
 - **AND** the plugin has bootstrap templates at `${CLAUDE_PLUGIN_ROOT}/templates/agents.md` and `${CLAUDE_PLUGIN_ROOT}/templates/claude.md`
 - **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL generate `AGENTS.md` containing `## Workflow`, `## Planning`, `## Knowledge Management`, and `## File Ownership` sections
+- **THEN** the system SHALL generate `AGENTS.md` containing `## Workflow`, `## Planning`, and `## Knowledge Management` sections (and any project-specific sections derived from the codebase scan)
 - **AND** SHALL generate `CLAUDE.md` containing an `@AGENTS.md` import directive
 
 #### Scenario: AGENTS.md exists but CLAUDE.md missing

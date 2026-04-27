@@ -1,8 +1,7 @@
 ---
 order: 16
 category: distribution
-status: draft
-change: 2026-04-27-codex-plugin-support
+status: stable
 version: 1
 lastModified: 2026-04-27
 ---
@@ -112,7 +111,7 @@ The plugin SHALL ship a Codex-marketplace entry file at `.agents/plugins/marketp
 
 ### Requirement: Bootstrap Single Source of Truth Pattern
 
-The plugin SHALL maintain a single bootstrap content source at `src/templates/agents.md` containing the full set of agent directives (workflow rules, plan-mode regulation, workflow-routing rule, knowledge-management rules, file-ownership rules, project-specific instructions). The plugin SHALL also maintain a small bootstrap stub at `src/templates/claude.md` containing only an `@AGENTS.md` import line and any Claude-Code-specific instructions that do not apply to other targets. Both templates SHALL be tracked as Smart Templates with `template-version` discipline. Updates to shared bootstrap content (rules that apply to all agents) SHALL be made only in `agents.md`. The `claude.md` stub SHALL NOT contain duplicated content from `agents.md`.
+The plugin SHALL maintain a single bootstrap content source at `src/templates/agents.md` containing the full set of agent directives (workflow rules, plan-mode regulation, workflow-routing rule, knowledge-management rules). The plugin SHALL also maintain a small bootstrap stub at `src/templates/claude.md` containing only an `@AGENTS.md` import line and any Claude-Code-specific instructions that do not apply to other targets. Both templates SHALL be tracked as Smart Templates with `template-version` discipline. Updates to shared bootstrap content (rules that apply to all agents) SHALL be made only in `agents.md`. The `claude.md` stub SHALL NOT contain duplicated content from `agents.md`. Project-specific content (such as a File Ownership section reflecting the consumer project's directory layout) is added by the agent during `specshift init`'s codebase scan, not in the bootstrap template.
 
 The compile script SHALL place both templates into the compiled `templates/` directory so that `specshift init` can read them at runtime.
 
@@ -122,7 +121,7 @@ The compile script SHALL place both templates into the compiled `templates/` dir
 
 - **GIVEN** the source `src/templates/agents.md`
 - **WHEN** the file is inspected
-- **THEN** it SHALL contain at minimum sections covering Workflow, Planning, Knowledge Management, and File Ownership rules
+- **THEN** it SHALL contain at minimum sections covering Workflow, Planning, and Knowledge Management rules
 
 #### Scenario: claude.md is reduced to an import stub
 
