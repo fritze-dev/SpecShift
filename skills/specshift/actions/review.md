@@ -286,7 +286,7 @@ When a PR is merged from within a worktree (via any merge method), the system SH
 
 #### Scenario: Cleanup after successful local merge
 
-- **GIVEN** the agent is working inside a worktree at `.claude/worktrees/fix-auth` on branch `fix-auth`
+- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
 - **AND** the agent merges the PR which succeeds
 - **WHEN** the merge completes
 - **THEN** the system SHALL switch the working directory to the main worktree

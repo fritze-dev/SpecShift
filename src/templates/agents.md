@@ -1,13 +1,13 @@
 ---
-id: claude
-template-version: 4
-description: CLAUDE.md bootstrap template with standard agent directives
-generates: CLAUDE.md
+id: agents
+template-version: 1
+description: AGENTS.md bootstrap template (full body) — single source of truth for agent directives, read by Codex natively and by Claude Code via the @AGENTS.md import in CLAUDE.md
+generates: AGENTS.md
 requires: []
 instruction: |
-  Generate CLAUDE.md with project-specific agent instructions.
+  Generate AGENTS.md with project-specific agent instructions.
   Always include the Workflow, Planning, and Knowledge Management sections.
-  Add project-specific rules discovered during codebase analysis.
+  Add project-specific rules discovered during codebase analysis (e.g., a File Ownership section).
   Use REVIEW markers for items needing user confirmation.
 ---
 # Project Rules
