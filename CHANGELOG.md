@@ -3,6 +3,29 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.5-beta] — 2026-04-27
+
+### Codex Plugin Support (Multi-Target Distribution)
+
+#### Added
+- New plugin manifest source under `src/.codex-plugin/plugin.json` and compiled output at `.codex-plugin/plugin.json` — SpecShift now ships as both a Claude Code and an OpenAI Codex CLI plugin
+- New Codex marketplace entry generated at `.agents/plugins/marketplace.json` from `src/marketplace/codex.json`
+- New bootstrap-template `src/templates/agents.md` carrying the full agent-directives body (Workflow, Planning, Knowledge Management) — single source of truth for both targets
+- Project-level `AGENTS.md` generated for this repo to model the new pattern
+- New capability spec `docs/specs/multi-target-distribution.md` covering manifest parity, shared skill-tree layout, Codex marketplace, and bootstrap pattern
+
+#### Changed
+- **BREAKING (marketplace path):** `.claude-plugin/marketplace.json` source moved from `./.claude` to `./` — the compiled skill tree now lives at `./skills/specshift/` (Shopify-AI-Toolkit layout). Existing Claude Code installs run `claude plugin marketplace update specshift` to pick up the new layout.
+- `src/templates/claude.md` reduced from full body to a single-line `@AGENTS.md` import stub (template-version 4 → 5). Claude Code's documented memory-import syntax loads AGENTS.md content into the session, so no content is duplicated between bootstrap files.
+- `src/templates/workflow.md` `## Action: init` instruction updated: init now generates both AGENTS.md (full body) and CLAUDE.md (import stub) on fresh setup; on re-init it preserves existing files and warns about missing standard sections (template-version 8 → 9).
+- `scripts/compile-skills.sh` migrated to multi-target output: emits both manifests at the repo root, the shared `./skills/specshift/` tree, and the Codex marketplace file; removes the legacy `.claude/skills/` location; stamps the same `version` (read from the Claude source manifest) into all generated files.
+- `.specshift/CONSTITUTION.md` updated: release directory `.claude/skills/specshift/` → `./skills/specshift/`; plugin source layout convention documents both manifest source dirs and the new marketplace source path; agent instructions now point to AGENTS.md as the single source of truth.
+- `README.md` restructured into per-target install sections (Claude Code + Codex), updated Project Structure and Architecture sections to reflect multi-target layout.
+
+#### Specs
+- `multi-target-distribution.md` v1: new capability — Per-Target Plugin Manifest, Shared Skill Tree at Repository Root, Codex Marketplace Entry, Bootstrap Single Source of Truth Pattern, Multi-Target Install Documentation
+- `project-init.md` v6: replaced "CLAUDE.md Bootstrap" requirement with "Bootstrap Files Generation" requirement covering both AGENTS.md and CLAUDE.md generation; "Install Workflow" updated to add `agents.md` to the bootstrap-template exclusion list
+
 ## [v0.2.4-beta] — 2026-04-15
 
 ### Fix Review Action Friction Issues

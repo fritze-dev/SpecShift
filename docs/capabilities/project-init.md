@@ -1,13 +1,13 @@
 ---
 title: "Project Init"
 capability: "project-init"
-description: "One-command project initialization with template merge, codebase scanning, constitution generation, CLAUDE.md bootstrap, Claude Code Web settings generation, and health checks"
-lastUpdated: "2026-04-15"
+description: "One-command project initialization with template merge, codebase scanning, constitution generation, multi-target bootstrap files (AGENTS.md + CLAUDE.md), and health checks"
+lastUpdated: "2026-04-27"
 ---
 
 # Project Init
 
-Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution and CLAUDE.md from your codebase, generating Claude Code Web settings for cloud sessions, configuring optional worktree isolation, and running health checks for spec and documentation drift.
+Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution and bootstrap files (AGENTS.md as the full body and CLAUDE.md as a `@AGENTS.md` import stub) from your codebase, configuring optional worktree isolation, and running health checks for spec and documentation drift.
 
 ## Purpose
 
@@ -19,11 +19,12 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 
 ## Features
 
-- **One-command setup** via `specshift init` -- copies Smart Templates, installs WORKFLOW.md, creates CONSTITUTION.md placeholder, generates CLAUDE.md from bootstrap template, and validates the result
-- **CLAUDE.md bootstrap** -- generates CLAUDE.md from a plugin template containing Workflow, Planning (with scope commitment and workflow routing), and Knowledge Management sections, adapted with project-specific rules from the codebase scan
+- **One-command setup** via `specshift init` -- copies Smart Templates, installs WORKFLOW.md, creates CONSTITUTION.md placeholder, generates AGENTS.md (full body) and CLAUDE.md (`@AGENTS.md` import stub), and validates the result
+- **Multi-target bootstrap** -- generates `AGENTS.md` from the bootstrap template containing Workflow, Planning (with scope commitment and workflow routing), and Knowledge Management sections, adapted with project-specific rules from the codebase scan; generates `CLAUDE.md` as a single-line `@AGENTS.md` import stub. Codex reads AGENTS.md natively; Claude Code expands the import to load AGENTS.md content into the session
 - **Version-aware template merge** -- uses `template-version` fields to detect user customizations and merge plugin updates instead of overwriting
 - **Constitution section-level merge** -- detects missing sections from newer template versions and offers to generate content for them based on the codebase
-- **CLAUDE.md section-level check** -- during re-init, compares CLAUDE.md against bootstrap template section headings and reports missing standard sections as WARNING without modifying the file
+- **AGENTS.md section-level check** -- during re-init, compares the existing AGENTS.md against bootstrap template section headings and reports missing standard sections as WARNING without modifying the file
+- **Bootstrap-file partial setup recovery** -- if only AGENTS.md or only CLAUDE.md exists (e.g., from a pre-multi-target plugin version), init generates the missing one and leaves the existing file untouched
 - **Codebase scanning** -- analyzes tech stack, frameworks, languages, file structure, and coding conventions to populate the constitution with project-specific values
 - **Constitution generation** -- produces Tech Stack, Architecture Rules, Code Style, Constraints, Conventions, and Standard Tasks sections from scan results
 - **Environment checks** -- detects GitHub tooling availability, git version (2.5+ for worktree support), and `.gitignore` configuration
