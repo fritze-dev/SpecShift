@@ -47,22 +47,17 @@
   - Action: `bash scripts/compile-skills.sh`
   - Verify: `.claude/skills/specshift/` no longer exists; `./skills/specshift/` is the only compiled skill tree
 
-#### Codex Marketplace Entry
+#### Codex Discovery via Marketplace Add
 
-- [ ] **Scenario: Codex marketplace lives at repository root**
-  - Setup: clean checkout
-  - Action: `ls .agents/plugins/marketplace.json src/marketplace/`
-  - Verify: marketplace at root exists; `src/marketplace/` does NOT exist; the marketplace's plugin entry references the Codex plugin manifest
+- [ ] **Scenario: Codex install discovers the plugin manifest**
+  - Setup: a Codex CLI session with no SpecShift install
+  - Action: `codex plugin marketplace add github:fritze-dev/specshift`
+  - Verify: install succeeds and reads `.codex-plugin/plugin.json` directly; the marketplace entry is created automatically; no `.agents/plugins/marketplace.json` is required
 
-- [ ] **Scenario: Codex marketplace version stamped**
-  - Setup: edit `src/VERSION` to a new value (e.g. `9.9.9-test`); run compile
-  - Action: `jq -r '.plugins[0].version' .agents/plugins/marketplace.json`
-  - Verify: returns `9.9.9-test`; restore `src/VERSION` after the test
-
-- [ ] **Scenario: Independent marketplace updates**
-  - Setup: edit `.claude-plugin/marketplace.json` description (or unrelated metadata)
-  - Action: `bash scripts/compile-skills.sh`
-  - Verify: `.agents/plugins/marketplace.json` non-version fields semantically unchanged (`jq -S 'del(.plugins[].version)'` before/after compare-equal); only its own version field would change if `src/VERSION` changed
+- [ ] **Scenario: No Codex marketplace catalog file shipped**
+  - Setup: tree on this branch
+  - Action: `ls .agents/plugins/marketplace.json`
+  - Verify: file does NOT exist; `.agents/` directory does NOT exist either
 
 #### Bootstrap Single Source of Truth Pattern
 
@@ -130,7 +125,7 @@
 - [ ] **Scenario: Finalize bump edits only the SoT**
   - Setup: dry-run finalize on a completed change
   - Action: observe which file the version-bump step modifies
-  - Verify: only `src/VERSION` is modified by the bump itself; the four root manifest/marketplace files are subsequently updated by the compile run
+  - Verify: only `src/VERSION` is modified by the bump itself; the three root manifest/marketplace files are subsequently updated by the compile run
 
 - [ ] **Scenario: No manifest is the SoT**
   - Setup: read CONSTITUTION, README, and the multi-target-distribution spec
@@ -139,10 +134,10 @@
 
 #### Symmetric Version Stamping with Cross-Check
 
-- [ ] **Scenario: All four files stamped from one source**
+- [ ] **Scenario: All three files stamped from one source**
   - Setup: edit `src/VERSION` to `9.9.9-test`; run `bash scripts/compile-skills.sh`
-  - Action: `jq -r '.version // .plugins[0].version' .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json .agents/plugins/marketplace.json`
-  - Verify: returns `9.9.9-test` four times; restore `src/VERSION` after the test
+  - Action: `jq -r '.version // .plugins[0].version' .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json`
+  - Verify: returns `9.9.9-test` three times; restore `src/VERSION` after the test
 
 - [ ] **Scenario: Post-stamp cross-check fails on drift**
   - Setup: run a clean compile so all files are at the SoT version; then hand-edit `.codex-plugin/plugin.json` `version` to a different value
@@ -200,14 +195,14 @@
 - [ ] **Scenario: Successful auto-bump after change completion**
   - Setup: a completed change ready for finalize; current `src/VERSION` is e.g. `1.0.3`
   - Action: trigger the post-apply auto-bump path
-  - Verify: `src/VERSION` becomes `1.0.4`; the subsequent compile run stamps `1.0.4` into all four root files; the displayed version is `1.0.4`
+  - Verify: `src/VERSION` becomes `1.0.4`; the subsequent compile run stamps `1.0.4` into all three root files; the displayed version is `1.0.4`
 
 #### Version Sync Between Plugin Files
 
-- [ ] **Scenario: All four root files in sync after compile**
+- [ ] **Scenario: All three root files in sync after compile**
   - Setup: `src/VERSION` contains a known value
-  - Action: `bash scripts/compile-skills.sh`; `jq -r` over the four version locations
-  - Verify: all four equal `cat src/VERSION`
+  - Action: `bash scripts/compile-skills.sh`; `jq -r` over the three version locations
+  - Verify: all three equal `cat src/VERSION`
 
 - [ ] **Scenario: Manifest version drifts from SoT**
   - Setup: hand-edit `.codex-plugin/plugin.json` `version` to a non-SoT value
@@ -215,9 +210,14 @@
   - Verify: post-compile, the file's version equals `cat src/VERSION`; cross-check passes
 
 - [ ] **Scenario: Stamping failure caught by cross-check**
-  - Setup: simulate a stamp failure (e.g., chmod 444 one of the four files before running)
+  - Setup: simulate a stamp failure (e.g., chmod 444 one of the three files before running)
   - Action: `bash scripts/compile-skills.sh`
   - Verify: script exits non-zero with an error naming the offending file; restore permissions after the test
+
+- [ ] **Scenario: CI release workflow catches missing recompile**
+  - Setup: edit `src/VERSION` from `1.0.3` to `1.0.4` and push to `main` WITHOUT running `bash scripts/compile-skills.sh` first; the three root manifest/marketplace files therefore still declare `1.0.3`
+  - Action: GitHub Actions release workflow runs (triggered by `src/VERSION` path)
+  - Verify: the cross-check step in `release.yml` fails naming each offending file; tag creation is skipped; maintainer is told to run the compile script and re-push
 
 #### Manual Minor and Major Release Process
 
@@ -412,8 +412,8 @@
 
 - [ ] **Scenario: Manifests and marketplaces hand-edited at the root**
   - Setup: tree
-  - Action: `ls .claude-plugin/ .codex-plugin/ .agents/plugins/`
-  - Verify: all four root files exist; no `src/.claude-plugin/`, no `src/.codex-plugin/`
+  - Action: `ls .claude-plugin/ .codex-plugin/`
+  - Verify: `.claude-plugin/{plugin,marketplace}.json` and `.codex-plugin/plugin.json` exist; no `src/.claude-plugin/`, no `src/.codex-plugin/`, no `.agents/plugins/marketplace.json` (Codex auto-discovers via `codex plugin marketplace add`)
 
 - [ ] **Scenario: Shared release directory contains generated files**
   - Setup: post-compile
@@ -449,7 +449,7 @@
 - [ ] **Scenario: Finalize triggers AOT compilation**
   - Setup: completed change with audit verdict PASS
   - Action: `specshift finalize`
-  - Verify: source files copied to `./skills/specshift/`; `src/VERSION` value stamped into all four root files and into the workflow template's `plugin-version` field; compiled action files generated under `./skills/specshift/actions/`; each compiled file contains only requirement blocks
+  - Verify: source files copied to `./skills/specshift/`; `src/VERSION` value stamped into all three root files and into the workflow template's `plugin-version` field; compiled action files generated under `./skills/specshift/actions/`; each compiled file contains only requirement blocks
 
 - [ ] **Scenario: Count validation detects missing requirements**
   - Setup: edit `src/actions/propose.md` to include a link to a non-existent spec
@@ -478,7 +478,7 @@
 - [ ] **Scenario: Dev script builds complete release directory**
   - Setup: clean working tree
   - Action: `bash scripts/compile-skills.sh`
-  - Verify: source files copied to `./skills/specshift/`; `src/VERSION` value stamped into all four root files; compiled action files written; summary printed
+  - Verify: source files copied to `./skills/specshift/`; `src/VERSION` value stamped into all three root files; compiled action files written; summary printed
 
 - [ ] **Scenario: Dev script requires jq**
   - Setup: shell where `jq` is not on PATH

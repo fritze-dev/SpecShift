@@ -2,13 +2,13 @@
 order: 16
 category: distribution
 status: stable
-version: 2
-lastModified: 2026-04-27
+version: 4
+lastModified: 2026-04-28
 ---
 
 ## Purpose
 
-Defines how SpecShift packages and distributes the same workflow content to multiple AI-coding-tool targets (Claude Code, OpenAI Codex CLI) from a single source repository. Covers per-target manifests hand-edited at the repository root, the shared skill tree at the repository root, target-specific marketplace files, the agnostic skill body that works under both runtimes without per-target rewrites, the bootstrap-file generation pattern that lets both tools read the same instructions without duplication, and the version source of truth that drives symmetric version stamping across all per-target manifests and marketplaces.
+Defines how SpecShift packages and distributes the same workflow content to multiple AI-coding-tool targets (Claude Code, OpenAI Codex CLI) from a single source repository. Covers per-target manifests hand-edited at the repository root, the shared skill tree at the repository root, the agnostic skill body that works under both runtimes without per-target rewrites, the bootstrap-file generation pattern that lets both tools read the same instructions without duplication, and the version source of truth that drives symmetric version stamping across all per-target manifests and the Claude marketplace.
 
 ## Requirements
 
@@ -72,31 +72,27 @@ The compile script SHALL remove any pre-existing skill output at the legacy loca
 - **THEN** the legacy directory SHALL be removed
 - **AND** only the new location at `./skills/specshift/` SHALL contain the compiled skill
 
-### Requirement: Codex Marketplace Entry
+### Requirement: Codex Discovery via Marketplace Add
 
-The plugin SHALL ship a Codex-marketplace entry file at `.agents/plugins/marketplace.json` so that the plugin is discoverable when a Codex user runs `codex /plugins`. The marketplace file SHALL be hand-edited at the repository root (no `src/` indirection) and SHALL reference the Codex manifest path. The compile script SHALL stamp the current plugin version into the `plugins[].version` field via `jq`, preserving every other field verbatim. The Codex marketplace SHALL be independent of the Claude marketplace (`.claude-plugin/marketplace.json`), and changes to one SHALL NOT require changes to the other.
+Codex consumers SHALL install the plugin via `codex plugin marketplace add github:fritze-dev/specshift` (or an equivalent direct-repo install command), which discovers the plugin by reading `.codex-plugin/plugin.json` at the repository root. The plugin SHALL NOT ship a `.agents/plugins/marketplace.json` file: Codex's auto-discovery for single-plugin repositories is the supported path, and shipping a marketplace catalog file would require a multi-plugin layout (or a different, marketplace-aggregator schema) that SpecShift does not need.
 
-**User Story:** As a Codex user I want to discover and install SpecShift through Codex's native plugin marketplace, so that I do not need to manually clone or configure the plugin.
+If a future change introduces multiple plugins from this repository — or the plugin needs to control installation policy (`policy.installation`, `policy.authentication`) or curated ordering — a `.agents/plugins/marketplace.json` SHALL be added at that time, with the schema documented at https://developers.openai.com/codex/plugins/build (`name`, `interface.displayName`, `plugins[].source: {source, path}`, `plugins[].policy`, `plugins[].category`).
 
-#### Scenario: Codex marketplace lives at repository root
+**User Story:** As a Codex user I want to install SpecShift directly from its GitHub repository, so that the install path is symmetric with Claude Code's `claude plugin marketplace add fritze-dev/specshift` and I do not need a separate marketplace registry.
+
+#### Scenario: Codex install discovers the plugin manifest
+
+- **GIVEN** a Codex user runs `codex plugin marketplace add github:fritze-dev/specshift`
+- **WHEN** Codex resolves the repository
+- **THEN** Codex SHALL read `.codex-plugin/plugin.json` at the repository root and create the marketplace entry automatically
+- **AND** the install SHALL succeed without requiring a `.agents/plugins/marketplace.json` file
+
+#### Scenario: No Codex marketplace catalog file shipped
 
 - **GIVEN** the repository
 - **WHEN** the root layout is inspected
-- **THEN** `.agents/plugins/marketplace.json` SHALL exist hand-edited at the repository root
-- **AND** SHALL reference the Codex plugin manifest at `.codex-plugin/plugin.json`
-- **AND** no `src/marketplace/` template SHALL exist
-
-#### Scenario: Codex marketplace version stamped
-
-- **GIVEN** the version source of truth declares version `0.3.0`
-- **WHEN** the compile script runs
-- **THEN** `.agents/plugins/marketplace.json` SHALL declare the plugin version as `0.3.0`
-
-#### Scenario: Independent marketplace updates
-
-- **GIVEN** an update changes only the Claude marketplace metadata
-- **WHEN** the compile script runs
-- **THEN** `.agents/plugins/marketplace.json` SHALL be unaffected by the Claude marketplace change
+- **THEN** `.agents/plugins/marketplace.json` SHALL NOT exist
+- **AND** Codex install SHALL still succeed via the auto-discovery path
 
 ### Requirement: Bootstrap Single Source of Truth Pattern
 
@@ -202,7 +198,7 @@ The README SHALL document install instructions for every supported target. There
 
 ### Requirement: Version Source of Truth
 
-The plugin SHALL store the canonical version in a single agnostic file at `src/VERSION`. The file SHALL be plain text, contain exactly one line with a SemVer version string (e.g., `0.2.5-beta`), and SHALL NOT contain any other content. No per-target manifest or marketplace file SHALL be the source of truth — every `version` field in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` is a stamped copy of the SoT, written by the compile script.
+The plugin SHALL store the canonical version in a single agnostic file at `src/VERSION`. The file SHALL be plain text, contain exactly one line with a SemVer version string (e.g., `0.2.5-beta`), and SHALL NOT contain any other content. The compile script SHALL validate the file's content against the SemVer 2.0 regex before stamping. No per-target manifest or marketplace file SHALL be the source of truth — every `version` field in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json` is a stamped copy of the SoT, written by the compile script.
 
 The `specshift finalize` version-bump step SHALL edit only `src/VERSION`. Manifest version fields SHALL be updated indirectly via the subsequent compile run.
 
@@ -220,7 +216,7 @@ The `specshift finalize` version-bump step SHALL edit only `src/VERSION`. Manife
 - **GIVEN** a completed change ready for finalize
 - **WHEN** the finalize version-bump step runs
 - **THEN** the only file modified by the bump SHALL be `src/VERSION`
-- **AND** all four root manifest/marketplace `version` fields SHALL receive the new value during the subsequent compile run
+- **AND** all three root manifest/marketplace `version` fields SHALL receive the new value during the subsequent compile run
 
 #### Scenario: No manifest is the SoT
 
@@ -231,18 +227,18 @@ The `specshift finalize` version-bump step SHALL edit only `src/VERSION`. Manife
 
 ### Requirement: Symmetric Version Stamping with Cross-Check
 
-The compile script SHALL read the version string from `src/VERSION` and stamp it into all four root manifest/marketplace files: `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). The script SHALL use `jq` to update only the version field in each file, preserving all non-version keys and values semantically. JSON formatting (whitespace, indentation, key ordering) may be normalized by `jq`'s pretty-printer; consumers depend on the JSON's semantic content, not on byte-level formatting. After stamping, the script SHALL re-read each of the four files and verify that the stamped version equals the SoT. Any mismatch SHALL fail the build with an error naming the offending file.
+The compile script SHALL read the version string from `src/VERSION` and stamp it into the three root manifest/marketplace files: `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), and `.codex-plugin/plugin.json` (`.version`). The script SHALL use `jq` to update only the version field in each file, preserving all non-version keys and values semantically. JSON formatting (whitespace, indentation, key ordering) may be normalized by `jq`'s pretty-printer; consumers depend on the JSON's semantic content, not on byte-level formatting. After stamping, the script SHALL re-read each of the three files and verify that the stamped version equals the SoT. Any mismatch SHALL fail the build with an error naming the offending file.
 
 The script SHALL also stamp the version into the compiled workflow template's `plugin-version` frontmatter field (existing behavior, retained).
 
 **User Story:** As a maintainer I want released artifacts to always agree on the version, so that no consumer install can land in a state where Claude reports one version and Codex reports another.
 
-#### Scenario: All four files stamped from one source
+#### Scenario: All three files stamped from one source
 
 - **GIVEN** `src/VERSION` contains `0.3.0`
-- **AND** the four root manifest/marketplace files declare arbitrary prior versions
+- **AND** the three root manifest/marketplace files declare arbitrary prior versions
 - **WHEN** the compile script runs
-- **THEN** all four files SHALL declare version `0.3.0`
+- **THEN** all three files SHALL declare version `0.3.0`
 - **AND** every other key/value pair in each file SHALL be semantically equal to its pre-stamp content (JSON formatting may be normalized by `jq`)
 
 #### Scenario: Post-stamp cross-check fails on drift
@@ -263,18 +259,18 @@ The script SHALL also stamp the version into the compiled workflow template's `p
 
 - **Codex manifest schema change**: If the Codex CLI plugin schema evolves (e.g., new required fields in `interface`), the compile script SHALL not silently drop unknown fields from the manifest — fields present in `.codex-plugin/plugin.json` SHALL be preserved verbatim except for `version`, which is stamped from the version source of truth.
 - **Existing Claude install with old marketplace source**: When existing Claude Code consumers run `claude plugin marketplace update specshift` after the migration, the new marketplace.json with `source: "./"` SHALL be picked up and the new skill tree at `./skills/specshift/` SHALL resolve correctly.
-- **Codex marketplace API path drift**: The exact filesystem location of the Codex marketplace file (`.agents/plugins/marketplace.json`) is governed by the Codex CLI documentation; if the upstream path changes, the compile script SHALL be updated to match.
+- **Codex auto-discovery semantics change**: The `codex plugin marketplace add github:owner/repo` install path relies on Codex CLI auto-discovering `.codex-plugin/plugin.json`. If the Codex CLI changes the manifest path or removes auto-discovery, the README install instructions and the spec SHALL be updated; in the worst case a `.agents/plugins/marketplace.json` SHALL be added with the official Codex schema.
 - **Branding assets absent**: If `interface.logo`, `composerIcon`, `brandColor`, or `screenshots` are not provided, the Codex listing SHALL still install correctly, displaying without branding rather than rejecting the manifest.
 - **Mixed-target consumer project**: A consumer project may use both Claude Code and Codex. AGENTS.md is the single agnostic source of truth — Codex reads it natively. Claude Code reads CLAUDE.md and expands the `@AGENTS.md` import. Both files are generated on fresh init so a project that adds the second target later requires no additional bootstrap setup.
 - **Per-target manifest field drift**: Hand-edited per-target manifests carry agnostic metadata (`name`, `description`, `author`, `repository`, `license`, `keywords`) that SHALL be reviewed manually for parity. Only the `version` field is enforced by the compile script — drift in other fields is a maintainer-review concern, not a compile-time error.
 - **Skill compilation produces files for unsupported target**: The compile script SHALL only emit files for targets it knows about. Files for unknown targets SHALL NOT be created speculatively.
 - **`src/VERSION` malformed or missing**: If `src/VERSION` is missing, empty, or contains more than one line, the compile script SHALL fail with a descriptive error before stamping any file.
-- **Manual edit to a manifest version field**: If a maintainer hand-edits a `version` field directly in any of the four root files, the next compile run SHALL overwrite that edit with the value from `src/VERSION`. Maintainers are expected to bump `src/VERSION` instead.
+- **Manual edit to a manifest version field**: If a maintainer hand-edits a `version` field directly in any of the three root files, the next compile run SHALL overwrite that edit with the value from `src/VERSION`. Maintainers are expected to bump `src/VERSION` instead.
 
 ## Assumptions
 
-- The Codex CLI's plugin manifest schema, marketplace location (`.agents/plugins/marketplace.json`), and skill discovery paths described in OpenAI's `developers.openai.com/codex` documentation are stable as of 2026-04-27. <!-- ASSUMPTION: Codex CLI plugin schema stable -->
+- The Codex CLI's plugin manifest schema (`.codex-plugin/plugin.json`) and skill discovery paths described in OpenAI's `developers.openai.com/codex` documentation are stable as of 2026-04-28. <!-- ASSUMPTION: Codex CLI plugin schema stable -->
 - Claude Code's `@AGENTS.md` import syntax loads the referenced file into the session context at startup, as documented at `code.claude.com/docs/de/memory#agents-md`. <!-- ASSUMPTION: Claude Code AGENTS.md import behavior -->
-- The `.agents/plugins/marketplace.json` file format and discovery is consistent with the Codex `codex /plugins` command behavior; if Codex requires a different filename or location in a future release, the compile script will need updating. <!-- ASSUMPTION: Codex marketplace file convention -->
+- The `codex plugin marketplace add github:owner/repo` install path correctly auto-discovers a single-plugin repository's `.codex-plugin/plugin.json` (verified against OpenAI Codex documentation; not yet smoke-tested on a live Codex install). If Codex changes this behavior in a future release, this plugin will need to ship a `.agents/plugins/marketplace.json` catalog file with the official Codex schema. <!-- ASSUMPTION: Codex single-plugin auto-discovery -->
 - Both Claude Code and Codex resolve plugin-bundled assets referenced in skill prose (e.g., "the plugin's `templates/` directory") relative to the skill's installed location; neither runtime requires environment-variable interpolation in skill body text for asset paths to work. <!-- ASSUMPTION: Agnostic asset resolution -->
 - `jq` is available on every maintainer's build machine (used by the compile script for in-place manifest editing). <!-- ASSUMPTION: jq build dependency -->

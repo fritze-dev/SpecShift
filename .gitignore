@@ -1,5 +1,8 @@
 # Claude Code local config (generated, not part of plugin)
+# After the multi-target migration, the compiled skill tree lives at ./skills/
+# (committed at the repo root, no whitelist needed). Per-target plugin manifests
+# live at .claude-plugin/ and .codex-plugin/ at the repo root, also unaffected
+# by this rule. .claude/ now only carries local-developer artefacts (settings,
+# worktrees) which stay ignored.
 /.claude/*
 !/.claude/settings.json
-!/.claude/skills/
-!/.claude/.claude-plugin/

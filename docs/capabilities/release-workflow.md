@@ -6,7 +6,7 @@ lastUpdated: "2026-04-27"
 ---
 # Release Workflow
 
-The release workflow handles version management for the multi-target plugin: a single agnostic version source of truth at `src/VERSION`, automatic patch bumps during the post-apply workflow, symmetric stamping into all four root manifest/marketplace files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`) with post-stamp cross-check, automated GitHub Releases via CI triggered by `src/VERSION` changes, plugin distribution via the shared compiled skill tree at `./skills/specshift/`, consumer version pinning, developer local marketplace workflow per target, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates on both Claude Code and Codex CLI.
+The release workflow handles version management for the multi-target plugin: a single agnostic version source of truth at `src/VERSION`, automatic patch bumps during the post-apply workflow, symmetric stamping into the three root manifest/marketplace files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`) with post-stamp cross-check enforced both at compile time and in CI before tag creation, automated GitHub Releases via CI triggered by `src/VERSION` changes, plugin distribution via the shared compiled skill tree at `./skills/specshift/`, consumer version pinning, developer local marketplace workflow per target, changelog generation via `specshift finalize`, and documented processes for manual releases and consumer updates on both Claude Code and Codex CLI.
 
 ## Purpose
 
@@ -14,12 +14,12 @@ Without an agnostic version source of truth, per-target manifests carry dual res
 
 ## Rationale
 
-`src/VERSION` is the single agnostic source of truth — plain text, single line, SemVer — chosen over embedding in a per-target manifest because it decouples versioning from per-target metadata and makes the bump UX a single small edit. The compile script reads `src/VERSION` and stamps the value into all four root manifest/marketplace files via `jq` (preserving all non-version keys and values semantically; JSON formatting may be normalized), then re-reads each file and verifies the stamped value matches; any mismatch fails the build with an error naming the offending file. This eliminates a class of bug — silent drift on the unchecked manifest — that previously affected the Claude marketplace's version field. The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities. It also reads `.specshift/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
+`src/VERSION` is the single agnostic source of truth — plain text, single line, SemVer — chosen over embedding in a per-target manifest because it decouples versioning from per-target metadata and makes the bump UX a single small edit. The compile script reads `src/VERSION` and stamps the value into all three root manifest/marketplace files via `jq` (preserving all non-version keys and values semantically; JSON formatting may be normalized), then re-reads each file and verifies the stamped value matches; any mismatch fails the build with an error naming the offending file. This eliminates a class of bug — silent drift on the unchecked manifest — that previously affected the Claude marketplace's version field. The auto-bump is implemented as a constitution convention rather than a skill modification, respecting the principle that skills are shared plugin code and must not contain project-specific behavior. Patch bumps cover the vast majority of changes; minor and major releases are rare enough that a documented manual process suffices. The changelog command identifies completed changes by reading proposal frontmatter `status: completed` (falling back to tasks.md checkbox parsing for legacy changes) and reads the proposal's frontmatter `capabilities` field to identify affected capabilities. It also reads `.specshift/WORKFLOW.md` for a `docs_language` setting, allowing teams to generate release notes in their preferred language while keeping dates in ISO format and product names in English.
 
 ## Features
 
 - **Agnostic version source of truth** at `src/VERSION` -- single small edit to bump the plugin version
-- **Symmetric version stamping** -- the compile script stamps `src/VERSION` into all four root manifest/marketplace files via `jq` and cross-checks each post-stamp; any drift fails the build
+- **Symmetric version stamping** -- the compile script stamps `src/VERSION` into all three root manifest/marketplace files via `jq` and cross-checks each post-stamp; any drift fails the build
 - **Automatic patch version bump** -- the patch version in `src/VERSION` increments automatically after each completed change during the post-apply workflow
 - **Automated GitHub Releases** -- a GitHub Action creates git tags and releases automatically when `src/VERSION` changes on `main`
 - **Plugin source separation** -- plugin source lives in `src/`; per-target manifests/marketplaces hand-edited at the repo root; the shared compiled skill tree at `./skills/specshift/` consumed by both targets
@@ -39,11 +39,11 @@ The plugin version is stored in `src/VERSION` -- plain text, single line, SemVer
 
 ### Symmetric Version Stamping with Cross-Check
 
-When `bash scripts/compile-skills.sh` runs, it reads `src/VERSION` once and stamps the value into all four root files: `.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, `.codex-plugin/plugin.json` `.version`, and `.agents/plugins/marketplace.json` `.plugins[].version`. Each file is updated via `jq`, preserving all non-version keys and values semantically (JSON formatting may be normalized by `jq`). After stamping, the script re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The compile script also stamps the version into the compiled workflow template's `plugin-version` frontmatter field.
+When `bash scripts/compile-skills.sh` runs, it reads `src/VERSION` once, validates it as a SemVer 2.0 string, and stamps the value into the three root files: `.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, and `.codex-plugin/plugin.json` `.version`. Each file is updated via `jq`, preserving all non-version keys and values semantically (JSON formatting may be normalized by `jq`). After stamping, the script re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The same cross-check is also enforced in CI (`.github/workflows/release.yml`) before tag creation, catching the foot-gun where a maintainer pushes `src/VERSION` without recompiling. The compile script also stamps the version into the compiled workflow template's `plugin-version` frontmatter field.
 
 ### Automatic Patch Bump
 
-During the post-apply workflow, the patch version in `src/VERSION` is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The new version is displayed in the summary. The subsequent compile run propagates the new value into all four root manifest/marketplace files.
+During the post-apply workflow, the patch version in `src/VERSION` is incremented automatically (for example, `1.0.3` becomes `1.0.4`). The new version is displayed in the summary. The subsequent compile run propagates the new value into all three root manifest/marketplace files.
 
 ### Automated GitHub Releases
 
@@ -51,7 +51,7 @@ When `src/VERSION` changes on `main`, a GitHub Action automatically creates a gi
 
 ### Source and Release Directory Structure
 
-Plugin source code (skills, templates, action manifests, `VERSION`) lives in the `src/` subdirectory. Per-target plugin manifests and marketplace files are hand-edited at the repository root (`.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`). The shared compiled skill tree at `./skills/specshift/` is built from `src/` via `bash scripts/compile-skills.sh` and consumed by both Claude Code and Codex via their respective root manifests' skill-path field. Consumer plugin caches contain only what the marketplace/manifest references — documentation, CI workflows, project spec files, and changelogs are not downloaded.
+Plugin source code (skills, templates, action manifests, `VERSION`) lives in the `src/` subdirectory. Per-target plugin manifests and the Claude marketplace are hand-edited at the repository root (`.claude-plugin/`, `.codex-plugin/`). The shared compiled skill tree at `./skills/specshift/` is built from `src/` via `bash scripts/compile-skills.sh` and consumed by both Claude Code and Codex via their respective root manifests' skill-path field. Consumer plugin caches contain only what the marketplace/manifest references — documentation, CI workflows, project spec files, and changelogs are not downloaded.
 
 ### Marketplace Source Configuration
 
@@ -67,7 +67,7 @@ Claude Code developers register the local repository path via `claude plugin mar
 
 ### Manual Minor and Major Releases
 
-For intentional minor or major version changes, edit `src/VERSION` to the new SemVer string, run `bash scripts/compile-skills.sh` (which stamps the new value into all four root files), and push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, manually create and push a tag.
+For intentional minor or major version changes, edit `src/VERSION` to the new SemVer string, run `bash scripts/compile-skills.sh` (which stamps the new value into all three root files), and push to `main`. The GitHub Action automatically creates the git tag and release. For retroactive tagging without a version change, manually create and push a tag.
 
 ### Consumer Update Process
 

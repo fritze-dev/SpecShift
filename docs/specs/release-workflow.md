@@ -2,8 +2,8 @@
 order: 12
 category: finalization
 status: stable
-version: 4
-lastModified: 2026-04-27
+version: 5
+lastModified: 2026-04-28
 ---
 ## Purpose
 
@@ -13,7 +13,7 @@ Define the release-workflow conventions for the multi-target plugin, including t
 
 ### Requirement: Auto Patch Version Bump
 
-The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/VERSION` after a successful change completion. `src/VERSION` is the single agnostic version source of truth — manifest and marketplace files at the repository root carry the version only as a stamped copy. The output SHALL display the new version. The subsequent compile run SHALL propagate the new version into all four root files (`{.claude-plugin,.codex-plugin}/plugin.json`, `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
+The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/VERSION` after a successful change completion. `src/VERSION` is the single agnostic version source of truth — manifest and marketplace files at the repository root carry the version only as a stamped copy. The output SHALL display the new version. The subsequent compile run SHALL propagate the new version into the three root files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`).
 
 **User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed, so that consumers can detect updates without manual version bumps.
 
@@ -23,18 +23,18 @@ The project constitution SHALL define a convention that instructs the post-apply
 - **AND** the constitution defines the post-completion auto-bump convention
 - **WHEN** the post-apply workflow runs for a completed change
 - **THEN** the system SHALL update `src/VERSION` to `1.0.4`
-- **AND** the subsequent compile run SHALL stamp `1.0.4` into all four root manifest/marketplace files
+- **AND** the subsequent compile run SHALL stamp `1.0.4` into all three root manifest/marketplace files
 - **AND** the output SHALL display the new version
 
 ### Requirement: Version Sync Between Plugin Files
 
-The `version` field in every per-target manifest and marketplace file at the repository root MUST equal the value in `src/VERSION`. The compile script SHALL enforce this by reading `src/VERSION` and stamping the value into `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). After stamping, the script SHALL re-read each file and verify the stamped version equals the SoT; any mismatch SHALL fail the build with an error naming the offending file. Hand-edits to a manifest's `version` field SHALL be considered transient — the next compile run overwrites them with the SoT value.
+The `version` field in every per-target manifest and marketplace file at the repository root MUST equal the value in `src/VERSION`. The compile script SHALL enforce this by reading `src/VERSION` and stamping the value into `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), and `.codex-plugin/plugin.json` (`.version`). After stamping, the script SHALL re-read each file and verify the stamped version equals the SoT; any mismatch SHALL fail the build with an error naming the offending file. The CI release workflow SHALL run the same cross-check before tag creation, ensuring that pushed manifests carry the version their `src/VERSION` declares (catches the foot-gun where a maintainer pushes a `src/VERSION` bump without recompiling). Hand-edits to a manifest's `version` field SHALL be considered transient — the next compile run overwrites them with the SoT value.
 
-#### Scenario: All four root files in sync after compile
+#### Scenario: All three root files in sync after compile
 
 - **GIVEN** `src/VERSION` contains `1.0.3`
 - **WHEN** the compile script runs
-- **THEN** all four root manifest/marketplace files SHALL declare version `1.0.3`
+- **THEN** all three root manifest/marketplace files SHALL declare version `1.0.3`
 
 #### Scenario: Manifest version drifts from SoT
 
@@ -46,10 +46,18 @@ The `version` field in every per-target manifest and marketplace file at the rep
 #### Scenario: Stamping failure caught by cross-check
 
 - **GIVEN** `src/VERSION` contains `1.0.3`
-- **AND** the in-place jq stamp on one of the four files fails silently
+- **AND** the in-place jq stamp on one of the three files fails silently
 - **WHEN** the cross-check step runs
 - **THEN** the script SHALL detect the mismatch
 - **AND** SHALL exit non-zero with an error naming the offending file
+
+#### Scenario: CI release workflow catches missing recompile
+
+- **GIVEN** the maintainer edits `src/VERSION` from `1.0.3` to `1.0.4` and pushes to `main` without running `bash scripts/compile-skills.sh` first
+- **AND** the three root manifest/marketplace files therefore still declare `1.0.3`
+- **WHEN** the GitHub Actions release workflow runs
+- **THEN** the cross-check step SHALL fail naming each offending file with the actual vs expected version
+- **AND** the tag creation SHALL be skipped
 
 ### Requirement: Manual Minor and Major Release Process
 
@@ -61,7 +69,7 @@ For intentional minor or major version changes, the maintainer SHALL manually ed
 
 - **GIVEN** a maintainer decides a set of changes warrants a minor version bump
 - **WHEN** the maintainer edits `src/VERSION` to `1.1.0`, runs the compile script, and pushes to `main`
-- **THEN** all four root manifest/marketplace files SHALL contain version `1.1.0`
+- **THEN** all three root manifest/marketplace files SHALL contain version `1.1.0`
 - **AND** the GitHub Actions release workflow SHALL create tag `v1.1.0` and a corresponding GitHub Release
 
 #### Scenario: Retroactive manual tagging
@@ -150,7 +158,7 @@ After pushing a version bump to the remote, the developer's local plugin install
 #### Scenario: Developer with local marketplace updates after version bump
 
 - **GIVEN** a version bump has been applied locally (via auto-bump or manual)
-- **AND** the compile script has stamped the new version into the four root files
+- **AND** the compile script has stamped the new version into the three root files
 - **WHEN** the developer runs the relevant plugin-update command for their target
 - **THEN** the local plugin installation SHALL reflect the new version
 
@@ -348,7 +356,7 @@ The repository SHALL maintain a clear separation between hand-edited source cont
 
 **Source directory (`src/`)**: Contains hand-edited plugin source files: `src/VERSION` (agnostic version source of truth), `src/skills/specshift/SKILL.md` (router with requirement link mappings), `src/templates/` (Smart Templates), and `src/actions/*.md` (compilation manifests with requirement links). Developers edit files in `src/` to change plugin behavior.
 
-**Per-target manifests and marketplaces (repository root)**: Hand-edited at the root, not under `src/`. The four files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`. The `version` field in each is stamped by the compile script from `src/VERSION` — every other field is hand-edited per target.
+**Per-target manifests and the Claude marketplace (repository root)**: Hand-edited at the root, not under `src/`. The three files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json`. The `version` field in each is stamped by the compile script from `src/VERSION` — every other field is hand-edited per target. Codex consumers install via `codex plugin marketplace add github:owner/repo`, which auto-discovers `.codex-plugin/plugin.json` directly — no separate Codex marketplace catalog file is shipped.
 
 **Shared release directory (`./skills/`)**: Generated, self-contained release artifact built by the AOT compiler (`scripts/compile-skills.sh`). Contains `./skills/specshift/SKILL.md` (copied from `src/`), `./skills/specshift/templates/` (copied from `src/`), and `./skills/specshift/actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Both targets discover the skill from this single shared tree via their respective manifests' skill-path field.
 
@@ -369,7 +377,7 @@ Files not needed by consumers — documentation, CI workflows, specs, changelog,
 
 - **GIVEN** the repository
 - **WHEN** the root layout is inspected
-- **THEN** `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` SHALL exist
+- **THEN** `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json` SHALL exist
 - **AND** each SHALL be hand-edited (no `src/.claude-plugin/` or `src/.codex-plugin/` source counterparts)
 
 #### Scenario: Shared release directory contains generated files
@@ -407,7 +415,7 @@ The Claude marketplace at `.claude-plugin/marketplace.json` SHALL declare `sourc
 
 ### Requirement: Repository Layout Separation
 
-The repository SHALL maintain a clear separation between plugin source (`src/`), per-target manifests at the root (`.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`), the shared release artifact (`./skills/specshift/`), and project management files (other repo-root files). The repo root SHALL also contain: `.specshift/` (project workflow), `docs/`, `scripts/`, `.github/`, `AGENTS.md`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. Project-specific files SHALL NOT exist inside `src/` or `./skills/specshift/`.
+The repository SHALL maintain a clear separation between plugin source (`src/`), per-target manifests at the root (`.claude-plugin/`, `.codex-plugin/`), the shared release artifact (`./skills/specshift/`), and project management files (other repo-root files). The repo root SHALL also contain: `.specshift/` (project workflow), `docs/`, `scripts/`, `.github/`, `AGENTS.md`, `CLAUDE.md`, `README.md`, and `CHANGELOG.md`. Project-specific files SHALL NOT exist inside `src/` or `./skills/specshift/`.
 
 #### Scenario: Clean separation
 
@@ -426,7 +434,7 @@ The `specshift finalize` action SHALL include an AOT (Ahead-of-Time) skill compi
 1. **Read version**: Read the version string from `src/VERSION`. If the file is missing, empty, or contains more than one line, fail with a descriptive error.
 2. **Copy source files into the shared skill tree**: Copy `src/skills/specshift/SKILL.md` → `./skills/specshift/SKILL.md` and `src/templates/` → `./skills/specshift/templates/`.
 3. **Stamp version into the compiled workflow template**: Write the version into the `plugin-version` frontmatter field of `./skills/specshift/templates/workflow.md`.
-4. **Stamp version into all four root manifest/marketplace files**: For each of `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, use `jq` to set the version field while preserving every other key, ordering, and formatting verbatim. After stamping, re-read each file and verify the stamped version equals `src/VERSION`. Fail the build on any mismatch with an error naming the offending file.
+4. **Stamp version into the three root manifest/marketplace files**: For each of `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json`, use `jq` to set the version field while preserving non-version keys and values semantically (JSON formatting may be normalized). After stamping, re-read each file and verify the stamped version equals `src/VERSION`. Fail the build on any mismatch with an error naming the offending file.
 5. **Parse requirement links and assemble compiled action files**: For each file in `src/actions/*.md`, parse markdown anchor links in the format `[Requirement Name](../../docs/specs/<spec>.md#requirement-<slug>)`. For each link, resolve the relative path to the target spec file and extract the `### Requirement: <Name>` block — including the normative description, optional user story, and all `#### Scenario:` blocks — up to the next `### ` or `## ` heading. Write a markdown file to `./skills/specshift/actions/<action>.md` containing `# Requirements` followed by the concatenated extracted requirement blocks. No frontmatter, no instruction text — compiled files contain only requirements.
 6. **Validate output**: Each compiled file SHALL be non-empty. The compiler SHALL verify that the number of extracted requirement blocks matches the number of links in the source action file. A count mismatch SHALL produce a warning naming the specific missing requirements. Unresolvable requirement links SHALL be skipped with a warning.
 
@@ -443,7 +451,7 @@ The shared skill tree at `./skills/specshift/` SHALL be committed to Git so that
 - **GIVEN** a completed change with audit.md verdict PASS
 - **WHEN** `specshift finalize` executes the compilation step
 - **THEN** it SHALL copy source files to the shared skill tree at `./skills/specshift/`
-- **AND** SHALL stamp the version from `src/VERSION` into all four root manifest/marketplace files and the workflow template's `plugin-version` field
+- **AND** SHALL stamp the version from `src/VERSION` into all three root manifest/marketplace files and the workflow template's `plugin-version` field
 - **AND** SHALL generate compiled requirements files for each built-in action at `./skills/specshift/actions/<action>.md`
 - **AND** each compiled file SHALL contain only the extracted requirement blocks
 
@@ -499,7 +507,7 @@ The project SHALL provide a standalone bash script at `scripts/compile-skills.sh
 - **GIVEN** the developer runs `bash scripts/compile-skills.sh` from the repository root
 - **WHEN** the script completes
 - **THEN** it SHALL have copied source files to the shared skill tree at `./skills/specshift/`
-- **AND** SHALL have stamped the version from `src/VERSION` into all four root manifest/marketplace files
+- **AND** SHALL have stamped the version from `src/VERSION` into all three root manifest/marketplace files
 - **AND** SHALL have written compiled requirements files to `./skills/specshift/actions/`
 - **AND** SHALL print a summary of actions compiled and requirements extracted
 

@@ -105,9 +105,7 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 │   ├── plugin.json
 │   └── marketplace.json
 ├── .codex-plugin/                 # Codex target (hand-edited at root)
-│   └── plugin.json
-├── .agents/plugins/               # Codex marketplace (hand-edited at root)
-│   └── marketplace.json
+│   └── plugin.json                # auto-discovered by `codex plugin marketplace add github:owner/repo`
 ├── skills/specshift/              # Compiled, shared skill tree (both targets)
 │   ├── SKILL.md
 │   ├── templates/
@@ -115,7 +113,7 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 └── scripts/compile-skills.sh
 ```
 
-`src/VERSION` is the agnostic version source of truth. The compile script reads it and stamps the value into all four root manifest/marketplace files via `jq`, preserving all non-version fields and values (JSON formatting may be normalized by `jq`), and cross-checks each post-stamp; any drift fails the build. To bump the plugin version, edit `src/VERSION` and re-run `bash scripts/compile-skills.sh`.
+`src/VERSION` is the agnostic version source of truth. The compile script reads it and stamps the value into all three root manifest/marketplace files via `jq`, preserving all non-version fields and values (JSON formatting may be normalized by `jq`), and cross-checks each post-stamp; any drift fails the build. To bump the plugin version, edit `src/VERSION` and re-run `bash scripts/compile-skills.sh`.
 
 ## License
 

@@ -67,7 +67,7 @@
 
 - **G1 — single-source bootstrap**: `grep -rl "All changes to this project MUST go through the spec-driven workflow" src/templates/` returns exactly `src/templates/agents.md`. **PASS.**
 - **G2 — symmetric versions**: `jq -r '.version // .plugins[0].version' .{claude,codex}-plugin/{plugin,marketplace}.json .agents/plugins/marketplace.json; cat src/VERSION` sorted-uniq returns one value (`0.2.4-beta`). **PASS.**
-- **G3 — agnostic SoT**: design + tasks specify the bump touches `src/VERSION` only; no manifest is the SoT per CONSTITUTION; verified by reading `scripts/compile-skills.sh` (the four root manifest version fields are written, not read, by the script). **PASS by design.**
+- **G3 — agnostic SoT**: design + tasks specify the bump touches `src/VERSION` only; no manifest is the SoT per CONSTITUTION; verified by reading `scripts/compile-skills.sh` (the three root manifest version fields are written, not read, by the script). **PASS by design.**
 - **G4 — cross-check enforces consistency**: `stamp_version` function in the script re-reads each file post-stamp and `exit 1` on mismatch. Verified by inspection of the function body. **PASS by design.**
 - **G5 — one shared skill tree**: `find . -path ./node_modules -prune -o -name 'SKILL.md' -print` returns exactly two paths (`./src/skills/specshift/SKILL.md`, `./skills/specshift/SKILL.md`). **PASS.**
 - **G6 — tool-agnostic compiled body**: `grep -rn '${CLAUDE_PLUGIN_ROOT}' skills/specshift/` returns 0 hits; `grep -rn '\.claude/worktrees' skills/specshift/` returns 0 hits (after spec edits in `artifact-pipeline.md` + `change-workspace.md`). **PASS.**
@@ -140,7 +140,7 @@ Our `.agents/plugins/marketplace.json` was added based on a documentation-interp
 
 #### Pass-2 #4 — Self-review MEDIUM: `release.yml` trusts manifests are pre-stamped (FIXED)
 
-`.github/workflows/release.yml` now runs a four-file cross-check before tag/release creation: reads `.version` (manifests) and `.plugins[0].version` (marketplaces) from each of the four root files via `jq`, compares each to `src/VERSION`, fails the workflow with a descriptive error naming the offending file if any mismatch. The error message tells the maintainer to run `bash scripts/compile-skills.sh` and re-push. Closes the foot-gun where a bare `src/VERSION` push would publish a tag with stale manifests. **PASS.**
+`.github/workflows/release.yml` now runs a four-file cross-check before tag/release creation: reads `.version` (manifests) and `.plugins[0].version` (marketplaces) from each of the three root files via `jq`, compares each to `src/VERSION`, fails the workflow with a descriptive error naming the offending file if any mismatch. The error message tells the maintainer to run `bash scripts/compile-skills.sh` and re-push. Closes the foot-gun where a bare `src/VERSION` push would publish a tag with stale manifests. **PASS.**
 
 #### Pass-2 #5 — Self-review MEDIUM: `src/VERSION` SemVer not validated (FIXED)
 
@@ -160,8 +160,72 @@ Both filed as GitHub Issues for follow-up (cosmetic / latent fragility, not regr
 
 ### Verdict (Pass 2)
 
-**PASS**, 0 CRITICAL, 0 WARNING, 2 SUGGESTIONS (both filed as GitHub Issues):
-1. Live Codex install smoke test — verify `.agents/plugins/marketplace.json` is read (or ignored) by `codex /plugins`; if ignored, decide whether to keep, remove, or replace with the Shopify direct-install pattern.
-2. CHANGELOG BREAKING-note promotion + `release.yml` sed pipeline robustness against deeper headers.
+**PASS**, 0 CRITICAL, 0 WARNING, 2 SUGGESTIONS (both filed as GitHub Issues #48 and #49):
+1. CHANGELOG BREAKING-note promotion (#48) — cosmetic placement of the BREAKING callout above sub-sections.
+2. `release.yml` sed pipeline robustness against deeper-than-`####` headers (#49) — latent fragility, not a regression.
 
 The pass closes all blocking items from the self-review and the Copilot review. Layout decisions are now confirmed against the Shopify-AI-Toolkit reference (skills path resolution interpretation (b) is canonical).
+
+---
+
+## Audit Fix Loop (Pass 3 — Codex Marketplace Re-Evaluation + Layout Cleanup)
+
+### Trigger
+
+User raised two related concerns after the Pass-2 SUGGESTION about the Codex marketplace was filed:
+
+1. **What is `.agents/plugins/marketplace.json` actually for, and if we don't have a clear use-case, do we need it?**
+2. **Why does `.claude/.claude-plugin/plugin.json` still exist in the PR?**
+
+Both turned out to be load-bearing scope cleanups, not just nits.
+
+### Findings Resolved
+
+#### Pass-3 #1 — `.agents/plugins/marketplace.json` removed (Design Pivot, scoped down)
+
+Research via OpenAI Codex docs (`developers.openai.com/codex/plugins/build`) and a sample real-world plugin (`Habib0x0/spec-driven-plugin`) revealed:
+
+- The `.agents/plugins/marketplace.json` file is **optional** for single-plugin repos. Codex docs explicitly: *"A single-plugin repo can skip the marketplace file during initial development. `codex plugin marketplace add github:owner/repo` doesn't require a pre-existing marketplace.json — Codex will locate the plugin's manifest and create appropriate marketplace entries automatically."*
+- The official Codex marketplace schema (`name` + `interface.displayName`, `plugins[].source: {source, path}` as object, `plugins[].policy`, `plugins[].category`, no `plugins[].version`) is **incompatible** with what we shipped (we used Claude-style fields: `owner.name`, `metadata.description`, `plugins[].source` as bare string, `plugins[].version`, `plugins[].description`).
+- Shopify-AI-Toolkit (the canonical multi-target reference) ships **no** `.agents/plugins/marketplace.json` — they rely on auto-discovery.
+
+Decision: **remove the file entirely.** Reasons: our schema was wrong (worse than not shipping); Codex auto-discovers single-plugin repos without it; Shopify pattern matches; we have no real use-case (single plugin, no policy/curation needs). Can be added back later with the correct schema if a multi-plugin layout or policy-control need emerges.
+
+Implementation:
+- `git rm -r .agents/`
+- Spec `multi-target-distribution.md` v2 → v3: "Codex Marketplace Entry" requirement replaced with "Codex Discovery via Marketplace Add" (auto-discovery is the supported path; document the schema for future use)
+- Spec `release-workflow.md` v4 → v5: Version Sync Between Plugin Files now lists three files; new scenario "CI release workflow catches missing recompile" added to cover the Pass-2 cross-check addition
+- ADR-003 Decision 1 + Decision 2 + Alternatives Considered: "Ship a `.agents/plugins/marketplace.json` catalog file" added as rejected alternative with rationale
+- `scripts/compile-skills.sh`: removed `CODEX_MARKETPLACE` constant + preflight check + stamp_version call + summary line
+- `.github/workflows/release.yml` cross-check loop: removed the `.agents/plugins/marketplace.json` entry (3 files instead of 4)
+- Cascaded wording cleanup across `CONSTITUTION.md`, `AGENTS.md`, `README.md`, `CHANGELOG.md`, capability docs, change-artifact files (proposal, design, tests, tasks, preflight) — all "four files" → "three files", removed `.agents/plugins/marketplace.json` mentions, replaced with "Codex auto-discovery via `codex plugin marketplace add github:owner/repo`"
+
+**PASS.** Spec is now consistent with what we ship; no broken-or-ignored file in the consumer-facing plugin.
+
+#### Pass-3 #2 — `.claude/.claude-plugin/plugin.json` removed (cleanup miss)
+
+User noticed the legacy compiled Claude manifest at `.claude/.claude-plugin/plugin.json` was still tracked on this branch — leftover from the pre-multi-target layout where `.claude/` was the plugin root. The file carried `version: "0.2.4-beta"` (stale vs. our SoT `0.2.5-beta`) and was no longer referenced by anything: the new Claude marketplace `source: "./"` resolves the plugin to the repo root, not `.claude/`.
+
+Implementation:
+- `git rm -r .claude/.claude-plugin/`
+- `.gitignore` cleaned: removed obsolete whitelists `!/.claude/skills/` and `!/.claude/.claude-plugin/` (the new compiled tree lives at `./skills/`, no longer under `.claude/`); kept `!/.claude/settings.json` whitelist for local-developer config
+- `scripts/compile-skills.sh`: added `LEGACY_CLAUDE_MANIFEST_DIR=".claude/.claude-plugin"` to the cleanup section so future maintainers with the pre-migration layout get auto-cleaned on next compile (alongside the existing `.claude/skills/specshift/` legacy cleanup)
+- CHANGELOG bullet about the compile script's legacy cleanup updated to mention both legacy paths
+
+**PASS.** No more stale Claude manifest hiding in the tree. Fresh checkouts of this branch cannot hit the version-drift confusion that the leftover file would have caused.
+
+### Re-Run of Verifiable Metrics
+
+- G1 (single-source bootstrap): unchanged, **PASS**.
+- G2 (symmetric versions): three root files (was four) all at `0.2.5-beta`, plus `src/VERSION` = `0.2.5-beta`, **PASS**.
+- G3 (agnostic SoT): unchanged, **PASS**.
+- G4 (cross-check enforces consistency): three-file scope; logic unchanged, **PASS**.
+- G5 / G6 / G8 / G9: unchanged, **PASS**.
+- SemVer-regex: positive + negative paths re-tested in Pass 2, **PASS**.
+- New: post-Pass-3 compile run is clean (5 actions, 46 requirements, 0 warnings, 3-file stamping table prints all three files at version 0.2.5-beta).
+
+### Verdict (Pass 3)
+
+**PASS**, 0 CRITICAL, 0 WARNING, 0 SUGGESTIONS open.
+
+The Pass-2 SUGGESTION about live Codex install verification is now stronger: with the catalog file removed, the only thing to verify is that `codex plugin marketplace add github:fritze-dev/specshift` correctly auto-discovers `.codex-plugin/plugin.json`. This is the documented behavior; verification remains a recommended manual smoke test on a real Codex CLI install but is no longer ambiguous (we know exactly which behavior we're testing for).

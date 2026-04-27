@@ -9,7 +9,7 @@ set -euo pipefail
 # ./skills/specshift/ and is shared between both targets.
 #
 # Version source of truth: src/VERSION (plain text, single line, SemVer).
-# This script reads that value and stamps it into all four root manifest /
+# This script reads that value and stamps it into the three root manifest /
 # marketplace files via `jq` (preserving all non-version fields and values;
 # JSON formatting may be normalized by jq's pretty-printer). After stamping,
 # it re-reads each file and verifies the stamped value matches src/VERSION;
@@ -26,8 +26,8 @@ SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
 CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 CLAUDE_MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
-CODEX_MARKETPLACE="$PLUGIN_ROOT/.agents/plugins/marketplace.json"
 LEGACY_SKILL_DIR=".claude/skills/specshift"
+LEGACY_CLAUDE_MANIFEST_DIR=".claude/.claude-plugin"
 
 warnings=0
 
@@ -54,7 +54,7 @@ if [[ ! -f "$VERSION_FILE" ]]; then
 fi
 
 # Required: each per-target manifest / marketplace must be hand-edited at the root.
-for f in "$CLAUDE_MANIFEST" "$CLAUDE_MARKETPLACE" "$CODEX_MANIFEST" "$CODEX_MARKETPLACE"; do
+for f in "$CLAUDE_MANIFEST" "$CLAUDE_MARKETPLACE" "$CODEX_MANIFEST"; do
   if [[ ! -f "$f" ]]; then
     echo "Error: $f not found (per-target manifest / marketplace files are hand-edited at the repository root)." >&2
     exit 1
@@ -131,6 +131,7 @@ fi
 echo "Building release at $PLUGIN_ROOT/ (version: $PLUGIN_VERSION) ..."
 rm -rf "$SKILL_DIR"
 rm -rf "$LEGACY_SKILL_DIR"
+rm -rf "$LEGACY_CLAUDE_MANIFEST_DIR"
 
 # --- Copy shared skill tree (one tree, served to both targets) ---
 
@@ -175,7 +176,6 @@ stamp_version() {
 stamp_version "$CLAUDE_MANIFEST"     '.version = $v'                  '.version // empty'              "Claude manifest"
 stamp_version "$CLAUDE_MARKETPLACE"  '(.plugins[] | .version) = $v'   '.plugins[0].version // empty'   "Claude marketplace"
 stamp_version "$CODEX_MANIFEST"      '.version = $v'                  '.version // empty'              "Codex manifest"
-stamp_version "$CODEX_MARKETPLACE"   '(.plugins[] | .version) = $v'   '.plugins[0].version // empty'   "Codex marketplace"
 
 total_actions=0
 total_requirements=0
@@ -281,7 +281,6 @@ echo "Outputs:"
 echo "  - $CLAUDE_MANIFEST (Claude manifest, hand-edited + version-stamped)"
 echo "  - $CLAUDE_MARKETPLACE (Claude marketplace, hand-edited + version-stamped)"
 echo "  - $CODEX_MANIFEST (Codex manifest, hand-edited + version-stamped)"
-echo "  - $CODEX_MARKETPLACE (Codex marketplace, hand-edited + version-stamped)"
 echo "  - $SKILL_DIR/ (shared skill tree)"
 echo ""
 

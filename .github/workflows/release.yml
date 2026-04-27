@@ -28,8 +28,7 @@ jobs:
           for entry in \
             ".claude-plugin/plugin.json|.version|Claude manifest" \
             ".claude-plugin/marketplace.json|.plugins[0].version|Claude marketplace" \
-            ".codex-plugin/plugin.json|.version|Codex manifest" \
-            ".agents/plugins/marketplace.json|.plugins[0].version|Codex marketplace"; do
+            ".codex-plugin/plugin.json|.version|Codex manifest"; do
             file="${entry%%|*}"
             rest="${entry#*|}"
             jq_path="${rest%%|*}"
@@ -49,7 +48,7 @@ jobs:
           if [ "$MISMATCH" -ne 0 ]; then
             exit 1
           fi
-          echo "Version cross-check passed: src/VERSION and all four root manifest/marketplace files agree on $VERSION."
+          echo "Version cross-check passed: src/VERSION and all three root manifest/marketplace files agree on $VERSION."
 
           # Skip if tag already exists
           if git ls-remote --tags origin | grep -q "refs/tags/v${VERSION}$"; then

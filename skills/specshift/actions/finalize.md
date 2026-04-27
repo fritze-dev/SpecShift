@@ -46,7 +46,7 @@ The post-apply workflow output SHALL include a "Next steps" section guiding the 
 
 ### Requirement: Auto Patch Version Bump
 
-The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/VERSION` after a successful change completion. `src/VERSION` is the single agnostic version source of truth — manifest and marketplace files at the repository root carry the version only as a stamped copy. The output SHALL display the new version. The subsequent compile run SHALL propagate the new version into all four root files (`{.claude-plugin,.codex-plugin}/plugin.json`, `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
+The project constitution SHALL define a convention that instructs the post-apply workflow to automatically increment the patch version in `src/VERSION` after a successful change completion. `src/VERSION` is the single agnostic version source of truth — manifest and marketplace files at the repository root carry the version only as a stamped copy. The output SHALL display the new version. The subsequent compile run SHALL propagate the new version into the three root files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`).
 
 **User Story:** As a plugin maintainer I want the patch version to auto-increment when a change is completed, so that consumers can detect updates without manual version bumps.
 
@@ -56,18 +56,18 @@ The project constitution SHALL define a convention that instructs the post-apply
 - **AND** the constitution defines the post-completion auto-bump convention
 - **WHEN** the post-apply workflow runs for a completed change
 - **THEN** the system SHALL update `src/VERSION` to `1.0.4`
-- **AND** the subsequent compile run SHALL stamp `1.0.4` into all four root manifest/marketplace files
+- **AND** the subsequent compile run SHALL stamp `1.0.4` into all three root manifest/marketplace files
 - **AND** the output SHALL display the new version
 
 ### Requirement: Version Sync Between Plugin Files
 
-The `version` field in every per-target manifest and marketplace file at the repository root MUST equal the value in `src/VERSION`. The compile script SHALL enforce this by reading `src/VERSION` and stamping the value into `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), `.codex-plugin/plugin.json` (`.version`), and `.agents/plugins/marketplace.json` (`.plugins[].version`). After stamping, the script SHALL re-read each file and verify the stamped version equals the SoT; any mismatch SHALL fail the build with an error naming the offending file. Hand-edits to a manifest's `version` field SHALL be considered transient — the next compile run overwrites them with the SoT value.
+The `version` field in every per-target manifest and marketplace file at the repository root MUST equal the value in `src/VERSION`. The compile script SHALL enforce this by reading `src/VERSION` and stamping the value into `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), and `.codex-plugin/plugin.json` (`.version`). After stamping, the script SHALL re-read each file and verify the stamped version equals the SoT; any mismatch SHALL fail the build with an error naming the offending file. The CI release workflow SHALL run the same cross-check before tag creation, ensuring that pushed manifests carry the version their `src/VERSION` declares (catches the foot-gun where a maintainer pushes a `src/VERSION` bump without recompiling). Hand-edits to a manifest's `version` field SHALL be considered transient — the next compile run overwrites them with the SoT value.
 
-#### Scenario: All four root files in sync after compile
+#### Scenario: All three root files in sync after compile
 
 - **GIVEN** `src/VERSION` contains `1.0.3`
 - **WHEN** the compile script runs
-- **THEN** all four root manifest/marketplace files SHALL declare version `1.0.3`
+- **THEN** all three root manifest/marketplace files SHALL declare version `1.0.3`
 
 #### Scenario: Manifest version drifts from SoT
 
@@ -79,10 +79,18 @@ The `version` field in every per-target manifest and marketplace file at the rep
 #### Scenario: Stamping failure caught by cross-check
 
 - **GIVEN** `src/VERSION` contains `1.0.3`
-- **AND** the in-place jq stamp on one of the four files fails silently
+- **AND** the in-place jq stamp on one of the three files fails silently
 - **WHEN** the cross-check step runs
 - **THEN** the script SHALL detect the mismatch
 - **AND** SHALL exit non-zero with an error naming the offending file
+
+#### Scenario: CI release workflow catches missing recompile
+
+- **GIVEN** the maintainer edits `src/VERSION` from `1.0.3` to `1.0.4` and pushes to `main` without running `bash scripts/compile-skills.sh` first
+- **AND** the three root manifest/marketplace files therefore still declare `1.0.3`
+- **WHEN** the GitHub Actions release workflow runs
+- **THEN** the cross-check step SHALL fail naming each offending file with the actual vs expected version
+- **AND** the tag creation SHALL be skipped
 
 ### Requirement: Generate Enriched Capability Documentation
 The `specshift finalize` command SHALL generate user-facing documentation from the specs located in `docs/specs/<capability>.md`. The command SHALL produce one documentation file per capability, placed under `docs/capabilities/<capability>.md`. The agent SHALL read the capability doc template at `.specshift/templates/docs/capability.md` for the expected output format. Generated documentation SHALL use clear, user-facing language that explains what the capability does, how to use it, and what behavior to expect. Documentation SHALL NOT include implementation details, internal architecture references, or normative specification language (SHALL/MUST). The agent SHALL transform requirement descriptions into natural explanations, convert Gherkin scenarios into readable usage examples or behavioral descriptions, and organize content with appropriate headings. If a User Story is present in the spec, the agent SHALL use it to inform the documentation's framing and context. The `docs/capabilities/` directory SHALL be created if it does not exist.

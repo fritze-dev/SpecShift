@@ -8,7 +8,7 @@ Layout-level changes — file-system shape only, no behavioral changes yet.
 - [x] 1.2. [P] Move `src/.claude-plugin/plugin.json` content to `.claude-plugin/plugin.json` at the repo root (preserve all fields), then delete the now-empty `src/.claude-plugin/` directory.
 - [x] 1.3. [P] Update `.claude-plugin/marketplace.json` `plugins[0].source` field from `"./.claude"` to `"./"` (no other field changes; the version is re-stamped at compile time).
 - [x] 1.4. [P] Create `.codex-plugin/plugin.json` at the repo root with the full Codex schema (`name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, `skills: "./skills/"`, `interface` block with `displayName`, `shortDescription`, `longDescription`, `developerName`, `category`, `capabilities: ["Read", "Edit", "Write", "Bash"]`, `websiteURL`, `defaultPrompt`, `brandColor`, `screenshots: []`).
-- [x] 1.5. [P] Create `.agents/plugins/marketplace.json` at the repo root with a single plugin entry referencing `.codex-plugin/` and the current version.
+- [x] 1.5. ~~[P] Create `.agents/plugins/marketplace.json` at the repo root with a single plugin entry referencing `.codex-plugin/` and the current version.~~ **REVERTED in audit Pass 3**: Shopify abgleich + Codex docs confirmed single-plugin repos use auto-discovery via `codex plugin marketplace add github:owner/repo` reading `.codex-plugin/plugin.json` directly. The catalog file we initially shipped used a wrong (Claude-style) schema. File and `.agents/` directory removed.
 - [x] 1.6. Create `src/templates/agents.md` as a Smart Template (frontmatter `id: agents`, `template-version: 1`, `description`, `generates: AGENTS.md`, `requires: []`, `instruction`) with the full bootstrap body (Workflow, Planning, Knowledge Management sections).
 - [x] 1.7. Reduce `src/templates/claude.md` body to a single `@AGENTS.md` import line. Bump frontmatter `template-version` from `4` to `5`. Update `description` to reflect the new role ("Bootstrap import stub: makes Claude Code load AGENTS.md via memory-import").
 - [x] 1.8. Update `src/templates/workflow.md`: rewrite the `## Action: init` instruction body to mention both bootstrap files. Bump frontmatter `template-version` from `8` to `9`.
@@ -23,13 +23,13 @@ Layout-level changes — file-system shape only, no behavioral changes yet.
   - `rm -rf` the shared output tree (`./skills/specshift/`) and the legacy tree (`.claude/skills/specshift/`).
   - Copy `src/skills/specshift/SKILL.md` → `./skills/specshift/SKILL.md`; copy `src/templates/` → `./skills/specshift/templates/`.
   - Stamp `plugin-version: <version>` into `./skills/specshift/templates/workflow.md` frontmatter.
-  - For each of the four root files (`.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, `.codex-plugin/plugin.json` `.version`, `.agents/plugins/marketplace.json` `.plugins[].version`): use `jq` to set the version, write to a tmp file, atomic-rename. Re-read each post-stamp and verify the value equals `PLUGIN_VERSION`; fail with an error naming the offending file on mismatch.
+  - For each of the three root files (`.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, `.codex-plugin/plugin.json` `.version`, `.agents/plugins/marketplace.json` `.plugins[].version`): use `jq` to set the version, write to a tmp file, atomic-rename. Re-read each post-stamp and verify the value equals `PLUGIN_VERSION`; fail with an error naming the offending file on mismatch.
   - Compile actions: existing requirement-extraction logic → `./skills/specshift/actions/<action>.md`.
   - Print summary: actions compiled, requirements extracted, warnings count, version stamped.
 - [x] 2.2. Add a requirement link to `src/actions/init.md` for the new `Bootstrap Files Generation` requirement: `- [Bootstrap Files Generation](../../docs/specs/project-init.md#requirement-bootstrap-files-generation)`. Position it after `Install Workflow`.
 - [x] 2.3. Update `.specshift/CONSTITUTION.md`:
   - **Architecture Rules**: release-directory line `.claude/skills/specshift/` → `./skills/specshift/`; plugin-manifest line updated for hand-edited per-target manifests and marketplaces at repo root.
-  - **Conventions — Post-apply version bump**: rewrite to name `src/VERSION` as SoT; sync mechanism is the compile script's symmetric stamping into all four root files.
+  - **Conventions — Post-apply version bump**: rewrite to name `src/VERSION` as SoT; sync mechanism is the compile script's symmetric stamping into all three root files.
   - **Conventions — Plugin source layout**: marketplace source `./.claude` → `./`; manifests at root, not under `src/`.
   - **Conventions — Agent instructions**: `AGENTS.md` is agnostic SoT, `CLAUDE.md` is `@AGENTS.md` import stub.
   - **Conventions — Tool-agnostic instructions**: strengthened — compiled-into-skill files MUST NOT use `${CLAUDE_PLUGIN_ROOT}` and MUST use product names only where the surrounding text is target-scoped.
@@ -79,8 +79,8 @@ Layout-level changes — file-system shape only, no behavioral changes yet.
   - Generate / update capability docs: new `docs/capabilities/multi-target-distribution.md`; updated `docs/capabilities/project-init.md` and `docs/capabilities/release-workflow.md`.
   - Generate `docs/decisions/adr-003-shopify-flat-multi-target-distribution.md` (or next available ADR number) capturing the layout decision and the version-SoT decision.
   - Bump `src/VERSION` per the post-apply auto-bump convention: `0.2.4-beta` → `0.2.5-beta`.
-  - Run `bash scripts/compile-skills.sh` to stamp the new version into all four root files and refresh the shared skill tree.
-- [x] 4.2. Verify the bumped version is consistent across `src/VERSION` and all four root files (one final cross-check).
+  - Run `bash scripts/compile-skills.sh` to stamp the new version into all three root files and refresh the shared skill tree.
+- [x] 4.2. Verify the bumped version is consistent across `src/VERSION` and all three root files (one final cross-check).
 - [x] 4.3. Commit and push to remote (the open PR #46 picks up the finalize commits).
 
 ### Pre-Merge (from CONSTITUTION Standard Tasks)

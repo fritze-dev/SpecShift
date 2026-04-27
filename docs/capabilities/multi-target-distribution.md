@@ -6,7 +6,7 @@ lastUpdated: "2026-04-27"
 ---
 # Multi-Target Distribution
 
-SpecShift is packaged from a single repository for two AI-coding-tool targets — Claude Code and OpenAI Codex CLI — via per-target plugin manifests and marketplace files at the repository root, one shared agnostic skill tree at `./skills/specshift/`, a bootstrap pattern that lets both runtimes read the same instructions without content duplication, and a single version source of truth at `src/VERSION` stamped symmetrically into all four root manifest/marketplace files at compile time.
+SpecShift is packaged from a single repository for two AI-coding-tool targets — Claude Code and OpenAI Codex CLI — via per-target plugin manifests and marketplace files at the repository root, one shared agnostic skill tree at `./skills/specshift/`, a bootstrap pattern that lets both runtimes read the same instructions without content duplication, and a single version source of truth at `src/VERSION` stamped symmetrically into all three root manifest/marketplace files at compile time.
 
 ## Purpose
 
@@ -14,15 +14,16 @@ Without a multi-target distribution layout, packaging SpecShift for a second AI 
 
 ## Rationale
 
-The Shopify-flat layout (manifests side-by-side at the repo root, one shared `./skills/` tree) matches the verified Shopify-AI-Toolkit precedent and eliminates per-target duplication. Manifests are hand-edited at the root rather than rendered from `src/` because they carry per-target metadata only — there is no source/output relationship that would justify an indirection layer. The version source of truth lives in `src/VERSION` (plain text, single line, SemVer) so that bumping the version is a single small edit, decoupled from any per-target metadata file. The compile script reads `src/VERSION` and stamps the value into all four root manifest/marketplace files via `jq` (preserving all non-version keys and values semantically; JSON formatting may be normalized), then re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The bootstrap content lives once in `src/templates/agents.md` (full body) — Codex reads `AGENTS.md` natively at session start, Claude Code reads `CLAUDE.md` and expands the documented `@AGENTS.md` memory-import. The `src/templates/claude.md` stub is a one-line pointer, not a content duplicate, so single source of truth is preserved while both runtimes work without manual setup.
+The Shopify-flat layout (manifests side-by-side at the repo root, one shared `./skills/` tree) matches the verified Shopify-AI-Toolkit precedent and eliminates per-target duplication. Manifests are hand-edited at the root rather than rendered from `src/` because they carry per-target metadata only — there is no source/output relationship that would justify an indirection layer. The version source of truth lives in `src/VERSION` (plain text, single line, SemVer) so that bumping the version is a single small edit, decoupled from any per-target metadata file. The compile script reads `src/VERSION` and stamps the value into all three root manifest/marketplace files via `jq` (preserving all non-version keys and values semantically; JSON formatting may be normalized), then re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The bootstrap content lives once in `src/templates/agents.md` (full body) — Codex reads `AGENTS.md` natively at session start, Claude Code reads `CLAUDE.md` and expands the documented `@AGENTS.md` memory-import. The `src/templates/claude.md` stub is a one-line pointer, not a content duplicate, so single source of truth is preserved while both runtimes work without manual setup.
 
 ## Features
 
 - Hand-edited per-target plugin manifests at the repository root: `.claude-plugin/plugin.json` (Claude Code), `.codex-plugin/plugin.json` (Codex CLI)
-- Hand-edited per-target marketplace files at the repository root: `.claude-plugin/marketplace.json` (Claude marketplace), `.agents/plugins/marketplace.json` (Codex marketplace)
+- Hand-edited Claude marketplace at the repository root: `.claude-plugin/marketplace.json`
+- Codex auto-discovery via `codex plugin marketplace add github:owner/repo` reading `.codex-plugin/plugin.json` directly — no separate Codex marketplace catalog file needed for single-plugin repos
 - One shared agnostic skill tree at `./skills/specshift/` consumed by both targets via their respective manifests' skill-path field
 - Single agnostic version source of truth at `src/VERSION` (plain text, single line, SemVer)
-- Symmetric version stamping via `jq` into all four root manifest/marketplace files with post-stamp cross-check that fails the build on drift
+- Symmetric version stamping via `jq` into all three root manifest/marketplace files with post-stamp cross-check that fails the build on drift
 - Bootstrap single-source-of-truth pattern: `AGENTS.md` carries the full body (read by Codex natively, by Claude Code via `@AGENTS.md` import), `CLAUDE.md` is a one-line import stub
 - `specshift init` generates both bootstrap files unconditionally on fresh init; existing files are never overwritten on re-init
 - Multi-target install documentation in `README.md` with one section per target at the same heading level
@@ -37,9 +38,9 @@ Each target ships one plugin manifest at the repo root. The Claude manifest at `
 
 The compile script writes the entire compiled skill tree to `./skills/specshift/` — `SKILL.md`, the `templates/` directory, and the compiled `actions/` directory. The Claude marketplace declares `source: "./"` so Claude Code resolves the plugin root to the repo root and discovers the skill at `./skills/specshift/`. The Codex manifest declares `skills: "./skills/"` so Codex resolves the same shared tree. There is exactly one skill body — no per-target SKILL variants and no token-substitution rewrite passes.
 
-### Codex Marketplace Entry
+### Codex Discovery via Marketplace Add
 
-The Codex marketplace at `.agents/plugins/marketplace.json` advertises the plugin to Codex consumers running `codex /plugins`. Its `plugins[].source` field references the Codex plugin manifest path (`./.codex-plugin`). The compile script stamps the current `src/VERSION` value into `plugins[].version` via `jq`, preserving all non-version fields and values (JSON formatting may be normalized by `jq`). The Codex marketplace is independent of the Claude marketplace — changes to one do not require changes to the other.
+Codex consumers install via `codex plugin marketplace add github:fritze-dev/specshift` (or an equivalent direct-repo install command). Codex resolves the repository, reads `.codex-plugin/plugin.json` at the root, and creates the marketplace entry automatically — no separate `.agents/plugins/marketplace.json` catalog file is shipped. This matches the documented Codex single-plugin auto-discovery pattern. If a future change introduces multiple plugins from this repository, or the plugin needs to control installation policy or curated ordering, a `.agents/plugins/marketplace.json` can be added at that time using the official Codex schema (`name`, `interface.displayName`, `plugins[].source: {source, path}`, `plugins[].policy`, `plugins[].category`).
 
 ### Bootstrap Single Source of Truth Pattern
 
@@ -51,7 +52,7 @@ The shared skill body (`SKILL.md`, `templates/`, action specs and the spec files
 
 ### Version Source of Truth & Symmetric Stamping
 
-`src/VERSION` is the single agnostic version source of truth — plain text, single line, SemVer (e.g., `0.2.5-beta`). The compile script reads it once and stamps the value into all four root files (`.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, `.codex-plugin/plugin.json` `.version`, `.agents/plugins/marketplace.json` `.plugins[].version`) via `jq`. After stamping, the script re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The compile script also stamps the version into the compiled workflow template's `plugin-version` frontmatter field. To bump the plugin version, the maintainer edits `src/VERSION` and runs `bash scripts/compile-skills.sh` — the four root files are updated in one consistent pass.
+`src/VERSION` is the single agnostic version source of truth — plain text, single line, SemVer (e.g., `0.2.5-beta`). The compile script validates it against the SemVer 2.0 regex, then reads it once and stamps the value into the three root files (`.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[].version`, `.codex-plugin/plugin.json` `.version`) via `jq`. After stamping, the script re-reads each file and verifies the stamped value matches `src/VERSION`; any mismatch fails the build with an error naming the offending file. The same cross-check is also enforced in CI (`.github/workflows/release.yml`) before tag creation, so a maintainer who edits `src/VERSION` without recompiling is caught at push time. The compile script also stamps the version into the compiled workflow template's `plugin-version` frontmatter field. To bump the plugin version, the maintainer edits `src/VERSION` and runs `bash scripts/compile-skills.sh` — the three root files are updated in one consistent pass.
 
 ### Multi-Target Install Documentation
 
