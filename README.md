@@ -26,9 +26,18 @@ claude plugin marketplace update specshift && claude plugin update specshift@spe
 
 ### OpenAI Codex CLI
 
-```text
-codex /plugins
-# Discover and install "specshift" via the Codex plugin marketplace.
+```bash
+# Add the marketplace
+codex plugin marketplace add github:fritze-dev/specshift
+
+# Install the plugin
+codex plugin install specshift
+```
+
+Update:
+
+```bash
+codex plugin marketplace upgrade specshift && codex plugin update specshift
 ```
 
 > **Existing Claude Code installs:** the `0.2.5-beta` release moves the marketplace `source` from `./.claude` to `./` and the compiled skill from `.claude/skills/specshift/` to `./skills/specshift/`. Run `claude plugin marketplace update specshift && claude plugin update specshift@specshift` once after upgrading to pick up the new layout.
@@ -105,7 +114,9 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 │   ├── plugin.json
 │   └── marketplace.json
 ├── .codex-plugin/                 # Codex target (hand-edited at root)
-│   └── plugin.json                # auto-discovered by `codex plugin marketplace add github:owner/repo`
+│   └── plugin.json
+├── .agents/plugins/               # Codex marketplace catalog (hand-edited at root)
+│   └── marketplace.json           # resolved by `codex plugin marketplace add github:owner/repo`
 ├── skills/specshift/              # Compiled, shared skill tree (both targets)
 │   ├── SKILL.md
 │   ├── templates/
