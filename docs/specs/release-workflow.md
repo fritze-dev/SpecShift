@@ -324,9 +324,9 @@ The project documentation SHALL describe how consumers can pin to a specific plu
 
 ### Requirement: Developer Local Marketplace Workflow
 
-The project documentation SHALL describe the local marketplace setup for plugin developers on each target. Developers SHALL register the local repository path as a marketplace source using the host's `marketplace add` command (Claude: `claude plugin marketplace add <local-path>`; Codex: `codex plugin marketplace add ./<local-marketplace-root>` per the documented local-path form at `developers.openai.com/codex/plugins/build`, then enable from the in-session `/plugins` directory). This enables the IDE/editor extension to load the development version of the plugin without requiring CLI-only flags.
+The project documentation SHALL describe the local marketplace setup for plugin developers. Developers SHALL register the local repository path as a marketplace source via `claude plugin marketplace add <local-path> --scope user`. This enables Claude Code to load the development version of the plugin without requiring CLI-only flags. SpecShift is developed against Claude Code; Codex local-development setup is out of scope for this spec — Codex is a distribution target only and is covered by the consumer install requirements in `docs/specs/multi-target-distribution.md` and the consumer install / update requirements elsewhere in this spec.
 
-**User Story:** As a plugin developer I want to load my local plugin changes without CLI flags, so that I can iterate on skills and test them in any project.
+**User Story:** As a plugin developer using Claude Code I want to load my local plugin changes without CLI flags, so that I can iterate on skills and test them in any project.
 
 #### Scenario: Claude Code developer registers local marketplace
 

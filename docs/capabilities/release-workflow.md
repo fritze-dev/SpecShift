@@ -24,7 +24,7 @@ Without an agnostic version source of truth, per-target manifests carry dual res
 - **Automated GitHub Releases** -- a GitHub Action creates git tags and releases automatically when `src/VERSION` changes on `main`
 - **Plugin source separation** -- plugin source lives in `src/`; per-target manifests/marketplaces hand-edited at the repo root; the shared compiled skill tree at `./skills/specshift/` consumed by both targets
 - **Consumer version pinning** -- consumers can pin to a specific version using a tag reference when adding the marketplace
-- **Developer local marketplace per target** -- developers register the local repo as marketplace source for live plugin development on either target
+- **Developer local marketplace (Claude Code)** -- developers register the local repo as marketplace source for live plugin development against Claude Code (SpecShift is developed against Claude Code; Codex local-development setup is out of scope)
 - **Manual minor/major releases** -- documented process: edit `src/VERSION`, run `bash scripts/compile-skills.sh`, push; the Action handles tagging
 - **Per-target consumer update guidance** -- clear update commands for Claude Code (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`) and Codex (`codex plugin marketplace upgrade specshift`)
 - **Changelog generation** -- `specshift finalize` produces release notes from completed changes in Keep a Changelog format
@@ -61,9 +61,9 @@ The Claude marketplace at `.claude-plugin/marketplace.json` declares `source: ".
 
 Consumers can pin to a specific plugin version by adding the marketplace with a tag reference (for example, `claude plugin marketplace add fritze-dev/specshift#v1.0.30`). Pinned marketplaces do not receive updates when new versions are released.
 
-### Developer Local Marketplace per Target
+### Developer Local Marketplace (Claude Code)
 
-Claude Code developers register the local repository path via `claude plugin marketplace add /path/to/specshift --scope user` and install via `claude plugin install specshift@specshift`. Codex developers register the local marketplace via `codex plugin marketplace add ./<local-marketplace-root>` (the documented local-path form per `developers.openai.com/codex/plugins/build`) and enable SpecShift from the in-session `/plugins` directory. Skill changes reload via the host's plugin-reload command. Version changes require running the host's plugin-update command after editing `src/VERSION` and recompiling.
+SpecShift is developed against Claude Code. Developers register the local repository path via `claude plugin marketplace add /path/to/specshift --scope user` and install via `claude plugin install specshift@specshift`. Skill changes reload via the host's plugin-reload command. Version changes require running `claude plugin update specshift@specshift` after editing `src/VERSION` and recompiling. Codex local-development setup is out of scope for this capability — Codex is a distribution target only; consumer install and update flows for Codex are documented under "Consumer Update Process" and the End-to-End Install Checklist.
 
 ### Manual Minor and Major Releases
 

@@ -103,6 +103,8 @@ Post-merge of the propose→apply→finalize pipeline, two follow-ups landed in 
 
 Classification: **Tweak** (wrong values / typos in user-visible commands and the dependent spec scenarios) — not a Design Pivot. The architectural decisions in design.md (Git-URL source, no sub-payload, no `verify_catalog_shape()`, Claude marketplace stays at `"./"`, no auto-PR) are unchanged. Only the textual representations of the canonical Codex commands changed.
 
+Plus a follow-on Tweak: scoped the "Developer Local Marketplace" requirement to Claude Code only. Rationale: SpecShift is developed against Claude Code; the prior wording's Codex side described a path we don't actually exercise. Codex stays as a distribution target — consumer install/update flows for Codex live under "Consumer Update Process" and the End-to-End Install Checklist requirements (those genuinely describe consumer-facing behavior). Keeps this PR's scope tight while Issue #55 covers the broader CONSTITUTION trim.
+
 Files updated in this fix pass:
 - `README.md` (install + Update sections)
 - `docs/specs/multi-target-distribution.md` (Codex Discovery via Marketplace Catalog requirement + scenario; Multi-Target Install Documentation scenario; Edge Case wording; Assumption wording)
