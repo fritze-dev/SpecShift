@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Codex Marketplace Catalog
 
-The `0.2.5-beta` Codex install path relied on a documented auto-discovery assumption (`codex plugin marketplace add github:owner/repo` reads `.codex-plugin/plugin.json` directly without a catalog file). This assumption was falsified against a live Codex install — Codex actually expects a marketplace catalog at `.agents/plugins/marketplace.json`. The catalog file was committed in `71c000fc`; this release pulls the spec, AGENTS.md, CONSTITUTION.md, README.md, ADR-003, and capability doc into alignment with the shipped reality.
+The `0.2.5-beta` Codex install path relied on a documented auto-discovery assumption (`codex plugin marketplace add owner/repo` reads `.codex-plugin/plugin.json` directly without a catalog file). This assumption was falsified against a live Codex install — Codex actually expects a marketplace catalog at `.agents/plugins/marketplace.json`. The catalog file was committed in `71c000fc`; this release pulls the spec, AGENTS.md, CONSTITUTION.md, README.md, ADR-003, and capability doc into alignment with the shipped reality.
 
 #### Added
 - `docs/specs/multi-target-distribution.md` v5: new Requirement "Codex Marketplace Catalog Schema" documenting the Git-URL source form, `policy.installation: "AVAILABLE"`, `policy.authentication: "ON_INSTALL"`, and `category` field (two scenarios verifiable via `jq`)

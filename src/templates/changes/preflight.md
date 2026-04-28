@@ -1,6 +1,6 @@
 ---
 id: preflight
-template-version: 1
+template-version: 2
 description: "Quality gate: traceability, gaps, side effects, assumption audit"
 generates: preflight.md
 requires: [design]
@@ -29,10 +29,10 @@ instruction: |
 <!-- Overlapping stories? Contradictions between specs? Inconsistencies with existing specs in docs/specs/? -->
 
 ## F. Assumption Audit
-<!-- Collect all <!-- ASSUMPTION --> markers from spec.md and design.md.
+<!-- Collect all &lt;!-- ASSUMPTION --&gt; markers from spec.md and design.md.
      Verify each has visible text before the HTML tag.
      Rate each: Acceptable Risk / Needs Clarification / Blocking. -->
 
 ## G. Review Marker Audit
-<!-- Scan for any remaining <!-- REVIEW --> or <!-- REVIEW: ... --> markers.
+<!-- Scan for any remaining &lt;!-- REVIEW --&gt; or &lt;!-- REVIEW: ... --&gt; markers.
      Any REVIEW marker found = Blocking (must be resolved before implementation). -->

@@ -115,7 +115,7 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 ├── .codex-plugin/                 # Codex target (hand-edited at root)
 │   └── plugin.json
 ├── .agents/plugins/               # Codex marketplace catalog (hand-edited at root)
-│   └── marketplace.json           # resolved by `codex plugin marketplace add github:owner/repo`
+│   └── marketplace.json           # resolved by `codex plugin marketplace add owner/repo`
 ├── skills/specshift/              # Compiled, shared skill tree (both targets)
 │   ├── SKILL.md
 │   ├── templates/
