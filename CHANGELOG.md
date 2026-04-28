@@ -3,6 +3,33 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.6-beta] — 2026-04-28
+
+### Codex Marketplace Catalog
+
+The `0.2.5-beta` Codex install path relied on a documented auto-discovery assumption (`codex plugin marketplace add owner/repo` reads `.codex-plugin/plugin.json` directly without a catalog file). This assumption was falsified against a live Codex install — Codex actually expects a marketplace catalog at `.agents/plugins/marketplace.json`. The catalog file was committed in `71c000fc`; this release pulls the spec, AGENTS.md, CONSTITUTION.md, README.md, ADR-003, and capability doc into alignment with the shipped reality.
+
+#### Added
+- `docs/specs/multi-target-distribution.md` v5: new Requirement "Codex Marketplace Catalog Schema" documenting the Git-URL source form, `policy.installation: "AVAILABLE"`, `policy.authentication: "ON_INSTALL"`, and `category` field (two scenarios verifiable via `jq`)
+- `README.md` Multi-Target Distribution tree: added `.agents/plugins/marketplace.json` entry alongside the existing per-target manifest dirs
+
+#### Changed
+- `docs/specs/multi-target-distribution.md` v5: Requirement "Codex Discovery via Marketplace Add" renamed to "Codex Discovery via Marketplace Catalog" — clause inverted from "SHALL NOT ship" to "SHALL ship `.agents/plugins/marketplace.json` at the repository root"; "No Codex marketplace catalog file shipped" Scenario replaced with "Codex marketplace catalog file shipped at root"; Edge Case "Codex auto-discovery semantics change" rewritten as "Codex catalog schema change"; Assumption "Codex single-plugin auto-discovery" rewritten as "Codex catalog-mediated install" recording the falsification
+- `docs/specs/release-workflow.md` v6: Requirement "Source and Release Directory Structure" — "no separate Codex marketplace catalog file is shipped" sentence replaced with the four-file description (three version-bearing + one catalog without `version` field). Requirement "Developer Local Marketplace Workflow" scoped to Claude Code only (SpecShift is developed against Claude Code; Codex local-development setup is out of scope — Codex is a distribution target, covered by consumer install/update requirements)
+- `AGENTS.md` File Ownership: file list expanded from three to four; sentence rewritten to describe verified two-step Codex install path
+- `.specshift/CONSTITUTION.md` Architecture Rules: same content update, scoped to constitution's terser style
+- `README.md` Installation → OpenAI Codex CLI: replaced the prior `codex /plugins`-only placeholder with the documented Codex install flow per `developers.openai.com/codex/plugins/build` — `codex plugin marketplace add fritze-dev/SpecShift` followed by enabling SpecShift from the in-session `/plugins` directory, plus an Update subsection (`codex plugin marketplace upgrade specshift`). Reconciled `docs/specs/multi-target-distribution.md`'s "Multi-Target Install Documentation" scenario and `docs/specs/release-workflow.md`'s "Consumer Update Process" / "End-to-End Install Checklist" / "Developer Local Marketplace Workflow" requirements with the same canonical commands; regenerated `docs/capabilities/release-workflow.md`
+- `docs/decisions/adr-003-shopify-flat-multi-target-distribution.md`: amended with Decision 6 — record the falsification of the auto-discovery assumption and the choice of Git-URL source over `local`-path source; updated rejected-alternative paragraph forwards to Decision 6
+
+#### Specs
+- Modified: `multi-target-distribution.md` v4 → v5 (Codex Discovery via Marketplace Catalog clause inversion + scenario replacement; new Codex Marketplace Catalog Schema requirement; Edge Case + Assumption rewrites; Purpose paragraph updated to mention four root files)
+- Modified: `release-workflow.md` v5 → v6 (Source and Release Directory Structure paragraph rewritten for the four-file layout)
+
+#### Notes
+- `.agents/plugins/marketplace.json` is hand-edited; it has no `version` field and is not version-stamped by `bash scripts/compile-skills.sh`. The script remains unchanged in this release — `verify_catalog_shape()` defense-in-depth, `.github/workflows/release.yml` cross-check loop extension for the catalog, and the compile-script header comments at lines 6–9 and 147 (which preemptively say "four root files" while the code path stamps three) are bundled into Issue #56 (build-time verification of the Codex catalog) for a separate change.
+- Issue #51's live-Codex-smoke-test acceptance criterion is not met in this release; a separate verification step on a clean Codex install is needed to fully close it.
+- Issue #55 tracks a follow-up trim of Codex-specific reference info from `.specshift/CONSTITUTION.md` (only pipeline guardrails should remain there).
+
 ## [v0.2.5-beta] — 2026-04-27
 
 ### Multi-Target Distribution (Claude Code + Codex CLI)
