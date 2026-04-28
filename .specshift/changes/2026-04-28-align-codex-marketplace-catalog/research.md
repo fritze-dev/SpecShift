@@ -20,7 +20,7 @@ Commit `71c000fc` (Tue 2026-04-28) introduced `.agents/plugins/marketplace.json`
 }
 ```
 
-The catalog file is the missing piece that lets `codex plugin marketplace add github:fritze-dev/specshift` succeed. The single-plugin auto-discovery assumption shipped in PR #46 (multi-target distribution, merged as `5fe9d66`) had been falsified — Codex does not auto-discover `.codex-plugin/plugin.json` for repos that lack a `.agents/plugins/marketplace.json` catalog at the root.
+The catalog file is the missing piece that lets `codex plugin marketplace add fritze-dev/SpecShift` succeed. The single-plugin auto-discovery assumption shipped in PR #46 (multi-target distribution, merged as `5fe9d66`) had been falsified — Codex does not auto-discover `.codex-plugin/plugin.json` for repos that lack a `.agents/plugins/marketplace.json` catalog at the root.
 
 ### Spec / Doc state still asserts the opposite
 
@@ -89,7 +89,7 @@ The committed schema (`source: url`, policy `AVAILABLE`/`ON_INSTALL`) was verifi
 | Behavior | Clear | No runtime behavior change — file already in place and working. |
 | Data Model | Clear | Schema is the committed Git-URL form. |
 | UX | Clear | README Codex install commands change to canonical two-step + Update subsection. |
-| Integration | Clear | Codex `marketplace add github:fritze-dev/specshift` install path. |
+| Integration | Clear | Codex `marketplace add fritze-dev/SpecShift` install path. |
 | Edge Cases | Clear | Existing edge cases re-worded for the new world; no new edge cases. |
 | Constraints | Clear | Routing through specshift workflow per AGENTS.md. Stay on `claude/optimize-codex-marketplace-uVtJK`. No PR auto-creation. |
 | Terminology | Clear | "Codex marketplace catalog" (`.agents/plugins/marketplace.json`) vs. "Codex plugin manifest" (`.codex-plugin/plugin.json`) — already distinct in existing prose. |

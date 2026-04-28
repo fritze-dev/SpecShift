@@ -2,7 +2,7 @@
 
 ## Context
 
-The Codex marketplace catalog file `.agents/plugins/marketplace.json` was committed in `71c000fc` and verified functional by the user — `codex plugin marketplace add github:fritze-dev/specshift` resolves the plugin via the catalog's Git-URL source. However, the authoritative documents that describe shipped behavior still claim the file is not shipped. This change is purely textual reconciliation: align five documents (two specs, AGENTS.md, CONSTITUTION.md, README.md) plus a small ADR amendment with the committed reality. No runtime behavior changes; no build script extension.
+The Codex marketplace catalog file `.agents/plugins/marketplace.json` was committed in `71c000fc` and verified functional by the user — `codex plugin marketplace add fritze-dev/SpecShift` resolves the plugin via the catalog's Git-URL source. (The official Codex CLI plugin docs at `developers.openai.com/codex/plugins/build` document the `owner/repo` shorthand without `github:` prefix, and install/enable happens via the in-session `/plugins` directory rather than a separate `plugin install <name>` CLI command.) However, the authoritative documents that describe shipped behavior still claim the file is not shipped. This change is purely textual reconciliation: align five documents (two specs, AGENTS.md, CONSTITUTION.md, README.md) plus a small ADR amendment with the committed reality. No runtime behavior changes; no build script extension.
 
 The constraint set is conservative by design (per user direction):
 - The committed catalog file's contents stay as-is — we describe what is, we don't redesign it.
@@ -20,7 +20,7 @@ The change touches three categories of files:
 **Documentation (apply phase):**
 - `AGENTS.md` File Ownership block: file list expanded to four; sentence rewritten.
 - `.specshift/CONSTITUTION.md` Architecture Rules "Per-target manifests at the repo root" bullet: file list expanded to four; sentence rewritten.
-- `README.md` Installation → OpenAI Codex CLI: replace `codex /plugins` placeholder with the canonical two-step `codex plugin marketplace add github:fritze-dev/specshift` + `codex plugin install specshift` plus an Update subsection.
+- `README.md` Installation → OpenAI Codex CLI: replace the prior `codex /plugins`-only placeholder with the documented `codex plugin marketplace add fritze-dev/SpecShift` followed by an in-session `/plugins`-UI install/enable step, plus an Update subsection (`codex plugin marketplace upgrade specshift`).
 - `README.md` Multi-Target Distribution tree diagram: add the `.agents/plugins/marketplace.json` line. Leave the surrounding "stamps … into all three root manifest/marketplace files" sentence unchanged — it stays factually accurate (the catalog has no version field).
 
 **Decisions (finalize phase, auto-generated):**
@@ -38,7 +38,7 @@ The change touches three categories of files:
 |--------|---------------------------|
 | Spec contradictions removed | `grep -r "no separate codex marketplace catalog" AGENTS.md docs/specs/ .specshift/CONSTITUTION.md` returns zero matches |
 | Old "SHALL NOT ship" clause gone | `grep "SHALL NOT ship a \`.agents/plugins/marketplace.json\`" docs/specs/` returns zero matches |
-| README install command corrected | README contains `codex plugin marketplace add github:fritze-dev/specshift` and `codex plugin install specshift`; no `codex /plugins` install snippet |
+| README install command corrected | README contains `codex plugin marketplace add fritze-dev/SpecShift` and an in-session `/plugins`-UI install/enable step; Update subsection contains `codex plugin marketplace upgrade specshift`; no `codex plugin install <name>` or `codex /plugins`-only placeholder |
 | README tree diagram updated | README's Multi-Target Distribution tree contains `.agents/plugins/` directory entry |
 | Spec frontmatter bumped | `multi-target-distribution.md` frontmatter `version: 5`; `release-workflow.md` frontmatter `version: 6` |
 | Catalog file untouched | `git diff main -- .agents/plugins/marketplace.json` shows no modification beyond the original `71c000fc` introduction |
@@ -92,5 +92,5 @@ No open questions.
 ## Assumptions
 
 - The Codex CLI marketplace schema documented at `developers.openai.com/codex/plugins/build` is stable for our subset (`source: url` form, `policy.installation: AVAILABLE`, `policy.authentication: ON_INSTALL`). <!-- ASSUMPTION: Codex catalog schema stable -->
-- The user-verified functional state of the committed catalog file is accurate — `codex plugin marketplace add github:fritze-dev/specshift` succeeds on at least one Codex install. <!-- ASSUMPTION: Catalog functionally validated -->
+- The user-verified functional state of the committed catalog file is accurate — `codex plugin marketplace add fritze-dev/SpecShift` succeeds on at least one Codex install. <!-- ASSUMPTION: Catalog functionally validated -->
 - `bash scripts/compile-skills.sh` continues to run without `verify_catalog_shape()` errors (it never read the catalog file). <!-- ASSUMPTION: Compile script unaffected -->

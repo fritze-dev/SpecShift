@@ -18,9 +18,9 @@ The plugin is Markdown/YAML; no executable test framework. Per CONSTITUTION.md `
 #### Requirement: Codex Discovery via Marketplace Catalog
 
 - [ ] **Scenario: Codex install resolves the plugin via the catalog**
-  - Setup: A Codex user runs `codex plugin marketplace add github:fritze-dev/specshift`
+  - Setup: A Codex user runs `codex plugin marketplace add fritze-dev/SpecShift`
   - Action: Codex resolves the repository
-  - Verify: Codex reads `.agents/plugins/marketplace.json` at the repository root, follows the declared `plugins[0].source` to fetch the plugin, and the subsequent `codex plugin install specshift` succeeds
+  - Verify: Codex reads `.agents/plugins/marketplace.json` at the repository root, follows the declared `plugins[0].source` to fetch the plugin, and the consumer can subsequently install/enable SpecShift from the in-session `/plugins` directory
   - **Note:** Live verification deferred to Issue #51 acceptance — out of scope for this change. This change only verifies that the catalog file is present at the documented path with the documented schema.
 
 - [ ] **Scenario: Codex marketplace catalog file shipped at root**
@@ -80,7 +80,7 @@ The plugin is Markdown/YAML; no executable test framework. Per CONSTITUTION.md `
 - [ ] **Scenario: README install command corrected**
   - Setup: The repository after apply
   - Action: Read `README.md` Installation → OpenAI Codex CLI section
-  - Verify: Section contains `codex plugin marketplace add github:fritze-dev/specshift` and `codex plugin install specshift`; no `codex /plugins` install snippet remains; an Update subsection is present
+  - Verify: Section contains `codex plugin marketplace add fritze-dev/SpecShift` and an in-session `/plugins`-UI install/enable step; Update subsection contains `codex plugin marketplace upgrade specshift`; no `codex plugin install <name>` line
 
 - [ ] **Scenario: README tree diagram updated**
   - Setup: The repository after apply

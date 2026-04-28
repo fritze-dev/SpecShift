@@ -21,7 +21,7 @@ The Shopify-flat layout (manifests side-by-side at the repo root, one shared `./
 - Hand-edited per-target plugin manifests at the repository root: `.claude-plugin/plugin.json` (Claude Code), `.codex-plugin/plugin.json` (Codex CLI)
 - Hand-edited Claude marketplace at the repository root: `.claude-plugin/marketplace.json`
 - Hand-edited Codex marketplace catalog at the repository root: `.agents/plugins/marketplace.json` (Git-URL source pointing at the repository)
-- Codex consumers install via `codex plugin marketplace add github:fritze-dev/specshift` followed by `codex plugin install specshift` — Codex resolves the plugin via the marketplace catalog
+- Codex consumers install via `codex plugin marketplace add fritze-dev/SpecShift` and then enable SpecShift from the in-session `/plugins` directory` — Codex resolves the plugin via the marketplace catalog
 - One shared agnostic skill tree at `./skills/specshift/` consumed by both targets via their respective manifests' skill-path field
 - Single agnostic version source of truth at `src/VERSION` (plain text, single line, SemVer)
 - Symmetric version stamping via `jq` into the three version-bearing root files with post-stamp cross-check that fails the build on drift; the Codex marketplace catalog has no `version` field and is not stamped
@@ -41,7 +41,7 @@ The compile script writes the entire compiled skill tree to `./skills/specshift/
 
 ### Codex Discovery via Marketplace Catalog
 
-Codex consumers install via `codex plugin marketplace add github:fritze-dev/specshift` followed by `codex plugin install specshift`. Codex resolves the GitHub URL, reads the marketplace catalog at `.agents/plugins/marketplace.json`, and follows the declared `plugins[0].source` to fetch the plugin. The catalog is hand-edited at the repository root and carries no `version` field — its metadata is reviewed manually for parity, like other hand-edited per-target fields. The earlier `0.2.5-beta` framing (auto-discovery without a catalog file) was falsified on 2026-04-28; the catalog-mediated install is now the verified path.
+Codex consumers install via `codex plugin marketplace add fritze-dev/SpecShift` and then enable SpecShift from the in-session `/plugins` directory`. Codex resolves the GitHub URL, reads the marketplace catalog at `.agents/plugins/marketplace.json`, and follows the declared `plugins[0].source` to fetch the plugin. The catalog is hand-edited at the repository root and carries no `version` field — its metadata is reviewed manually for parity, like other hand-edited per-target fields. The earlier `0.2.5-beta` framing (auto-discovery without a catalog file) was falsified on 2026-04-28; the catalog-mediated install is now the verified path.
 
 ### Codex Marketplace Catalog Schema
 
@@ -61,7 +61,7 @@ The shared skill body (`SKILL.md`, `templates/`, action specs and the spec files
 
 ### Multi-Target Install Documentation
 
-The `README.md` carries one install section per supported target at the same heading level. Claude Code consumers run `claude plugin marketplace add fritze-dev/specshift` and `claude plugin install specshift`. Codex consumers run `codex plugin marketplace add github:fritze-dev/specshift` and `codex plugin install specshift`. Update flows are target-specific and documented in their respective sections.
+The `README.md` carries one install section per supported target at the same heading level. Claude Code consumers run `claude plugin marketplace add fritze-dev/specshift` and `claude plugin install specshift`. Codex consumers run `codex plugin marketplace add fritze-dev/SpecShift` and then install or enable SpecShift from the in-session `/plugins` directory; updates use `codex plugin marketplace upgrade specshift`. Update flows are target-specific and documented in their respective sections.
 
 ## Known Limitations
 

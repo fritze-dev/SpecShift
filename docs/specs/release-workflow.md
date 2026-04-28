@@ -80,7 +80,7 @@ For intentional minor or major version changes, the maintainer SHALL manually ed
 
 ### Requirement: Consumer Update Process
 
-The project documentation SHALL describe the complete consumer update process for each supported target. Claude Code consumers refresh the marketplace listing, update the plugin, and restart Claude Code. Codex consumers run the corresponding update flow via `codex /plugins`. This process SHALL be documented in the spec so that `specshift finalize` can generate user-facing documentation from it.
+The project documentation SHALL describe the complete consumer update process for each supported target. Claude Code consumers refresh the marketplace listing, update the plugin, and restart Claude Code. Codex consumers run `codex plugin marketplace upgrade specshift` to refresh the marketplace catalog and pick up the latest plugin version (the documented Codex CLI marketplace upgrade command from `developers.openai.com/codex/plugins/build`; no separate `plugin update` CLI command is documented — the marketplace upgrade is the mechanism). This process SHALL be documented in the spec so that `specshift finalize` can generate user-facing documentation from it.
 
 **User Story:** As a consumer of the plugin I want to know exactly how to update on my AI tool of choice, so that I always have the latest version.
 
@@ -96,7 +96,8 @@ The project documentation SHALL describe the complete consumer update process fo
 
 - **GIVEN** a new plugin version has been pushed by the maintainer
 - **WHEN** a Codex consumer wants to update
-- **THEN** the consumer SHALL refresh and reinstall via the `codex /plugins` flow
+- **THEN** the consumer SHALL run `codex plugin marketplace upgrade specshift`
+- **AND** the local SpecShift install SHALL reflect the latest plugin version after the next Codex session
 
 #### Scenario: Update not detected on Claude Code
 
@@ -136,8 +137,8 @@ The project spec SHALL document the complete happy path for plugin installation 
 
 - **GIVEN** a clean project without the plugin installed
 - **WHEN** the maintainer tests the install flow on Codex
-- **THEN** the plugin SHALL be discoverable via `codex /plugins`
-- **AND** install SHALL succeed
+- **THEN** `codex plugin marketplace add fritze-dev/SpecShift` SHALL succeed
+- **AND** SpecShift SHALL be installable or enableable from the in-session `/plugins` directory
 - **AND** `specshift init` SHALL install the schema and create config files
 - **AND** `specshift init` SHALL generate constitution and bootstrap files
 
@@ -323,7 +324,7 @@ The project documentation SHALL describe how consumers can pin to a specific plu
 
 ### Requirement: Developer Local Marketplace Workflow
 
-The project documentation SHALL describe the local marketplace setup for plugin developers on each target. Developers SHALL register the local repository path as a marketplace source using the host's `marketplace add` command (Claude: `claude plugin marketplace add <local-path>`; Codex: discovery via `codex /plugins` against the local path). This enables the IDE/editor extension to load the development version of the plugin without requiring CLI-only flags.
+The project documentation SHALL describe the local marketplace setup for plugin developers on each target. Developers SHALL register the local repository path as a marketplace source using the host's `marketplace add` command (Claude: `claude plugin marketplace add <local-path>`; Codex: `codex plugin marketplace add ./<local-marketplace-root>` per the documented local-path form at `developers.openai.com/codex/plugins/build`, then enable from the in-session `/plugins` directory). This enables the IDE/editor extension to load the development version of the plugin without requiring CLI-only flags.
 
 **User Story:** As a plugin developer I want to load my local plugin changes without CLI flags, so that I can iterate on skills and test them in any project.
 
@@ -356,7 +357,7 @@ The repository SHALL maintain a clear separation between hand-edited source cont
 
 **Source directory (`src/`)**: Contains hand-edited plugin source files: `src/VERSION` (agnostic version source of truth), `src/skills/specshift/SKILL.md` (router with requirement link mappings), `src/templates/` (Smart Templates), and `src/actions/*.md` (compilation manifests with requirement links). Developers edit files in `src/` to change plugin behavior.
 
-**Per-target manifests and marketplace catalogs (repository root)**: Hand-edited at the root, not under `src/`. The four files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` (the Codex marketplace catalog). The `version` field in the three plugin/marketplace files (Claude plugin, Claude marketplace, Codex plugin) is stamped by the compile script from `src/VERSION`. The Codex marketplace catalog has no `version` field on its plugin entries — it carries pure metadata (name, displayName, source URL, policy, category) and is reviewed manually for parity. Codex consumers install via `codex plugin marketplace add github:owner/repo` followed by `codex plugin install specshift`; Codex resolves the plugin via the catalog's declared Git-URL source.
+**Per-target manifests and marketplace catalogs (repository root)**: Hand-edited at the root, not under `src/`. The four files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` (the Codex marketplace catalog). The `version` field in the three plugin/marketplace files (Claude plugin, Claude marketplace, Codex plugin) is stamped by the compile script from `src/VERSION`. The Codex marketplace catalog has no `version` field on its plugin entries — it carries pure metadata (name, displayName, source URL, policy, category) and is reviewed manually for parity. Codex consumers register the catalog via `codex plugin marketplace add fritze-dev/SpecShift` (per `developers.openai.com/codex/plugins/build`) and then install or enable SpecShift from the in-session `/plugins` directory. Codex resolves the plugin via the catalog's declared Git-URL source. Updates use `codex plugin marketplace upgrade specshift`. References elsewhere in this spec to installing or updating SpecShift via `codex /plugins` alone are legacy wording that this requirement supersedes.
 
 **Shared release directory (`./skills/`)**: Generated, self-contained release artifact built by the AOT compiler (`scripts/compile-skills.sh`). Contains `./skills/specshift/SKILL.md` (copied from `src/`), `./skills/specshift/templates/` (copied from `src/`), and `./skills/specshift/actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Both targets discover the skill from this single shared tree via their respective manifests' skill-path field.
 

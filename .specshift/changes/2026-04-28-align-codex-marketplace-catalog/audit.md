@@ -93,6 +93,30 @@ None.
 
 Apply phase complete. Ready for finalize.
 
+### Post-Review Correction (Tweak — 2026-04-28)
+
+Post-merge of the propose→apply→finalize pipeline, two follow-ups landed in a single fix commit on the same change:
+
+1. **User correction** (the canonical Codex commands I had written were wrong): the README, specs, AGENTS.md, CONSTITUTION.md, ADR-003, capability docs, and CHANGELOG all used `codex plugin marketplace add github:fritze-dev/specshift` + `codex plugin install specshift`. The official Codex CLI plugin docs at `developers.openai.com/codex/plugins/build` document `owner/repo` shorthand without a `github:` prefix, and the install/enable step happens via the in-session `/plugins` directory rather than a separate `plugin install <name>` CLI command. Updated to: `codex plugin marketplace add fritze-dev/SpecShift` + enable from `/plugins`-UI, with updates via `codex plugin marketplace upgrade specshift`.
+
+2. **Copilot review** (3 comments on PR #54): pointed out that `docs/specs/multi-target-distribution.md`'s "Multi-Target Install Documentation" requirement scenario, `docs/specs/release-workflow.md`'s "Consumer Update Process" / "End-to-End Install Checklist" / "Developer Local Marketplace Workflow" requirements, and `docs/capabilities/release-workflow.md` (`lastUpdated: 2026-04-27` + multiple `codex /plugins` references) were inconsistent with the new install path. Reconciled all of them with the canonical commands.
+
+Classification: **Tweak** (wrong values / typos in user-visible commands and the dependent spec scenarios) — not a Design Pivot. The architectural decisions in design.md (Git-URL source, no sub-payload, no `verify_catalog_shape()`, Claude marketplace stays at `"./"`, no auto-PR) are unchanged. Only the textual representations of the canonical Codex commands changed.
+
+Files updated in this fix pass:
+- `README.md` (install + Update sections)
+- `docs/specs/multi-target-distribution.md` (Codex Discovery via Marketplace Catalog requirement + scenario; Multi-Target Install Documentation scenario; Edge Case wording; Assumption wording)
+- `docs/specs/release-workflow.md` (Consumer Update Process; End-to-End Install Checklist Codex scenario; Developer Local Marketplace Workflow; Source and Release Directory Structure paragraph)
+- `docs/capabilities/multi-target-distribution.md` (regenerated wording in two places)
+- `docs/capabilities/release-workflow.md` (`lastUpdated: 2026-04-27` → `2026-04-28`; Per-target consumer update guidance; Developer Local Marketplace per Target; Codex CLI update; End-to-End Install Flow)
+- `docs/decisions/adr-003-shopify-flat-multi-target-distribution.md` (Decision 1 Codex install commands; Live install verification deferred consequence — clarified the legacy `/plugins` reference)
+- `AGENTS.md` (File Ownership Codex install command)
+- `.specshift/CONSTITUTION.md` (Per-target manifests bullet; Local development convention)
+- `CHANGELOG.md` (v0.2.6-beta entry README description)
+- All change artifacts (research, proposal, design, tests, tasks) updated for consistency
+
+No spec frontmatter version re-bumps — the v5/v6 versions captured this whole change end-to-end including the post-review fix. `bash scripts/compile-skills.sh` re-run with no script changes; three version-bearing root files re-stamped (idempotent at `0.2.6-beta`).
+
 ### Spec Lifecycle Updates
 
 - Both modified specs (`multi-target-distribution.md`, `release-workflow.md`) were already at `status: stable` before this change — no draft → stable flip needed.

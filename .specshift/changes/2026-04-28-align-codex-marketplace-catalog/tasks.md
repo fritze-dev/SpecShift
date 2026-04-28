@@ -12,7 +12,7 @@ Documentation-only edits to align text with the committed catalog file. No code 
 
 - [x] 2.1. **`AGENTS.md` File Ownership block (line 33)** — replace the `.claude-plugin/plugin.json, .claude-plugin/marketplace.json, .codex-plugin/plugin.json` bullet with the four-file form, distinguishing the three version-bearing files from the catalog and stating the verified two-step Codex install path.
 - [x] 2.2. **`.specshift/CONSTITUTION.md` Architecture Rules — "Per-target manifests at the repo root" bullet (line 24)** — same content update as AGENTS.md, scoped to the constitution's terser style.
-- [x] 2.3. **[P] `README.md` Installation → OpenAI Codex CLI section** — replace the `codex /plugins` placeholder block with the canonical two-step install (`codex plugin marketplace add github:fritze-dev/specshift` + `codex plugin install specshift`) plus an Update subsection.
+- [x] 2.3. **[P] `README.md` Installation → OpenAI Codex CLI section** — replace the prior `codex /plugins`-only placeholder block with the documented Codex install flow per `developers.openai.com/codex/plugins/build`: `codex plugin marketplace add fritze-dev/SpecShift` followed by enabling SpecShift from the in-session `/plugins` directory; Update subsection uses `codex plugin marketplace upgrade specshift`.
 - [x] 2.4. **[P] `README.md` Multi-Target Distribution tree diagram** — add a `.agents/plugins/marketplace.json` entry; leave the surrounding "stamps … into all three root manifest/marketplace files" sentence as-is.
 - [x] 2.5. **Verify catalog file untouched** — `git diff origin/main -- .agents/plugins/marketplace.json` shows no change beyond the original commit.
 - [x] 2.6. **Verify compile script untouched** — `git diff origin/main -- scripts/compile-skills.sh` shows no change.
