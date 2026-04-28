@@ -1,5 +1,5 @@
 ---
-status: review
+status: completed
 branch: claude/optimize-codex-marketplace-uVtJK
 capabilities:
   new: []
