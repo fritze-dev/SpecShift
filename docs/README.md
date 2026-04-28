@@ -5,7 +5,7 @@
 SpecShift uses a three-layer architecture where each layer has distinct responsibilities and can be modified independently:
 
 1. **Constitution Layer** (`.specshift/CONSTITUTION.md`): Global project rules — Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. All AI actions read the constitution before performing any work.
-2. **Schema Layer** (`.specshift/WORKFLOW.md` + `.specshift/templates/`): Declarative pipeline orchestration via YAML frontmatter and Smart Templates. Defines the 8-stage artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit), action instructions, and artifact generation rules.
+2. **Schema Layer** (`.specshift/WORKFLOW.md` + `.specshift/templates/`): Declarative pipeline orchestration via YAML frontmatter and Smart Templates. Defines the artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit), action instructions, and artifact generation rules.
 3. **Router + Actions Layer** (`.claude/skills/specshift/`): A single router SKILL.md dispatches to 5 built-in actions (init, propose, apply, finalize, review) plus consumer-defined custom actions. Built-in actions read compiled requirements from AOT-extracted action files.
 
 ## Tech Stack
@@ -55,7 +55,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 | Capability | Description |
 |---|---|
 | [Change Workspace](capabilities/change-workspace.md) | Workspace creation, worktree isolation, and change lifecycle |
-| [Artifact Pipeline](capabilities/artifact-pipeline.md) | 8-stage pipeline with dependency gating and PR integration |
+| [Artifact Pipeline](capabilities/artifact-pipeline.md) | Artifact pipeline with dependency gating and PR integration |
 
 ### Development
 

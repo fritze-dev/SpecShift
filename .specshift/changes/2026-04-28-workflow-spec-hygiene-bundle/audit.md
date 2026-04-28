@@ -46,7 +46,7 @@ PASS.
 - 2.8 — `.specshift/WORKFLOW.md` template-version 9→10; mirror finalize bullets + review sharpening; project-specific Compile bullet preserved ✓
 - 2.9 — `.specshift/templates/changes/{tasks,research,preflight,audit}.md` re-synced from `src/templates/` ✓
 - 2.10 — `bash scripts/compile-skills.sh` exit 0; required propose.md link rename ("Eight-Stage Pipeline" → "Pipeline Stages and Dependencies") to keep extraction count clean ✓
-- 2.11 — `diff -r src/templates/ skills/specshift/templates/` shows only the expected `plugin-version` stamp (`""` → `0.2.7-beta`) — no semantic drift ✓
+- 2.11 — `diff -r src/templates/ skills/specshift/templates/` shows only the expected `plugin-version` stamp (`""` → `0.2.8-beta`) — no semantic drift ✓
 
 **Task-Diff Mapping:**
 Each task maps to specific changed files in the diff. Five [P] tasks (2.1, 2.2, 2.3, 2.4, 2.7) operated on independent files; the remaining were sequential due to compile/sync dependencies. No untraced files in `git diff --name-only main...HEAD`.
