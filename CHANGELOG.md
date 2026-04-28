@@ -3,6 +3,28 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.6-beta] — 2026-04-28
+
+### Add Codex Marketplace Catalog File
+
+A user reported that `codex plugin marketplace add github:fritze-dev/specshift` did not find the plugin on the released `0.2.5-beta` layout, falsifying the Codex single-plugin auto-discovery assumption that drove PR #46. This release ships the documented Codex marketplace catalog file at `.agents/plugins/marketplace.json` so Codex consumers can install via the canonical two-step flow (`marketplace add` + `plugin install`). Issue #51 acceptance branch (b).
+
+#### Added
+- `.agents/plugins/marketplace.json` (hand-edited at the repo root) following the documented Codex schema: top-level `name` + `interface.displayName`, single-entry `plugins[]` with object-form `source: { source: "local", path: "../../.codex-plugin" }`, `policy: { installation: "user-required", authentication: "none" }`, `category: "Coding"`. The catalog has no `plugins[].version` field — version is sourced from `.codex-plugin/plugin.json` referenced by `plugins[0].source.path`
+- New spec requirement "Codex Marketplace Catalog Schema" pinning the file's shape, with three scenarios covering top-level fields, object-form `source`, and absence of `plugins[].version`
+- New scenarios under "Symmetric Version Stamping with Cross-Check": "Codex catalog file shape-checked but not version-stamped" and "Release CI cross-check includes catalog file"
+
+#### Changed
+- README Codex install section: replaced the in-session `codex /plugins` line with the canonical two-step install (`codex plugin marketplace add github:fritze-dev/specshift` + `codex plugin install specshift`); added a Codex Update subsection mirroring Claude's; layout diagram now shows `.agents/plugins/`; version-stamping paragraph differentiates the three version-bearing files from the shape-checked catalog (Closes #51)
+- `scripts/compile-skills.sh`: preflight loop extended from three to four required root files; new `verify_catalog_shape()` helper called after the three `stamp_version` calls; summary output lists the catalog as the fourth root file
+- `.github/workflows/release.yml`: cross-check loop extended to four entries with a `version`/`shape` mode dispatch — three version-bearing files keep their version-equality assertion; the catalog gets presence-and-shape verification only
+- ADR-003 amended with Decision 6 mandating `.agents/plugins/marketplace.json`; the prior rejected-alternative paragraph is rewritten as a "decision history" annotation cross-referencing Decision 6
+- AGENTS.md, `.specshift/CONSTITUTION.md`: File Ownership / Architecture Rules paragraphs flipped from "no separate Codex marketplace catalog file is shipped" to acknowledge the catalog and differentiate the three version-bearing files from the shape-checked catalog
+- Spec `multi-target-distribution.md` Requirement "Codex Discovery via Marketplace Add" flipped from forbidding the catalog file to mandating it; Edge Case "Codex auto-discovery semantics change" rewritten as "Codex marketplace catalog schema change"; Assumption "Codex single-plugin auto-discovery" rewritten as "Codex catalog-driven install" with the falsifying observation recorded inline
+
+#### Specs
+- Modified: `multi-target-distribution.md` v5 (new Requirement "Codex Marketplace Catalog Schema"; "Codex Discovery via Marketplace Add" flipped; new scenarios under "Symmetric Version Stamping with Cross-Check"; Edge Case + Assumption rewritten; Multi-Target Install Documentation scenario updated)
+
 ## [v0.2.5-beta] — 2026-04-27
 
 ### Multi-Target Distribution (Claude Code + Codex CLI)
