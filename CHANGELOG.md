@@ -26,9 +26,9 @@ The `0.2.5-beta` Codex install path relied on a documented auto-discovery assump
 - Modified: `release-workflow.md` v5 → v6 (Source and Release Directory Structure paragraph rewritten for the four-file layout)
 
 #### Notes
-- `.agents/plugins/marketplace.json` is hand-edited; it has no `version` field and is not version-stamped by `bash scripts/compile-skills.sh`. The script remains unchanged in this release — `verify_catalog_shape()` defense-in-depth and `.github/workflows/release.yml` cross-check loop extension are deferred to a follow-up issue if relevant.
+- `.agents/plugins/marketplace.json` is hand-edited; it has no `version` field and is not version-stamped by `bash scripts/compile-skills.sh`. The script remains unchanged in this release — `verify_catalog_shape()` defense-in-depth, `.github/workflows/release.yml` cross-check loop extension for the catalog, and the compile-script header comments at lines 6–9 and 147 (which preemptively say "four root files" while the code path stamps three) are bundled into Issue #56 (build-time verification of the Codex catalog) for a separate change.
 - Issue #51's live-Codex-smoke-test acceptance criterion is not met in this release; a separate verification step on a clean Codex install is needed to fully close it.
-- Compile-script header comments at lines 6–9 and 147 mention "four root files" while the code path stamps three. Pre-existing condition tolerated; small follow-up patch can clean it up later.
+- Issue #55 tracks a follow-up trim of Codex-specific reference info from `.specshift/CONSTITUTION.md` (only pipeline guardrails should remain there).
 
 ## [v0.2.5-beta] — 2026-04-27
 
