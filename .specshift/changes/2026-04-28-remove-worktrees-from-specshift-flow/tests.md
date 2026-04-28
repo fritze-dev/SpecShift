@@ -108,10 +108,10 @@ CONSTITUTION's `## Testing` section declares the project as Markdown/YAML artifa
   - Action: `git grep -i worktree -- src/ .specshift/WORKFLOW.md AGENTS.md .specshift/templates/changes/proposal.md`.
   - Verify: 0 results.
 
-- [ ] **Edge: post-finalize compiled skills contain no removed-lifecycle markers.**
+- [ ] **Edge: post-finalize compiled skills contain no `worktree` references at all.**
   - Setup: after `specshift finalize` completes (compile re-run).
-  - Action: run `git grep -iE 'git worktree|worktree\.enabled|worktree\.path_pattern|\.specshift/worktrees/' -- skills/specshift/`.
-  - Verify: 0 results for those removed-lifecycle markers (commands, config keys, hardcoded path patterns). The legacy `worktree:` proposal-frontmatter mention compiled in from `change-workspace.md` is intentional and may still appear in compiled skill content.
+  - Action: run `git grep -in worktree -- skills/specshift/`.
+  - Verify: 0 results. Migration documentation about the removed `worktree:` proposal-frontmatter field lives in `CHANGELOG.md` only; specs describe the current contract via a generic "skills ignore unknown frontmatter fields" rule rather than naming the removed field, so nothing propagates into the compiled tree.
 
 ## Traceability Summary
 

@@ -54,12 +54,11 @@ Tier 1 already covers every change created since worktree adoption, so dropping 
 
 ## Goals & Success Metrics
 
-* `git grep -i worktree -- src/ .specshift/WORKFLOW.md AGENTS.md .specshift/templates/changes/proposal.md` returns **0 hits** after apply.
-* `git grep -iE 'git worktree|worktree\.enabled|worktree\.path_pattern|\.specshift/worktrees/' -- skills/specshift/` returns **0 hits** after finalize re-runs `bash scripts/compile-skills.sh` — i.e., no removed-lifecycle markers (commands, config keys, hardcoded path patterns) propagate into the compiled tree. The legacy `worktree:` proposal-frontmatter mention in `skills/specshift/actions/propose.md` (carried in from the `change-workspace.md` legacy/read-only documentation) is intentionally allowed.
-* `git grep -i worktree -- docs/specs/` returns **only** the legacy/read-only documentation lines in `change-workspace.md` (3 hits, intentional).
+* `git grep -i worktree -- src/ .specshift/WORKFLOW.md AGENTS.md .specshift/CONSTITUTION.md .specshift/templates/changes/proposal.md README.md` returns **0 hits** after apply.
+* `git grep -i worktree -- docs/specs/ docs/capabilities/ skills/specshift/` returns **0 hits** after finalize re-runs `bash scripts/compile-skills.sh`. Migration documentation about the now-removed `worktree:` proposal-frontmatter field lives in `CHANGELOG.md` only — specs describe the current contract via a generic "skills ignore unknown frontmatter fields" rule rather than naming the removed field.
 * `bash scripts/compile-skills.sh` exits 0 (template-version bump on `src/templates/workflow.md` is detected; no compile-time validation failures).
 * All 5 affected specs retain ≥3 requirements each (CONSTITUTION's "consolidation floor").
-* Existing `proposal.md` files in `.specshift/changes/*/` keep their legacy `worktree:` frontmatter unchanged (no migration touch).
+* Existing `proposal.md` files in `.specshift/changes/*/` keep their legacy `worktree:` frontmatter unchanged (no migration touch); they still load via the new generic ignore-unknown-fields rule.
 
 ## Non-Goals
 

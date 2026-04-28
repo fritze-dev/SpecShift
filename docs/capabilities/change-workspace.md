@@ -34,7 +34,7 @@ When you run `specshift propose add-user-auth`, the system creates a workspace a
 
 ### Proposal Tracking Frontmatter
 
-When the proposal artifact is generated, it includes YAML frontmatter with `status: active`, `branch`, and `capabilities` (structured new/modified/removed lists). This frontmatter enables the router to detect changes, filter by status, and identify affected capabilities without parsing markdown. New proposals do not write a `worktree` frontmatter field.
+When the proposal artifact is generated, it includes YAML frontmatter with `status: active`, `branch`, and `capabilities` (structured new/modified/removed lists). This frontmatter enables the router to detect changes, filter by status, and identify affected capabilities without parsing markdown. Skills ignore unknown frontmatter fields when reading proposals, so historical proposals carrying fields that are no longer part of the current contract still load cleanly.
 
 ### Change Context Detection (Router)
 
@@ -50,4 +50,3 @@ Changes are identified as active or completed based on their proposal's `status`
 - If a change with that name already exists, the system suggests continuing instead of creating a duplicate.
 - If two proposals have the same `branch` value, the most recently modified one is used with a warning.
 - If a branch is renamed after change creation, the proposal's `branch` field becomes stale and detection falls through to the directory listing prompt.
-- **Legacy `worktree:` frontmatter on existing proposals**: proposals committed before this capability was simplified may still carry a `worktree:` field. New proposals do not write the field, and skills treat any existing value as read-only legacy data.

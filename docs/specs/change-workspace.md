@@ -27,7 +27,7 @@ When the proposal artifact (`proposal.md`) is created for a change, the propose 
   ```
   This machine-readable field mirrors the Capabilities section in the proposal body and eliminates the need for skills to parse markdown sections.
 
-These fields enable automated change context detection, active/completed filtering, and capability lookup without relying on naming conventions or markdown parsing. New proposals MUST NOT write a `worktree` frontmatter field; existing proposals that already carry one are treated as legacy/read-only data.
+These fields enable automated change context detection, active/completed filtering, and capability lookup without relying on naming conventions or markdown parsing. Skills SHALL ignore unknown frontmatter fields when reading proposals — historical proposals may carry fields that are no longer part of the current contract.
 
 **User Story:** As a developer I want to create a new change workspace with a date-prefixed directory, so that changes are chronologically ordered from creation and I can immediately begin the spec-driven workflow.
 
@@ -52,7 +52,6 @@ These fields enable automated change context detection, active/completed filteri
 - **AND** the proposal lists `user-auth` as a new capability and `quality-gates` as modified
 - **WHEN** the proposal artifact is generated
 - **THEN** `proposal.md` SHALL include YAML frontmatter with `status: active`, `branch: add-user-auth`, and `capabilities: { new: [user-auth], modified: [quality-gates], removed: [] }`
-- **AND** SHALL NOT include a `worktree` frontmatter field
 
 #### Scenario: Reject invalid name format
 
@@ -165,7 +164,6 @@ Actions that operate on active changes (propose, apply) SHALL filter to active c
 - **Proposal without frontmatter (legacy)**: The router SHALL fall back to tasks.md-based detection for active/completed status.
 - **Multiple proposals match same branch**: If two change directories have proposals with the same `branch` value, skills SHALL use the most recently modified one and warn about the conflict.
 - **Branch renamed after change creation**: The `branch` field in proposal.md reflects the branch at creation time. If the branch is renamed, the field becomes stale — change context detection falls through to the directory listing prompt.
-- **Legacy `worktree:` frontmatter on existing proposals**: Proposals committed before this capability was simplified may still carry a `worktree: <path>` field. New proposals MUST NOT write the field, and skills SHALL ignore it on read.
 
 ## Assumptions
 
