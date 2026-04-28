@@ -4,13 +4,11 @@
 ### Requirement: Install Workflow
 The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's workflow template (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate the bootstrap files (`AGENTS.md` + `CLAUDE.md`) per the "Bootstrap Files Generation" requirement. The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
 
-The init command SHALL check for GitHub tooling availability (gh CLI, MCP tools, or API). If GitHub tooling is available and authenticated, the init command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the init command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The init command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge using available GitHub tooling.
-
 The init command SHALL NOT install any external CLI tools or require Node.js/npm as prerequisites.
 
 The init command SHALL ensure target directories exist (via `mkdir -p`) before copying files.
 
-**User Story:** As a new user I want a single `specshift init` command that sets up everything including optional worktree mode, so that I do not have to manually configure the project.
+**User Story:** As a new user I want a single `specshift init` command that sets up the project, so that I do not have to manually configure templates, constitution, and bootstrap files.
 
 #### Scenario: First-time project initialization
 - **GIVEN** a project directory without the spec-driven workflow installed
@@ -27,19 +25,6 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 - **AND** the plugin ships a `workflow.md` bootstrap template
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL copy workflow.md to `.specshift/WORKFLOW.md`
-
-#### Scenario: Worktree opt-in during init
-- **GIVEN** GitHub tooling is available and authenticated
-- **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL ask whether to enable worktree-based change isolation
-- **AND** if the user opts in, SHALL uncomment the `worktree:` section in WORKFLOW.md and set `enabled: true`
-- **AND** SHALL offer to configure the GitHub repo for rebase-merge
-
-#### Scenario: No GitHub tooling available
-- **GIVEN** no GitHub tooling is available or not authenticated
-- **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL skip the worktree opt-in question
-- **AND** SHALL leave the `worktree:` section commented out in WORKFLOW.md
 
 ### Requirement: Bootstrap Files Generation
 The `specshift init` command SHALL generate two bootstrap files at the project root from the plugin's bootstrap templates: `AGENTS.md` (full body, agnostic source of truth, generated from the `agents.md` template) and `CLAUDE.md` (one-line `@AGENTS.md` import stub, generated from the `claude.md` template). Both files are generated unconditionally on fresh init — there is no environment detection that picks one over the other. The agnostic body lives in `AGENTS.md`; Codex CLI reads it natively, Claude Code reads it via the `@AGENTS.md` import expanded from `CLAUDE.md`.
@@ -113,7 +98,7 @@ When `specshift init` runs on an already-initialized project (re-init after plug
    - If the plugin `template-version` is higher AND the local content has been customized: merge is needed. The system SHALL present both versions to the user and ask them to resolve differences. Report: "Template <name> has both local customizations and plugin updates — merge required."
    - If the local template has no `template-version` field (legacy): treat as version 0 and apply the same logic (likely results in silent update if content matches plugin template, or merge prompt if customized).
 
-The merge detection SHALL apply to all Smart Templates including docs templates in subdirectories, WORKFLOW.md, and CONSTITUTION.md. WORKFLOW.md is especially important for merge detection because the plugin frequently updates behavioral fields (`apply.instruction`, `context`) while users customize project-specific fields (`worktree`, `docs_language`, pipeline order). The existing skip-if-exists behavior for WORKFLOW.md is replaced by version-based merge detection.
+The merge detection SHALL apply to all Smart Templates including docs templates in subdirectories, WORKFLOW.md, and CONSTITUTION.md. WORKFLOW.md is especially important for merge detection because the plugin frequently updates behavioral fields (`apply.instruction`, `context`) while users customize project-specific fields (`docs_language`, pipeline order). The existing skip-if-exists behavior for WORKFLOW.md is replaced by version-based merge detection.
 
 For CONSTITUTION.md, the merge operates at **section level**: the system SHALL compare the template's section headings (e.g., `## Tech Stack`, `## Architecture Rules`, `## Standard Tasks`) against the existing CONSTITUTION.md. Missing sections from a newer template version SHALL be offered to the user for interactive generation (the agent reads the codebase and proposes content for the new section, as bootstrap does). Existing sections with user content SHALL be preserved. The generated CONSTITUTION.md SHALL include a `template-version` field in YAML frontmatter to track which template version generated its structure.
 

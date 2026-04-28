@@ -48,7 +48,6 @@ instruction: |
 <!-- Proposal tracking frontmatter — set by skills at generation time.
      status: active | review | completed (active→review when audit passes, review→completed after merge)
      branch: git branch name for this change
-     worktree: worktree path (only when worktree mode enabled)
      capabilities: machine-readable mirror of the Capabilities section below
 ---
 status: active

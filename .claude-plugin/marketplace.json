@@ -11,7 +11,7 @@
       "name": "specshift",
       "source": "./",
       "description": "Spec-driven development workflow — every feature produces research, specs, architecture, quality checks, changelogs, and user docs alongside code.",
-      "version": "0.2.6-beta"
+      "version": "0.2.7-beta"
     }
   ]
 }
