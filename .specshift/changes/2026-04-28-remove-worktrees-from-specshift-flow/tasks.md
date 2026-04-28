@@ -47,7 +47,7 @@ These files are link manifests consumed by `bash scripts/compile-skills.sh`. Rem
 - [x] 3.1. Metric Check — every Success Metric from `design.md` verified PASS:
   - `git grep -i worktree -- src/ .specshift/WORKFLOW.md AGENTS.md .specshift/templates/changes/proposal.md` → 0 hits ✅
   - `git grep -i worktree -- docs/specs/` → 3 intentional legacy-doc hits in `change-workspace.md` ✅
-  - All 5 affected specs ≥3 requirements (4 / 11 / 13 / 7 / 5) ✅
+  - All 5 affected specs ≥3 requirements (4 / 12 / 14 / 7 / 5) ✅
   - Existing `proposal.md` files in `.specshift/changes/*/` keep their legacy `worktree:` frontmatter unchanged (untouched) ✅
 - [x] 3.2. Auto-Verify — `audit.md` generated.
 - [x] 3.3. User Testing — `auto_approve: true` and audit verdict PASS → gate skipped per WORKFLOW.md `## Action: apply` instruction.

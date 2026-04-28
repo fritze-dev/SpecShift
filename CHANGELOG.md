@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Remove Worktrees from SpecShift Workflow
 
-SpecShift no longer owns a worktree lifecycle. Worktree isolation is a host/tool concern — Claude Code, the Codex CLI, and plain `git worktree` already provide it. Carrying our own creation, lazy stale cleanup, post-merge cleanup, and change-context fallback added significant surface area without giving users anything they could not get from their host. Removing it tightens SpecShift's scope to "file-based change workspaces under `.specshift/changes/`" and shrinks the propose / finalize / review actions and the change-workspace spec correspondingly. Closes #47.
+SpecShift no longer owns a worktree lifecycle. Worktree isolation is a host/tool concern — Claude Code, the Codex CLI, and plain `git worktree` already provide it. Carrying our own creation, lazy stale cleanup, post-merge cleanup, and change-context fallback added significant surface area without giving users anything they could not get from their host. Removing it tightens SpecShift's scope to "file-based change workspaces under `.specshift/changes/`" and shrinks the propose / finalize / review actions and the change-workspace spec correspondingly. Closes #47. Released the same day as `v0.2.6-beta` and built on top of it — the `multi-target-distribution.md` v5 spec from `v0.2.6-beta` is amended here to drop the orphan `Worktree-path references` sub-rule.
 
 #### Removed
 - `worktree:` config block in `.specshift/WORKFLOW.md` and `src/templates/workflow.md` (was: `enabled`, `path_pattern`, `auto_cleanup`, `stale_days`)
@@ -27,7 +27,7 @@ SpecShift no longer owns a worktree lifecycle. Worktree isolation is a host/tool
 - Compile script (`bash scripts/compile-skills.sh`) regenerates `./skills/specshift/` so the shipped skill tree stops mentioning worktrees
 
 #### Specs
-- Modified: `change-workspace.md` v5 (4 requirements; was 7), `project-init.md` v7 (11 requirements; was 13), `artifact-pipeline.md` v6 (13 requirements; was 13 with worktree-config scenarios trimmed), `review-lifecycle.md` v4 (purpose paragraph trimmed; merge sequence requires switching to default branch before local-branch deletion), `workflow-contract.md` v10 (frontmatter list trimmed; Router Dispatch Pattern documented as 2-tier with action-dependent listing), `multi-target-distribution.md` v5 (Agnostic Skill Body sub-rules renumbered — the "Worktree-path references" sub-rule that referenced `worktree.path_pattern` is dropped on top of `0.2.6-beta`'s Codex Marketplace Catalog rework)
+- Modified: `change-workspace.md` v5 (4 requirements; was 7), `project-init.md` v7 (12 requirements; was 13), `artifact-pipeline.md` v6 (14 requirements; worktree-config scenarios trimmed in-place — count unchanged), `review-lifecycle.md` v4 (purpose paragraph trimmed; merge sequence requires switching to default branch before local-branch deletion), `workflow-contract.md` v10 (frontmatter list trimmed; Router Dispatch Pattern documented as 2-tier with action-dependent listing), `multi-target-distribution.md` v5 (Agnostic Skill Body sub-rules renumbered — the "Worktree-path references" sub-rule that referenced `worktree.path_pattern` is dropped on top of `0.2.6-beta`'s Codex Marketplace Catalog rework)
 
 #### Migration
 - For consumers actively using worktree mode: remove the `worktree:` block from your `.specshift/WORKFLOW.md` (silently ignored otherwise) and clean up any on-disk worktrees with `git worktree remove`

@@ -16,7 +16,7 @@ Capabilities from the proposal frontmatter (`modified: [change-workspace, projec
 | review-lifecycle | `docs/specs/review-lifecycle.md` | ✅ v3 → v4 | `src/actions/review.md` (post-merge cleanup), `src/actions/finalize.md` (post-merge cleanup) |
 | workflow-contract | `docs/specs/workflow-contract.md` | ✅ v9 → v10 | `src/skills/specshift/SKILL.md` (Load Configuration, Change Context Detection) |
 
-All 5 capabilities have an updated spec. Each spec retains ≥3 requirements (CONSTITUTION's consolidation floor): change-workspace 4, project-init 11, artifact-pipeline 13, review-lifecycle 7, workflow-contract 5.
+All 5 capabilities have an updated spec. Each spec retains ≥3 requirements (CONSTITUTION's consolidation floor): change-workspace 4, project-init 12, artifact-pipeline 14, review-lifecycle 7, workflow-contract 5.
 
 ## B. Gap Analysis
 
