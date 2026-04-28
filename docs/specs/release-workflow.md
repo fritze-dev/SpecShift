@@ -2,7 +2,7 @@
 order: 12
 category: finalization
 status: stable
-version: 5
+version: 6
 lastModified: 2026-04-28
 ---
 ## Purpose
@@ -356,7 +356,7 @@ The repository SHALL maintain a clear separation between hand-edited source cont
 
 **Source directory (`src/`)**: Contains hand-edited plugin source files: `src/VERSION` (agnostic version source of truth), `src/skills/specshift/SKILL.md` (router with requirement link mappings), `src/templates/` (Smart Templates), and `src/actions/*.md` (compilation manifests with requirement links). Developers edit files in `src/` to change plugin behavior.
 
-**Per-target manifests and the Claude marketplace (repository root)**: Hand-edited at the root, not under `src/`. The three files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json`. The `version` field in each is stamped by the compile script from `src/VERSION` — every other field is hand-edited per target. Codex consumers install via `codex plugin marketplace add github:owner/repo`, which auto-discovers `.codex-plugin/plugin.json` directly — no separate Codex marketplace catalog file is shipped.
+**Per-target manifests and marketplace catalogs (repository root)**: Hand-edited at the root, not under `src/`. The four files are `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, and `.agents/plugins/marketplace.json` (the Codex marketplace catalog). The `version` field in the three plugin/marketplace files (Claude plugin, Claude marketplace, Codex plugin) is stamped by the compile script from `src/VERSION`. The Codex marketplace catalog has no `version` field on its plugin entries — it carries pure metadata (name, displayName, source URL, policy, category) and is reviewed manually for parity. Codex consumers install via `codex plugin marketplace add github:owner/repo` followed by `codex plugin install specshift`; Codex resolves the plugin via the catalog's declared Git-URL source.
 
 **Shared release directory (`./skills/`)**: Generated, self-contained release artifact built by the AOT compiler (`scripts/compile-skills.sh`). Contains `./skills/specshift/SKILL.md` (copied from `src/`), `./skills/specshift/templates/` (copied from `src/`), and `./skills/specshift/actions/` (compiled from specs + WORKFLOW.md). The release directory SHALL be committed to Git. Both targets discover the skill from this single shared tree via their respective manifests' skill-path field.
 
