@@ -19,36 +19,65 @@ jobs:
           echo "Detected version: ${VERSION}"
 
           # Cross-check: every per-target manifest/marketplace at the repo root
-          # MUST already declare the same version as src/VERSION. The maintainer
-          # is expected to run bash scripts/compile-skills.sh before pushing the
-          # version bump, which stamps src/VERSION into all four files. If they
-          # forgot, fail loudly here rather than publishing a tag for a version
-          # the manifests do not actually carry.
+          # MUST be present and consistent with src/VERSION. The three
+          # version-bearing files (Claude manifest, Claude marketplace, Codex
+          # manifest) are checked for version equality. The Codex marketplace
+          # catalog (.agents/plugins/marketplace.json) does NOT carry a
+          # plugins[].version field per the documented Codex schema — it is
+          # checked for presence and shape only. The maintainer is expected to
+          # run bash scripts/compile-skills.sh before pushing the version bump,
+          # which stamps src/VERSION into the three version-bearing files and
+          # shape-verifies the catalog. If they forgot, fail loudly here rather
+          # than publishing a tag for a version the manifests do not actually
+          # carry.
           MISMATCH=0
           for entry in \
-            ".claude-plugin/plugin.json|.version|Claude manifest" \
-            ".claude-plugin/marketplace.json|.plugins[0].version|Claude marketplace" \
-            ".codex-plugin/plugin.json|.version|Codex manifest"; do
+            ".claude-plugin/plugin.json|.version|Claude manifest|version" \
+            ".claude-plugin/marketplace.json|.plugins[0].version|Claude marketplace|version" \
+            ".codex-plugin/plugin.json|.version|Codex manifest|version" \
+            ".agents/plugins/marketplace.json|.plugins | length|Codex marketplace catalog|shape"; do
             file="${entry%%|*}"
             rest="${entry#*|}"
             jq_path="${rest%%|*}"
-            label="${rest#*|}"
+            rest="${rest#*|}"
+            label="${rest%%|*}"
+            mode="${rest#*|}"
             if [ ! -f "$file" ]; then
               echo "Error: $file not found ($label)" >&2
               MISMATCH=1
               continue
             fi
-            stamped=$(jq -r "$jq_path // empty" "$file")
-            if [ "$stamped" != "$VERSION" ]; then
-              echo "Error: $label at $file declares version '$stamped', expected '$VERSION' (from src/VERSION)" >&2
-              echo "Maintainer: run 'bash scripts/compile-skills.sh' to stamp src/VERSION into all four root files, then push." >&2
-              MISMATCH=1
+            if [ "$mode" = "version" ]; then
+              stamped=$(jq -r "$jq_path // empty" "$file")
+              if [ "$stamped" != "$VERSION" ]; then
+                echo "Error: $label at $file declares version '$stamped', expected '$VERSION' (from src/VERSION)" >&2
+                echo "Maintainer: run 'bash scripts/compile-skills.sh' to stamp src/VERSION into all root files, then push." >&2
+                MISMATCH=1
+              fi
+            elif [ "$mode" = "shape" ]; then
+              # Shape-only verification for the Codex marketplace catalog:
+              # the documented schema does not include plugins[].version; we
+              # verify the catalog is well-formed and references a single plugin.
+              if ! jq -e \
+                '.name == "specshift"
+                 and (.interface.displayName | type == "string")
+                 and ((.plugins | type) == "array")
+                 and ((.plugins | length) == 1)
+                 and (.plugins[0].source | type == "object")
+                 and (.plugins[0].source.source == "local")
+                 and (.plugins[0].source.path | type == "string" and endswith(".codex-plugin"))
+                 and ((.plugins[0] | has("version")) | not)' \
+                "$file" >/dev/null 2>&1; then
+                echo "Error: $label at $file does not match the documented Codex catalog schema" >&2
+                echo "Maintainer: see docs/specs/multi-target-distribution.md (Requirement: Codex Marketplace Catalog Schema)." >&2
+                MISMATCH=1
+              fi
             fi
           done
           if [ "$MISMATCH" -ne 0 ]; then
             exit 1
           fi
-          echo "Version cross-check passed: src/VERSION and all three root manifest/marketplace files agree on $VERSION."
+          echo "Version cross-check passed: src/VERSION and the three version-bearing root files agree on $VERSION; Codex marketplace catalog shape verified."
 
           # Skip if tag already exists
           if git ls-remote --tags origin | grep -q "refs/tags/v${VERSION}$"; then

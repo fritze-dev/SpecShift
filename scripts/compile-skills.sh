@@ -9,11 +9,15 @@ set -euo pipefail
 # ./skills/specshift/ and is shared between both targets.
 #
 # Version source of truth: src/VERSION (plain text, single line, SemVer).
-# This script reads that value and stamps it into the three root manifest /
-# marketplace files via `jq` (preserving all non-version fields and values;
-# JSON formatting may be normalized by jq's pretty-printer). After stamping,
-# it re-reads each file and verifies the stamped value matches src/VERSION;
-# any mismatch fails the build.
+# This script reads that value and stamps it into the three version-bearing
+# root files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
+# `.codex-plugin/plugin.json`) via `jq` (preserving all non-version fields and
+# values; JSON formatting may be normalized by jq's pretty-printer). After
+# stamping, it re-reads each file and verifies the stamped value matches
+# src/VERSION. The Codex marketplace catalog (`.agents/plugins/marketplace.json`)
+# does NOT carry a `plugins[].version` field per the documented Codex schema,
+# so it is presence-and-shape-checked instead of version-stamped. Any drift
+# fails the build.
 #
 # Run from the repository root: bash scripts/compile-skills.sh
 
@@ -26,6 +30,7 @@ SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
 CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 CLAUDE_MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
+CODEX_MARKETPLACE="$PLUGIN_ROOT/.agents/plugins/marketplace.json"
 LEGACY_SKILL_DIR=".claude/skills/specshift"
 LEGACY_CLAUDE_MANIFEST_DIR=".claude/.claude-plugin"
 
@@ -54,7 +59,7 @@ if [[ ! -f "$VERSION_FILE" ]]; then
 fi
 
 # Required: each per-target manifest / marketplace must be hand-edited at the root.
-for f in "$CLAUDE_MANIFEST" "$CLAUDE_MARKETPLACE" "$CODEX_MANIFEST"; do
+for f in "$CLAUDE_MANIFEST" "$CLAUDE_MARKETPLACE" "$CODEX_MANIFEST" "$CODEX_MARKETPLACE"; do
   if [[ ! -f "$f" ]]; then
     echo "Error: $f not found (per-target manifest / marketplace files are hand-edited at the repository root)." >&2
     exit 1
@@ -177,6 +182,32 @@ stamp_version "$CLAUDE_MANIFEST"     '.version = $v'                  '.version 
 stamp_version "$CLAUDE_MARKETPLACE"  '(.plugins[] | .version) = $v'   '.plugins[0].version // empty'   "Claude marketplace"
 stamp_version "$CODEX_MANIFEST"      '.version = $v'                  '.version // empty'              "Codex manifest"
 
+# Codex marketplace catalog (.agents/plugins/marketplace.json) is the fourth root
+# file but does NOT carry a plugins[].version field per the documented Codex
+# schema — version is sourced from .codex-plugin/plugin.json referenced by
+# plugins[0].source.path. The catalog is shape-checked instead of stamped.
+
+verify_catalog_shape() {
+  local file="$1"
+  if ! jq -e \
+    '.name == "specshift"
+     and (.interface.displayName | type == "string")
+     and ((.plugins | type) == "array")
+     and ((.plugins | length) == 1)
+     and (.plugins[0].source | type == "object")
+     and (.plugins[0].source.source == "local")
+     and (.plugins[0].source.path | type == "string" and endswith(".codex-plugin"))
+     and ((.plugins[0] | has("version")) | not)' \
+    "$file" >/dev/null 2>&1; then
+    echo "Error: Codex marketplace catalog at $file does not match the documented schema." >&2
+    echo "       Expected top-level name=\"specshift\", interface.displayName, plugins[1] with source.{source: \"local\", path: \"…/.codex-plugin\"}, no plugins[].version." >&2
+    exit 1
+  fi
+  echo "Codex marketplace catalog shape verified ($file)"
+}
+
+verify_catalog_shape "$CODEX_MARKETPLACE"
+
 total_actions=0
 total_requirements=0
 
@@ -281,6 +312,7 @@ echo "Outputs:"
 echo "  - $CLAUDE_MANIFEST (Claude manifest, hand-edited + version-stamped)"
 echo "  - $CLAUDE_MARKETPLACE (Claude marketplace, hand-edited + version-stamped)"
 echo "  - $CODEX_MANIFEST (Codex manifest, hand-edited + version-stamped)"
+echo "  - $CODEX_MARKETPLACE (Codex marketplace catalog, hand-edited + shape-checked)"
 echo "  - $SKILL_DIR/ (shared skill tree)"
 echo ""
 

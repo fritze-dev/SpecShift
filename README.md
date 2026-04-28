@@ -26,9 +26,18 @@ claude plugin marketplace update specshift && claude plugin update specshift@spe
 
 ### OpenAI Codex CLI
 
-```text
-codex /plugins
-# Discover and install "specshift" via the Codex plugin marketplace.
+```bash
+# Add the marketplace
+codex plugin marketplace add github:fritze-dev/specshift
+
+# Install the plugin
+codex plugin install specshift
+```
+
+Update:
+
+```bash
+codex plugin marketplace update specshift && codex plugin update specshift
 ```
 
 > **Existing Claude Code installs:** the `0.2.5-beta` release moves the marketplace `source` from `./.claude` to `./` and the compiled skill from `.claude/skills/specshift/` to `./skills/specshift/`. Run `claude plugin marketplace update specshift && claude plugin update specshift@specshift` once after upgrading to pick up the new layout.
@@ -105,7 +114,9 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 │   ├── plugin.json
 │   └── marketplace.json
 ├── .codex-plugin/                 # Codex target (hand-edited at root)
-│   └── plugin.json                # auto-discovered by `codex plugin marketplace add github:owner/repo`
+│   └── plugin.json                # version-bearing per-plugin manifest (referenced by the catalog below)
+├── .agents/plugins/               # Codex marketplace catalog (hand-edited at root)
+│   └── marketplace.json           # entry point for `codex plugin marketplace add github:owner/repo`
 ├── skills/specshift/              # Compiled, shared skill tree (both targets)
 │   ├── SKILL.md
 │   ├── templates/
@@ -113,7 +124,7 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 └── scripts/compile-skills.sh
 ```
 
-`src/VERSION` is the agnostic version source of truth. The compile script reads it and stamps the value into all three root manifest/marketplace files via `jq`, preserving all non-version fields and values (JSON formatting may be normalized by `jq`), and cross-checks each post-stamp; any drift fails the build. To bump the plugin version, edit `src/VERSION` and re-run `bash scripts/compile-skills.sh`.
+`src/VERSION` is the agnostic version source of truth. The compile script reads it and stamps the value into the three version-bearing root files (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`) via `jq`, preserving all non-version fields and values (JSON formatting may be normalized by `jq`), and cross-checks each post-stamp. The Codex marketplace catalog (`.agents/plugins/marketplace.json`) is presence-and-shape-checked instead of version-stamped because the documented Codex catalog schema does not include a `plugins[].version` field. Any drift fails the build. To bump the plugin version, edit `src/VERSION` and re-run `bash scripts/compile-skills.sh`.
 
 ## License
 

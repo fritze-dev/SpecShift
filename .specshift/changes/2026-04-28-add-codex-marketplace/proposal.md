@@ -1,5 +1,5 @@
 ---
-status: active
+status: review
 branch: claude/add-codex-marketplace-SATku
 capabilities:
   new: []
