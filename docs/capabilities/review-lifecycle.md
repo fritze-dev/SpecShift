@@ -1,7 +1,7 @@
 ---
 title: "Review Lifecycle"
 capability: "review-lifecycle"
-description: "Re-entrant PR review-to-merge state machine with comment processing, self-review, summary posting, and mandatory merge confirmation"
+description: "Re-entrant PR review-to-merge state machine with comment processing, mandatory self-check, summary posting, and merge confirmation"
 lastUpdated: "2026-04-28"
 ---
 
@@ -24,9 +24,9 @@ The review action is designed as a re-entrant state machine rather than a sessio
 - **Clean-tree check before review dispatch** -- verifies the working tree is clean before requesting external review; commits and pushes any uncommitted changes (e.g., from finalize compilation)
 - **Configurable review dispatch** -- requests reviews based on `review.request_review` setting (false, copilot, or true for default reviewers); graceful degradation on failure
 - **Automated comment processing** -- reads each unresolved thread, implements actionable fixes, replies explaining the action taken, and resolves threads; defers out-of-scope changes to the user
-- **Self-review after fixes** -- runs the built-in review skill as a self-check after processing comments to catch regressions
+- **Mandatory self-check after fixes** -- after committing review-comment fixes, invokes the built-in review skill as a self-check on the current branch and posts a `<!-- specshift:self-check -->` PR-comment marker carrying the HEAD commit SHA and a PASS/FIX findings summary; the marker is HEAD-anchored and treated as stale if HEAD advances
 - **Review cycle safety limit** -- max 3 review-fix cycles per invocation; pauses and reports remaining unresolved threads after the limit
-- **Pre-merge summary comment** -- posts a PR comment summarizing threads resolved, fixes applied, self-check result, and review cycles completed; uses an HTML marker for idempotent updates on re-entrant runs
+- **Pre-merge summary comment with self-check gate** -- before posting the summary, verifies a `<!-- specshift:self-check -->` marker exists for the current HEAD and is not stale; refuses to post the summary and stops if the marker is missing. Summary itself includes threads resolved, fixes applied, self-check result, and review cycles completed; uses an HTML marker for idempotent updates on re-entrant runs
 - **Review-pending gate** -- blocks merge offer while a requested review has no decision yet; reports pending status and suggests re-running later
 - **Mandatory merge confirmation** -- always requires explicit user confirmation before merging, regardless of `auto_approve` setting
 - **Post-merge branch deletion** -- deletes the local and remote feature branch after successful merge
@@ -37,13 +37,13 @@ The review action is designed as a re-entrant state machine rather than a sessio
 
 On each invocation, the action reads the PR's current state from GitHub and reports it before proceeding. If no PR exists, it suggests running `specshift finalize` first. The action detects which phase to enter based on the assessed state (draft, awaiting review, comments pending, ready to merge).
 
-### Comment Processing and Self-Review
+### Comment Processing and Mandatory Self-Check
 
-For each unresolved review thread, the action reads the comment, determines if the feedback is actionable, implements the fix if so, replies to the thread, and resolves it. After all fixes are committed and pushed, the built-in review skill runs as a self-check. If the self-check finds issues, they are fixed before proceeding. If a reviewer posts new comments after fixes, the cycle repeats (up to 3 times).
+For each unresolved review thread, the action reads the comment, determines if the feedback is actionable, implements the fix if so, replies to the thread, and resolves it. After all fixes are committed and pushed, the built-in review skill runs as a mandatory self-check on the current branch (invoked via the Skill tool with `skill: review`, or by spawning a subagent that runs `/review` against the current HEAD). The self-check posts a PR comment with `<!-- specshift:self-check -->` at the top, the HEAD commit SHA, and a PASS/FIX findings summary. If the self-check finds issues, they are fixed, committed, and the self-check is re-invoked until it reports PASS for the latest HEAD. If a reviewer posts new comments after fixes, the cycle repeats (up to 3 times).
 
-### Pre-Merge Summary
+### Pre-Merge Summary (gated on self-check marker)
 
-Before asking for merge confirmation, the action posts a summary comment on the PR. The summary includes thread counts, a fix list, self-check results, and review cycles completed. If a summary already exists (detected by `<!-- specshift:review-summary -->` marker), it is updated rather than duplicated. If posting fails, the action logs a warning and continues.
+Before asking for merge confirmation, the action verifies that a `<!-- specshift:self-check -->` marker comment exists for the current HEAD commit. If no marker exists or the marker is stale (its recorded SHA does not match HEAD), the action stops and reports "Self-check missing for HEAD `<sha>` — invoke the review skill on this branch before merging"; it does NOT post the summary or offer merge. When the marker is present and current, the action posts the summary comment on the PR with thread counts, a fix list, self-check results, and review cycles completed. If a summary already exists (detected by `<!-- specshift:review-summary -->` marker), it is updated rather than duplicated. If posting the summary itself fails, the action logs a warning and continues.
 
 ### Merge with Mandatory Confirmation
 

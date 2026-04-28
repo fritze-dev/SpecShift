@@ -1,13 +1,13 @@
 ---
 title: "Artifact Pipeline"
 capability: "artifact-pipeline"
-description: "8-stage pipeline with dependency gating, artifact frontmatter, consolidation checks, and incremental PR integration"
+description: "Artifact pipeline with dependency gating, artifact frontmatter, semantic heading discipline, consolidation checks, and incremental PR integration"
 lastUpdated: "2026-04-28"
 ---
 
 # Artifact Pipeline
 
-The artifact pipeline guides every change through eight mandatory stages -- research, proposal, specs, design, preflight, tests, tasks, and audit -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning. Key artifacts include YAML frontmatter for machine-readable metadata. Every artifact is committed incrementally using `specshift(<change-name>): <artifact-id>` commit messages, with a draft pull request created automatically on the first commit.
+The artifact pipeline guides every change through the canonical stages -- research, proposal, specs, design, preflight, tests, tasks, and audit -- enforcing strict dependency order so that no stage is skipped and implementation is gated by complete planning. Stage names are the single source of truth; counts are not duplicated in prose. Key artifacts include YAML frontmatter for machine-readable metadata. Every artifact is committed incrementally using `specshift(<change-name>): <artifact-id>` commit messages, with a draft pull request created automatically on the first commit.
 
 ## Purpose
 
@@ -15,11 +15,12 @@ Development teams working with AI assistants need a structured process that prev
 
 ## Rationale
 
-The pipeline uses WORKFLOW.md for declarative orchestration and Smart Templates for self-describing artifact definitions, so that the workflow structure is transparent and modifiable without touching command code. The pipeline expanded from 7 to 8 stages with the addition of tests between preflight and tasks -- the tests stage generates test artifacts from Gherkin scenarios before implementation, enabling TDD. Audit remains the final stage as a persistent, PR-visible verification artifact. Propose serves as the single entry point for all pipeline traversal operations (workspace creation, checkpoint/resume, full lifecycle execution), eliminating the need for separate commands. The `auto_approve` configuration defaults to `true`, so pipeline traversal proceeds without user confirmation at checkpoints on success paths. Users who prefer inline pauses can set `auto_approve: false` explicitly.
+The pipeline uses WORKFLOW.md for declarative orchestration and Smart Templates for self-describing artifact definitions, so that the workflow structure is transparent and modifiable without touching command code. The pipeline gained a `tests` stage between preflight and tasks to generate test artifacts from Gherkin scenarios before implementation, enabling TDD. Audit remains the final stage as a persistent, PR-visible verification artifact. Templates use semantic heading text rather than positional identifiers, so adding, removing, or reordering sections does not silently rot cross-references in other specs. Propose serves as the single entry point for all pipeline traversal operations (workspace creation, checkpoint/resume, full lifecycle execution), eliminating the need for separate commands. The `auto_approve` configuration defaults to `true`, so pipeline traversal proceeds without user confirmation at checkpoints on success paths. Users who prefer inline pauses can set `auto_approve: false` explicitly.
 
 ## Features
 
-- **Eight-Stage Pipeline** (`specshift propose`): Research, proposal, specs, design, preflight, tests, tasks, and audit execute in strict dependency order. Each stage produces a verifiable artifact file.
+- **Pipeline Stages and Dependencies** (`specshift propose`): Research, proposal, specs, design, preflight, tests, tasks, and audit execute in strict dependency order. Each stage produces a verifiable artifact file. The stage list is the single source of truth — the count is derived, not hardcoded.
+- **Semantic Heading Structure in Pipeline Artifact Templates**: Smart Templates and the artifacts they produce use semantic heading text without leading numerical (`## 1. ...`) or alphabetic (`## A. ...`) prefixes. Cross-references in other specs use the section's heading text rather than a positional identifier — adding, removing, or reordering sections does not silently rot cross-references.
 - **Artifact Output Frontmatter**: Proposals include `status`, `branch`, and `capabilities` (new/modified/removed). Designs include `has_decisions` (boolean). Actions prefer frontmatter over markdown parsing.
 - **Explicit Dependency Declarations**: Each Smart Template declares its dependencies via a `requires` field. Dependencies are enforced by verifying file existence.
 - **Apply Gate**: Implementation is gated by the tasks artifact. Apply cannot begin until `tasks.md` exists and is non-empty.
