@@ -1,6 +1,6 @@
 ---
 id: specs
-template-version: 2
+template-version: 1
 description: Requirements with Gherkin scenarios (BDD) and optional user stories
 generates: "specs/**/*.md"
 requires: [proposal]
@@ -72,5 +72,5 @@ lastModified: [YYYY-MM-DD]
 <!-- Boundary conditions, error states, empty states, concurrency -->
 
 ## Assumptions
-<!-- Format: "- Visible assumption text. &lt;!-- ASSUMPTION: short tag --&gt;"
+<!-- Format: "- Visible assumption text. <!-- ASSUMPTION: short tag -->"
      If none: state "No assumptions made." -->
