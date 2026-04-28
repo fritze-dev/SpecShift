@@ -2,7 +2,7 @@
 order: 16
 category: distribution
 status: stable
-version: 4
+version: 5
 lastModified: 2026-04-28
 ---
 
@@ -147,8 +147,7 @@ The shared skill body (`src/skills/specshift/SKILL.md`, `src/templates/`, `src/a
 
 1. **Plugin-root references**: SKILL.md and templates SHALL refer to the plugin's bundled assets in prose ("the plugin's `templates/` directory", "the plugin's workflow template") rather than via runtime-specific environment variables. The agent (in either runtime) resolves the path using the skill's known install location.
 2. **Product-name references**: Where a sentence applies to all supported runtimes, the source SHALL use phrasing like "the agent" or "the AI coding assistant" rather than naming a specific product. Where a sentence applies to one specific runtime (e.g., describing Claude Code's `@AGENTS.md` memory-import behavior), the product name MAY appear, but the surrounding text SHALL make the per-target scope explicit.
-3. **Worktree-path references**: Compiled-into-skill files (action specs, templates) SHALL avoid hardcoded `.claude/worktrees/...` strings. Worktree path patterns are configured per project in `.specshift/WORKFLOW.md` (`worktree.path_pattern`); spec scenarios SHALL refer to the configured pattern, not the legacy default.
-4. **Bootstrap-file references**: Compiled-into-skill files referring to the bootstrap pattern SHALL mention `AGENTS.md` as the agnostic source of truth. References to `CLAUDE.md` are appropriate only when the text specifically describes Claude Code's documented memory-import pattern.
+3. **Bootstrap-file references**: Compiled-into-skill files referring to the bootstrap pattern SHALL mention `AGENTS.md` as the agnostic source of truth. References to `CLAUDE.md` are appropriate only when the text specifically describes Claude Code's documented memory-import pattern.
 
 The compile script SHALL emit a single skill tree under `./skills/specshift/` that serves both targets unmodified — no per-target rewrite passes (no token substitution, no per-target SKILL.md variants).
 

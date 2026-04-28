@@ -9,4 +9,3 @@
 - [Generate Architecture Overview](../../docs/specs/documentation.md#requirement-generate-architecture-overview)
 - [Generate Documentation Table of Contents](../../docs/specs/documentation.md#requirement-generate-documentation-table-of-contents)
 - [ADR Generation from Change Decisions](../../docs/specs/documentation.md#requirement-adr-generation-from-change-decisions)
-- [Post-Merge Worktree Cleanup](../../docs/specs/change-workspace.md#requirement-post-merge-worktree-cleanup)
