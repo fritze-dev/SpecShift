@@ -1,0 +1,96 @@
+---
+status: active
+branch: claude/remove-worktrees-specshift-SACUg
+capabilities:
+  new: []
+  modified: [change-workspace, project-init, artifact-pipeline, review-lifecycle, workflow-contract]
+  removed: []
+---
+
+## Why
+
+Worktree isolation is a host/tool concern — Claude Code, the Codex CLI, and plain `git worktree` all already provide it. SpecShift carrying its own worktree lifecycle (creation, lazy stale cleanup, post-merge cleanup, change-context fallback) adds significant surface area to the propose/finalize/review actions and to the change-workspace spec without giving users anything they cannot get from their host tool. Removing it simplifies the workflow and tightens SpecShift's scope to "file-based change workspaces under `.specshift/changes/`". Closes #47.
+
+## What Changes
+
+- **BREAKING (consumer config):** The `worktree:` config block in `.specshift/WORKFLOW.md` is no longer read by any action. Consumers who set `worktree.enabled: true` will silently get the file-based workspace flow; the config key is documented as removed in the changelog. Existing on-disk worktrees are not auto-cleaned by SpecShift anymore — users may run `git worktree remove <path>` manually.
+- Remove worktree creation, fetch-main-and-branch logic, and stale-worktree cleanup from `src/actions/propose.md`.
+- Remove post-merge worktree cleanup from `src/actions/finalize.md` and `src/actions/review.md`.
+- Remove worktree mention from `src/actions/init.md`.
+- Remove the `worktree` config key from `src/skills/specshift/SKILL.md` and drop the worktree-name fallback from Change Context Detection (proposal-frontmatter `branch:` lookup remains the primary path).
+- Remove the commented-out `worktree:` config block from `src/templates/workflow.md` and bump its `template-version`.
+- Remove the live `worktree:` block from `.specshift/WORKFLOW.md` (this project's instance).
+- Remove the `worktree.enabled: true` reference from `AGENTS.md` line 34.
+- Trim worktree requirements/scenarios from `docs/specs/change-workspace.md`, `docs/specs/project-init.md`, `docs/specs/artifact-pipeline.md`, `docs/specs/review-lifecycle.md`, and `docs/specs/workflow-contract.md`. Update each spec's `## Purpose` line.
+- Drop the `worktree:` field from the proposal-tracking frontmatter documentation in `.specshift/templates/changes/proposal.md`.
+- Treat existing `proposal.md` files that already carry `worktree: <path>` frontmatter as legacy/read-only — new proposals MUST NOT write the field.
+- Regenerate the compiled release tree at `skills/specshift/` via `bash scripts/compile-skills.sh` so the shipped skill no longer references worktrees. This happens automatically during `specshift finalize`.
+
+## Capabilities
+
+### New Capabilities
+
+None.
+
+### Modified Capabilities
+
+- `change-workspace`: Remove the worktree creation, lazy stale cleanup, and worktree-name fallback requirements. Workspace creation simplifies to "create `.specshift/changes/YYYY-MM-DD-<name>/`". Change Context Detection drops the worktree branch and relies on proposal-frontmatter `branch:` lookup with a directory-listing fallback.
+- `project-init`: Remove worktree config from the bootstrapped WORKFLOW.md template; remove worktree mention from init's behavior.
+- `artifact-pipeline`: Remove "execute artifact generation inside the worktree" framing. Artifacts are generated in the main working tree on the change's branch.
+- `review-lifecycle`: Remove the post-merge worktree cleanup step from the merge sequence. Branch deletion stays.
+- `workflow-contract`: Remove `worktree` from the documented WORKFLOW.md frontmatter keys.
+
+### Removed Capabilities
+
+None — every spec listed above retains a coherent purpose after the worktree material is removed. No spec collapses below the "3 requirements" floor.
+
+### Consolidation Check
+
+1. Existing specs reviewed: `change-workspace.md`, `project-init.md`, `artifact-pipeline.md`, `review-lifecycle.md`, `workflow-contract.md`, `quality-gates.md`, `spec-format.md`, `task-implementation.md`, `test-generation.md`, `three-layer-architecture.md`, `documentation.md`, `human-approval-gate.md`, `multi-target-distribution.md`, `release-workflow.md`, `roadmap-tracking.md`, `constitution-management.md`.
+2. Overlap assessment: N/A — no new capabilities proposed.
+3. Merge assessment: N/A — no new capabilities proposed.
+
+## Impact
+
+**Plugin source (touched):**
+- `src/actions/propose.md`, `src/actions/finalize.md`, `src/actions/review.md`, `src/actions/init.md`
+- `src/templates/workflow.md` (template-version bump required)
+- `src/skills/specshift/SKILL.md`
+
+**Project instance (touched):**
+- `.specshift/WORKFLOW.md`
+- `.specshift/templates/changes/proposal.md`
+- `AGENTS.md`
+
+**Specs (touched):**
+- `docs/specs/change-workspace.md` (largest diff — ~96 worktree refs removed)
+- `docs/specs/project-init.md`
+- `docs/specs/artifact-pipeline.md`
+- `docs/specs/review-lifecycle.md`
+- `docs/specs/workflow-contract.md`
+
+**Compiled release tree (regenerated by finalize):**
+- `skills/specshift/SKILL.md`, `skills/specshift/templates/`, `skills/specshift/actions/*.md`
+
+**Untouched (intentionally):**
+- `.specshift/changes/*` — historical changes that designed/fixed the worktree feature stay as historical record.
+- `CHANGELOG.md` — past entries about worktree path migrations stay; finalize will append a new entry for this removal.
+- `docs/capabilities/*.md` — derived from specs, regenerated by finalize.
+- `scripts/compile-skills.sh` — search showed no worktree-specific handling there; no edit needed.
+- Existing `proposal.md` files with legacy `worktree: <path>` frontmatter — left as-is.
+
+## Scope & Boundaries
+
+**In scope:**
+- Removing all worktree-creation, detection, and cleanup logic from `src/actions/`, `src/skills/specshift/SKILL.md`, and `src/templates/workflow.md`.
+- Removing the `worktree:` config block from `.specshift/WORKFLOW.md`.
+- Removing worktree references from `AGENTS.md` and the proposal-template frontmatter doc.
+- Trimming worktree material from the five affected specs.
+- Regenerating `skills/specshift/` via `bash scripts/compile-skills.sh` during finalize.
+
+**Out of scope / Non-goals:**
+- Preventing or restricting host-level (Claude Code, Codex, manual `git worktree`) worktree usage outside SpecShift.
+- Reworking the broader change-workspace concept — it stays file-based under `.specshift/changes/`.
+- Migration tooling for in-flight changes that were created with worktree mode enabled. Existing artifacts keep their `worktree:` frontmatter as legacy data; we just stop reading and writing the field.
+- Deleting or rewriting historical `.specshift/changes/2026-03-30-worktree-based-change-lifecycle/` and related past changes.
+- Auto-cleaning existing worktrees on disk. Users may run `git worktree remove` manually.
