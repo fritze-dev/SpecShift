@@ -2,17 +2,17 @@
 order: 4
 category: change-workflow
 status: stable
-version: 6
+version: 7
 lastModified: 2026-04-28
 ---
 ## Purpose
 
-Defines the 8-stage artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit) driven by WORKFLOW.md and Smart Templates, with strict dependency gating that ensures no stage is skipped, implementation is gated by task completion, and verification produces an audit.md artifact.
+Defines the artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit) driven by WORKFLOW.md and Smart Templates, with strict dependency gating that ensures no stage is skipped, implementation is gated by task completion, and verification produces an audit.md artifact.
 
 ## Requirements
 
-### Requirement: Eight-Stage Pipeline
-The system SHALL define an 8-stage artifact pipeline with the following stages in order: research, proposal, specs, design, preflight, tests, tasks, and audit. Each stage SHALL produce a verifiable artifact file. The pipeline stages SHALL execute in strict dependency order: research has no dependencies, proposal requires research, specs requires proposal, design requires specs, preflight requires design, tests requires preflight, tasks requires tests, and audit requires tasks. The audit artifact is generated during the apply phase (after implementation) rather than during artifact-forward generation. No stage SHALL be skippable; each MUST complete before the change is considered complete. The pipeline order SHALL be declared in the `pipeline` array of `.specshift/WORKFLOW.md` frontmatter. Each stage's metadata (generates, requires, instruction) SHALL be defined in the corresponding Smart Template's YAML frontmatter.
+### Requirement: Pipeline Stages and Dependencies
+The system SHALL define an artifact pipeline with the following stages in order: research, proposal, specs, design, preflight, tests, tasks, and audit. This stage list is the single source of truth for the pipeline's stage set; other specs and documentation SHALL reference it rather than restating a count. Each stage SHALL produce a verifiable artifact file. The pipeline stages SHALL execute in strict dependency order: research has no dependencies, proposal requires research, specs requires proposal, design requires specs, preflight requires design, tests requires preflight, tasks requires tests, and audit requires tasks. The audit artifact is generated during the apply phase (after implementation) rather than during artifact-forward generation. No stage SHALL be skippable; each MUST complete before the change is considered complete. The pipeline order SHALL be declared in the `pipeline` array of `.specshift/WORKFLOW.md` frontmatter. Each stage's metadata (generates, requires, instruction) SHALL be defined in the corresponding Smart Template's YAML frontmatter.
 
 **User Story:** As a developer I want a structured pipeline that guides me from research through to implementation tasks, so that no critical thinking step is skipped and every decision is documented.
 
@@ -189,16 +189,16 @@ Each Smart Template's `instruction` field SHALL contain workflow rules that appl
 
 ### Requirement: Standard Tasks Directive in Task Generation
 
-The tasks Smart Template's `instruction` field SHALL include a standard tasks directive. The tasks template SHALL include a section 4 with universal post-implementation steps (changelog, docs, version bump, commit and push) that apply to all projects using this workflow. The `instruction` SHALL additionally instruct the agent to check the project constitution for a `## Standard Tasks` section. If the constitution defines extra standard tasks, the agent SHALL append them to the template's universal steps in the generated `tasks.md`. If no `## Standard Tasks` section exists in the constitution, the agent SHALL include only the universal steps from the template. Post-merge items in the constitution MAY include a scope hint describing when they are relevant. The tasks template instruction SHALL evaluate each post-merge item's relevance against the proposal scope and include only matching items.
+The tasks Smart Template's `instruction` field SHALL include a standard tasks directive. The tasks template SHALL include a Standard Tasks (Post-Implementation) section with universal post-implementation steps (changelog, docs, version bump, commit and push) that apply to all projects using this workflow. The `instruction` SHALL additionally instruct the agent to check the project constitution for a `## Standard Tasks` section. If the constitution defines extra standard tasks, the agent SHALL append them to the template's universal steps in the generated `tasks.md`. If no `## Standard Tasks` section exists in the constitution, the agent SHALL include only the universal steps from the template. Post-merge items in the constitution MAY include a scope hint describing when they are relevant. The tasks template instruction SHALL evaluate each post-merge item's relevance against the proposal scope and include only matching items.
 
 **User Story:** As a project maintainer I want universal post-implementation steps automatically in every task list, with the option to add project-specific extras in my constitution, so that all projects get a consistent baseline and each project can extend it.
 
 #### Scenario: Universal standard tasks always included
 
 - **GIVEN** a change progressing through the artifact pipeline
-- **AND** the tasks template contains section 4 with universal standard tasks
+- **AND** the tasks template contains the Standard Tasks section with universal standard tasks
 - **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` SHALL contain a final section titled `## 4. Standard Tasks (Post-Implementation)` (or the next available number)
+- **THEN** the generated `tasks.md` SHALL contain a section titled `## Standard Tasks (Post-Implementation)`
 - **AND** the section SHALL contain the universal steps: changelog, docs, version bump, commit and push
 
 #### Scenario: Constitution extras appended to universal steps
@@ -206,7 +206,7 @@ The tasks Smart Template's `instruction` field SHALL include a standard tasks di
 - **GIVEN** a project constitution containing a `## Standard Tasks` section with 1 extra checkbox item
 - **AND** a change progressing through the artifact pipeline
 - **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` section 4 SHALL contain the universal steps from the template
+- **THEN** the generated `tasks.md` Standard Tasks section SHALL contain the universal steps from the template
 - **AND** SHALL append the 1 extra item from the constitution after the universal steps
 
 #### Scenario: No constitution extras
@@ -214,13 +214,37 @@ The tasks Smart Template's `instruction` field SHALL include a standard tasks di
 - **GIVEN** a project constitution that does not contain a `## Standard Tasks` section
 - **AND** a change progressing through the artifact pipeline
 - **WHEN** the tasks artifact is generated
-- **THEN** the generated `tasks.md` SHALL contain section 4 with only the universal steps from the template
+- **THEN** the generated `tasks.md` SHALL contain the Standard Tasks section with only the universal steps from the template
 
 #### Scenario: Template includes universal standard tasks
 
 - **GIVEN** the tasks template at `.specshift/templates/changes/tasks.md`
 - **WHEN** the template is inspected
-- **THEN** it SHALL contain a section 4 with universal post-implementation steps as checkbox items
+- **THEN** it SHALL contain a Standard Tasks section with universal post-implementation steps as checkbox items
+
+### Requirement: Semantic Heading Structure in Pipeline Artifact Templates
+
+Smart Templates under `.specshift/templates/changes/` and `src/templates/changes/` (research, proposal, design, tests, tasks, preflight, audit) SHALL use semantic heading text without leading numerical (`## 1.`) or alphabetic (`## A.`) prefixes for structural sections. The order of sections in the rendered template body SHALL be the source of truth for presentation order; numerical or alphabetic prefixes SHALL NOT be used as cross-reference identifiers. Generated artifact bodies (e.g., the produced `tasks.md`) inherit this discipline. Cross-references to template sections in other specs, instructions, or documentation SHALL use the section's heading text (e.g., "Standard Tasks section") rather than a positional identifier (e.g., "section 4"). Numerical prefixes in artifact templates produced before this requirement was introduced SHALL be removed when the template is next modified, with a `template-version` bump.
+
+This requirement does not apply to: (a) Gherkin-style scenario or step IDs inside specs, (b) the `pipeline:` and `actions:` arrays in WORKFLOW.md frontmatter (which are positional by design), (c) checklist items in `tasks.md` body (which use `- [ ]` / `- [x]` markers, not numbered lists), (d) historical artifacts under `.specshift/changes/<date>-<slug>/` generated by older templates.
+
+**User Story:** As a template maintainer I want section identifiers to be semantic, so that adding, removing, or reordering sections does not silently rot cross-references in other specs or in the agent's reporting.
+
+#### Scenario: Tasks template uses semantic headings
+- **GIVEN** the tasks Smart Template at `.specshift/templates/changes/tasks.md`
+- **WHEN** its body headings are inspected
+- **THEN** every `## ` heading SHALL begin with a semantic word (e.g., `## Foundation`, `## Standard Tasks (Post-Implementation)`)
+- **AND** SHALL NOT begin with a number-and-period or letter-and-period prefix
+
+#### Scenario: Cross-reference in spec uses semantic name
+- **GIVEN** a spec that references a section of the tasks template
+- **WHEN** the cross-reference is read
+- **THEN** it SHALL name the section (e.g., "Standard Tasks section") rather than a positional identifier (e.g., "section 4")
+
+#### Scenario: Reordering sections does not break cross-references
+- **GIVEN** the tasks template body order is changed (e.g., Implementation moved before Foundation)
+- **WHEN** consumers regenerate `tasks.md`
+- **THEN** existing cross-references using semantic section names SHALL remain valid without edits
 
 ### Requirement: Capability Granularity Guidance
 The proposal Smart Template's `instruction` field SHALL include explicit rules defining what constitutes a capability versus a feature detail, including heuristics for merging (shared actor/trigger/data model) and minimum scope (3+ requirements).
@@ -325,7 +349,6 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - If the agent identifies overlap but the user explicitly requests separate specs (e.g., for team ownership reasons), the Consolidation Check SHALL document this decision with rationale.
 - **Constitution changes between task generation and apply:** If the constitution's standard tasks are updated after tasks.md was generated, the already-generated tasks.md retains its original content. The user can regenerate tasks if needed.
 - **Empty standard tasks section in constitution:** If the constitution contains `## Standard Tasks` but no checkbox items, only the universal template steps appear (no extras appended).
-- **Custom section numbering:** If the QA Loop is not section 3 (e.g., due to merged sections), the standard tasks section SHALL use the next available number.
 - **Project without constitution:** Universal template steps still appear; constitution extras are simply absent.
 - **Branch already exists:** The agent SHALL reuse the existing branch rather than failing.
 - **Network failure during PR creation:** The pipeline SHALL NOT be blocked.
