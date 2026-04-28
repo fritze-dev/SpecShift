@@ -1,6 +1,6 @@
 ---
 id: preflight
-template-version: 1
+template-version: 2
 description: "Quality gate: traceability, gaps, side effects, assumption audit"
 generates: preflight.md
 requires: [design]
@@ -12,27 +12,27 @@ instruction: |
 ---
 # Pre-Flight Check: [Feature Name]
 
-## A. Traceability Matrix
+## Traceability Matrix
 <!-- Mapping: Every Story → Scenarios → Architecture Components -->
 - [ ] Story 1 → Scenario 1.1 → Component X
 
-## B. Gap Analysis
+## Gap Analysis
 <!-- Missing edge cases? Error handling? Offline? Empty states? -->
 
-## C. Side-Effect Analysis
+## Side-Effect Analysis
 <!-- Which existing systems could be affected? Regression risks? -->
 
-## D. Constitution Check
+## Constitution Check
 <!-- Do global rules need updating due to new patterns? -->
 
-## E. Duplication & Consistency
+## Duplication & Consistency
 <!-- Overlapping stories? Contradictions between specs? Inconsistencies with existing specs in docs/specs/? -->
 
-## F. Assumption Audit
+## Assumption Audit
 <!-- Collect all <!-- ASSUMPTION --> markers from spec.md and design.md.
      Verify each has visible text before the HTML tag.
      Rate each: Acceptable Risk / Needs Clarification / Blocking. -->
 
-## G. Review Marker Audit
+## Review Marker Audit
 <!-- Scan for any remaining <!-- REVIEW --> or <!-- REVIEW: ... --> markers.
      Any REVIEW marker found = Blocking (must be resolved before implementation). -->

@@ -1,6 +1,6 @@
 ---
 id: research
-template-version: 1
+template-version: 2
 description: Discovery research, coverage assessment, and clarification questions
 generates: research.md
 requires: []
@@ -36,22 +36,22 @@ instruction: |
 ---
 # Research: [Feature Name]
 
-## 1. Current State
+## Current State
 <!-- Affected code, modules, architecture, relevant patterns -->
 
-## 2. External Research
+## External Research
 <!-- API docs, libraries, patterns, reference implementations (if applicable) -->
 
-## 3. Approaches
+## Approaches
 <!-- Possible solutions with trade-offs -->
 
 | Approach | Pro | Contra |
 |----------|-----|--------|
 
-## 4. Risks & Constraints
+## Risks & Constraints
 <!-- Technical limits, breaking changes, dependencies, performance -->
 
-## 5. Coverage Assessment
+## Coverage Assessment
 
 | Category | Status | Notes |
 |----------|--------|-------|
@@ -65,14 +65,14 @@ instruction: |
 | Terminology | Clear / Partial / Missing | |
 | Non-Functional | Clear / Partial / Missing | |
 
-## 6. Open Questions
+## Open Questions
 <!-- Only for Partial/Missing categories. Max 5, prioritized by Impact × Uncertainty. -->
 <!-- If all Clear — skip this section. -->
 
 | # | Question | Category | Impact |
 |---|----------|----------|--------|
 
-## 7. Decisions
+## Decisions
 <!-- Filled after user feedback. -->
 
 | # | Decision | Rationale | Alternatives Considered |

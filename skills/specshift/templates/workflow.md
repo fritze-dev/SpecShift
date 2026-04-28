@@ -1,5 +1,5 @@
 ---
-template-version: 11
+template-version: 12
 plugin-version: 0.2.7-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
@@ -70,10 +70,10 @@ After audit.md PASS, commit and push implementation.
 
 ### Instruction
 
-Post-approval finalization, executed sequentially:
-1. Changelog: incremental entries from completed change
-2. Docs: regenerate affected capability docs, ADRs, README
-3. Version-bump: if the constitution defines a version-bump convention, follow it; otherwise skip
+Post-approval finalization, executed sequentially in the order below:
+- **Changelog**: incremental entries from completed change.
+- **Docs**: regenerate affected capability docs, ADRs, README.
+- **Version-bump**: if the constitution defines a version-bump convention, follow it; otherwise skip.
 On error in one step: continue with next, report failures at end.
 Check audit.md exists with verdict PASS before proceeding.
 
@@ -88,10 +88,10 @@ State assessment: determine PR number from current branch, read PR state (draft,
 - **Review dispatch:** If no reviews requested and `review.request_review` is configured, request external review using available GitHub tooling. If unavailable or request fails, log warning and continue.
 - **Activity subscription:** Subscribe to PR activity for real-time updates if tooling supports it.
 - **Comment processing:** Process unresolved review comments: read each thread, implement fixes, reply explaining action taken, resolve threads. If a comment requires a fundamental change, inform the user and suggest a new specshift propose.
-- **Self-check:** After fixes, commit, push, run built-in self-check. Fix any findings.
+- **Self-check:** After fixes are committed and pushed, invoke the built-in review skill as a self-check on the current branch. Invocation form: call the `review` skill via the Skill tool, or spawn a subagent that runs the equivalent of `/review` against the current HEAD. The self-check SHALL post a PR comment containing `<!-- specshift:self-check -->` (top of the comment body) followed by the current HEAD commit SHA and a findings summary (PASS, or FIX with each finding listed). If the self-check finds issues, fix them, commit, push, and re-invoke the self-check until the marker reports PASS for the latest HEAD.
 - **Cycle limit:** If reviewer posts new comments, return to Comment processing. Safety limit: max 3 cycles, then pause.
 - **CI gate:** When no unresolved comments remain, check CI. If pending, report status and suggest waiting. If failing, report failures and stop.
-- **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
+- **Pre-merge summary:** If CI is passing, first verify a `<!-- specshift:self-check -->` marker comment exists for the current HEAD commit. If no marker exists or the marker's HEAD SHA is stale, stop and report "Self-check missing for HEAD <sha> — invoke the review skill on this branch before merging"; do NOT post the summary and do NOT offer merge confirmation. If the marker is present and current, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
 - **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later. Do NOT offer merge.
 - **Merge confirmation:** If no review is pending, ask user for explicit merge confirmation.
 - **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge cleanup: switch to the repository's default branch (e.g., `main`) before deleting the local feature branch (deleting the currently checked-out branch fails); then delete the remote feature branch.
