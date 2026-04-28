@@ -90,7 +90,7 @@ CONSTITUTION's `## Testing` section declares the project as Markdown/YAML artifa
 - [ ] **Scenario: Change Context Detection two-tier behavior**
   - Setup: any session.
   - Action: any action that triggers detection.
-  - Verify: detection scans `.specshift/changes/*/proposal.md` for `branch:` match → on miss, lists active changes for user selection. No `git rev-parse --git-dir /worktrees/` lookup.
+  - Verify: detection scans `.specshift/changes/*/proposal.md` for `branch:` match → on miss, lists changes filtered by the dispatched action (`propose` / `apply` → `status: active`; `finalize` / `review` → `status: review`). No `git rev-parse --git-dir /worktrees/` lookup.
 
 ## Edge Cases
 
@@ -108,10 +108,10 @@ CONSTITUTION's `## Testing` section declares the project as Markdown/YAML artifa
   - Action: `git grep -i worktree -- src/ .specshift/WORKFLOW.md AGENTS.md .specshift/templates/changes/proposal.md`.
   - Verify: 0 results.
 
-- [ ] **Edge: `git grep -i worktree` post-finalize returns 0 hits in `skills/specshift/`.**
+- [ ] **Edge: post-finalize compiled skills contain no removed-lifecycle markers.**
   - Setup: after `specshift finalize` completes (compile re-run).
-  - Action: `git grep -i worktree -- skills/specshift/`.
-  - Verify: 0 results.
+  - Action: run `git grep -iE 'git worktree|worktree\.enabled|worktree\.path_pattern|\.specshift/worktrees/' -- skills/specshift/`.
+  - Verify: 0 results for those removed-lifecycle markers (commands, config keys, hardcoded path patterns). The legacy `worktree:` proposal-frontmatter mention compiled in from `change-workspace.md` is intentional and may still appear in compiled skill content.
 
 ## Traceability Summary
 

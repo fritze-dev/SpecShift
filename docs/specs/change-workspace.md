@@ -93,7 +93,7 @@ The created workspace SHALL contain the artifacts defined by the pipeline in WOR
 The router SHALL detect the active change using proposal frontmatter and pass the resolved context to the dispatched action. The detection sequence SHALL be:
 
 1. **Proposal frontmatter lookup**: Scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` field matches the current branch (`git rev-parse --abbrev-ref HEAD`). If found, auto-select that change.
-2. **Fallback — directory listing**: If no proposal has a matching `branch` field, list active changes and prompt the user.
+2. **Fallback — directory listing**: If no proposal has a matching `branch` field, list changes filtered by the dispatched action and prompt the user. For `propose` and `apply`, list changes whose proposal `status` is `active`. For `finalize` and `review`, list changes whose proposal `status` is `review`.
 
 If a match is found, the router SHALL auto-select the change and announce: "Detected change context: using change '<name>'". An explicit argument always overrides auto-detection.
 

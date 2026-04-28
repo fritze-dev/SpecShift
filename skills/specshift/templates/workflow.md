@@ -1,5 +1,5 @@
 ---
-template-version: 10
+template-version: 11
 plugin-version: 0.2.6-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
@@ -94,7 +94,7 @@ State assessment: determine PR number from current branch, read PR state (draft,
 - **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
 - **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later. Do NOT offer merge.
 - **Merge confirmation:** If no review is pending, ask user for explicit merge confirmation.
-- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: delete the local and remote feature branch.
+- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge cleanup: switch to the repository's default branch (e.g., `main`) before deleting the local feature branch (deleting the currently checked-out branch fails); then delete the remote feature branch.
 When auto_approve is true and `review.request_review` is `false` or absent: skip Review dispatch and review waiting, proceed to CI gate + Pre-merge summary + Merge confirmation.
 When auto_approve is true and `review.request_review` is configured (`copilot` or `true`): dispatch the review and wait for the decision normally — auto_approve does NOT skip review when a review is explicitly configured.
 If session may end before review arrives: report state and suggest re-running specshift review later.

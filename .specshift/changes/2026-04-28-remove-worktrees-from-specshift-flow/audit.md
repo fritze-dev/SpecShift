@@ -51,7 +51,7 @@ None.
 
 #### SUGGESTION
 
-- The `compiled` release tree at `skills/specshift/` still mentions worktrees on 7 files; this is expected and is wiped by `bash scripts/compile-skills.sh` during `specshift finalize`. Verified post-finalize via the same `git grep -i worktree -- skills/specshift/` command listed in design.md's success metrics.
+- After `bash scripts/compile-skills.sh` runs in finalize, `skills/specshift/actions/propose.md` still contains 2 `worktree` mentions — these are the intentional legacy/read-only documentation lines compiled in from `docs/specs/change-workspace.md`'s `Create Change Workspace` requirement and edge case. They describe how SpecShift handles **legacy** proposal frontmatter (read-only). They are NOT references to the removed lifecycle (no `git worktree` commands, no `worktree.*` config keys, no `.specshift/worktrees/` paths). The narrowed success-metric grep `git grep -iE 'git worktree|worktree\.enabled|worktree\.path_pattern|\.specshift/worktrees/' -- skills/specshift/` returns 0 hits and is the correct invariant for "removed lifecycle" verification.
 - The follow-up Tweaks (2.4.3 in `src/templates/changes/proposal.md` and 2.4.4 in `docs/specs/multi-target-distribution.md`) were caught by the verification step in 2.5.1 / 2.5.3 rather than being listed in the original tasks. Future propose runs that mirror plugin source from a project-instance edit should explicitly list both the project-instance file AND the `src/templates/` source under `## Impact > Plugin source (touched)`.
 
 ### Requirement Verification
