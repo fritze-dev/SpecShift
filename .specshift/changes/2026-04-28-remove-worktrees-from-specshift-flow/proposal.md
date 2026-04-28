@@ -1,5 +1,5 @@
 ---
-status: review
+status: completed
 branch: claude/remove-worktrees-specshift-SACUg
 capabilities:
   new: []
