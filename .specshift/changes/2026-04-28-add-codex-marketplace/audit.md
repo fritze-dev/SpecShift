@@ -69,7 +69,7 @@ All 13 scenarios from `tests.md` verified:
 - Codex install resolves via catalog — implementation surfaces (`.agents/plugins/marketplace.json` + README + AGENTS.md) all consistent. Live verification deferred to post-merge (per non-goals). PASS (artefact-level)
 - Codex marketplace catalog file shipped — `test -f .agents/plugins/marketplace.json` true; `jq '.plugins | length' = 1` true. PASS
 - Catalog file declares the documented top-level fields — `jq -e '.name == "specshift" and (.interface.displayName | type == "string") and (.plugins | length == 1)'` returns true. PASS
-- Catalog plugin entry uses object-form source — `jq -e '.plugins[0].source | (type == "object") and (.source == "local") and (.path | endswith(".codex-plugin"))'` returns true. PASS
+- Catalog plugin entry uses object-form source — `jq -e '.plugins[0].source | (type == "object") and (.source == "local") and (.path == "./plugins/specshift")'` returns true. PASS
 - Catalog plugin entry omits version field — `jq -e '.plugins[0] | has("version") | not'` returns true. PASS
 - All three version-bearing files stamped from one source — `bash scripts/compile-skills.sh` ran successfully, all three files at `0.2.5-beta`. PASS (will be re-exercised at finalize when version bumps to 0.2.6-beta)
 - Post-stamp cross-check fails on drift — existing behavior, retained verbatim in the script. PASS (read-only verification of script body)
@@ -89,7 +89,7 @@ Each design.md decision row mapped to implementation:
 |-----------------|------------------------|
 | Ship `.agents/plugins/marketplace.json` rather than rely on auto-discovery | New file present |
 | Hand-edited catalog at repo root | File is committed source, not derived; no template generates it |
-| Object-form `source: { source: "local", path: "../../.codex-plugin" }` | File shows exact form |
+| Object-form `source: { source: "local", path: "./plugins/specshift" }` | File shows exact form |
 | Catalog shape-checked, not version-stamped | `verify_catalog_shape` does not modify file; jq probe confirms no `version` field; release CI uses `shape` mode |
 | Cross-check loop verifies presence + shape | Both compile script and release.yml verify the documented schema fields |
 | Flip ADR-003 rejected alternative into Decision 6 | New Decision 6 + rewritten Alternatives Considered paragraph + cross-reference from Decision 1 |
@@ -128,7 +128,11 @@ None.
 
 #### SUGGESTION
 
-- Post-merge: re-run `codex plugin marketplace add github:fritze-dev/specshift` against the released 0.2.6-beta layout and capture the actual command output for issue #51's acceptance criterion. Tracked under section 5 of tasks.md as a Post-Merge Reminder, not as a tracked task.
+- Post-merge: re-run `codex plugin marketplace add fritze-dev/SpecShift` against the released 0.2.6-beta layout and confirm the plugin appears in `/plugins`; capture the actual command/output for issue #51's acceptance criterion. Tracked under section 5 of tasks.md as a Post-Merge Reminder, not as a tracked task.
+
+## Post-review Codex CLI verification
+
+Local verification on `codex-cli 0.125.0` found that the original catalog values were not installable: `user-required` and `none` are invalid policy enum values, `./` is accepted by `marketplace add` but skipped by `/plugins` as an empty plugin path, and paths escaping to `.codex-plugin` are rejected. The verified working shape is `source.path: "./plugins/specshift"`, `policy.installation: "AVAILABLE"`, and `policy.authentication: "ON_INSTALL"` with a generated plugin payload at `plugins/specshift/`.
 
 ### Verdict
 

@@ -74,7 +74,7 @@ The compile script SHALL remove any pre-existing skill output at the legacy loca
 
 ### Requirement: Codex Discovery via Marketplace Add
 
-Codex consumers SHALL install the plugin via `codex plugin marketplace add github:fritze-dev/specshift` (or an equivalent direct-repo install command), which discovers the plugin by reading the Codex marketplace catalog file `.agents/plugins/marketplace.json` at the repository root. The catalog points at the per-plugin manifest `.codex-plugin/plugin.json` (also at the repository root) via its `plugins[].source` field. After install, Codex consumers SHALL run `codex plugin install specshift` to enable the plugin.
+Codex consumers SHALL install the plugin via `codex plugin marketplace add fritze-dev/SpecShift` (or an equivalent direct-repo install command), which discovers the plugin by reading the Codex marketplace catalog file `.agents/plugins/marketplace.json` at the repository root. The catalog points at the generated Codex plugin payload at `plugins/specshift/` via its `plugins[].source` field. After adding the marketplace, Codex consumers SHALL open `/plugins` and install or enable SpecShift.
 
 The plugin SHALL ship `.agents/plugins/marketplace.json`. The auto-discovery path on `.codex-plugin/plugin.json` alone — assumed in earlier iterations of this spec — does not reliably surface the plugin to Codex CLI consumers; the catalog file is the supported install surface. The shape of `.agents/plugins/marketplace.json` is defined by the "Codex Marketplace Catalog Schema" requirement below.
 
@@ -82,24 +82,24 @@ The plugin SHALL ship `.agents/plugins/marketplace.json`. The auto-discovery pat
 
 #### Scenario: Codex install resolves via catalog
 
-- **GIVEN** a Codex user runs `codex plugin marketplace add github:fritze-dev/specshift`
+- **GIVEN** a Codex user runs `codex plugin marketplace add fritze-dev/SpecShift`
 - **WHEN** Codex resolves the repository
 - **THEN** Codex SHALL read `.agents/plugins/marketplace.json` at the repository root
-- **AND** SHALL follow the catalog's `plugins[].source.path` reference to `.codex-plugin/plugin.json`
-- **AND** the install SHALL succeed and the plugin SHALL be available to `codex plugin install specshift`
+- **AND** SHALL follow the catalog's `plugins[].source.path` reference to `plugins/specshift/`
+- **AND** the marketplace add SHALL succeed and the plugin SHALL be available in `/plugins`
 
 #### Scenario: Codex marketplace catalog file shipped
 
 - **GIVEN** the repository
 - **WHEN** the root layout is inspected
 - **THEN** `.agents/plugins/marketplace.json` SHALL exist at the repository root
-- **AND** SHALL declare exactly one entry referencing `.codex-plugin/`
+- **AND** SHALL declare exactly one entry referencing `plugins/specshift/`
 
 ### Requirement: Codex Marketplace Catalog Schema
 
-The `.agents/plugins/marketplace.json` file SHALL conform to the schema documented at https://developers.openai.com/codex/plugins/build. Top-level fields SHALL include `name` (string, equal to the marketplace identifier `specshift`) and `interface.displayName` (string). The file SHALL declare a `plugins` array containing exactly one entry. The entry SHALL include `name` (`specshift`), `description`, `source` (object form `{ "source": "local", "path": "../../.codex-plugin" }` resolving the per-plugin manifest directory relative to the catalog file's location), `policy` (object with at minimum `installation` and `authentication` fields at the documented baseline values), and `category`.
+The `.agents/plugins/marketplace.json` file SHALL conform to the schema documented at https://developers.openai.com/codex/plugins/build and verified against `codex-cli 0.125.0`. Top-level fields SHALL include `name` (string, equal to the marketplace identifier `specshift`) and `interface.displayName` (string). The file SHALL declare a `plugins` array containing exactly one entry. The entry SHALL include `name` (`specshift`), `description`, `source` (object form `{ "source": "local", "path": "./plugins/specshift" }` resolving to the generated Codex plugin payload under the marketplace root), `policy` (`installation: "AVAILABLE"`, `authentication: "ON_INSTALL"`), and `category` (`"Coding"`).
 
-The catalog file SHALL NOT carry a `plugins[].version` field — version comes from the per-plugin manifest at `.codex-plugin/plugin.json`. Any field present in the file beyond the documented schema SHALL be preserved verbatim by the build (for forward compatibility with Codex schema additions).
+The catalog file SHALL NOT carry a `plugins[].version` field — version comes from the per-plugin manifest at `plugins/specshift/.codex-plugin/plugin.json`, which is regenerated from the stamped root `.codex-plugin/plugin.json`. Any field present in the file beyond the documented schema SHALL be preserved verbatim by the build (for forward compatibility with Codex schema additions).
 
 **User Story:** As a Codex user I want the marketplace catalog file to follow the documented Codex schema exactly, so that future Codex CLI versions can read it without quirks.
 
@@ -114,7 +114,7 @@ The catalog file SHALL NOT carry a `plugins[].version` field — version comes f
 
 - **GIVEN** the file `.agents/plugins/marketplace.json`
 - **WHEN** the `plugins[0].source` field is inspected
-- **THEN** it SHALL be an object containing `source` (`"local"`) and `path` (relative path resolving to the `.codex-plugin/` directory)
+- **THEN** it SHALL be an object containing `source` (`"local"`) and `path` (`"./plugins/specshift"`, a non-empty relative path resolving to the generated Codex plugin root)
 - **AND** SHALL NOT be a bare string
 
 #### Scenario: Catalog plugin entry omits version field
@@ -122,7 +122,7 @@ The catalog file SHALL NOT carry a `plugins[].version` field — version comes f
 - **GIVEN** the file `.agents/plugins/marketplace.json`
 - **WHEN** the `plugins[0]` object is inspected
 - **THEN** it SHALL NOT contain a `version` field
-- **AND** the version SHALL be sourced from `.codex-plugin/plugin.json` per the "Symmetric Version Stamping with Cross-Check" requirement
+- **AND** the version SHALL be sourced from `plugins/specshift/.codex-plugin/plugin.json` per the "Symmetric Version Stamping with Cross-Check" requirement
 
 ### Requirement: Bootstrap Single Source of Truth Pattern
 
@@ -216,7 +216,7 @@ The README SHALL document install instructions for every supported target. There
 - **GIVEN** the project README after the migration
 - **WHEN** it is inspected
 - **THEN** it SHALL contain a Claude Code install section showing the marketplace add and update commands
-- **AND** it SHALL contain a Codex install section showing the `codex plugin marketplace add github:fritze-dev/specshift` install command, the `codex plugin install specshift` enable command, and an update subsection
+- **AND** it SHALL contain a Codex install section showing the `codex plugin marketplace add fritze-dev/SpecShift` marketplace command, a `/plugins` install/enable instruction, and an update subsection using `codex plugin marketplace upgrade specshift`
 - **AND** both sections SHALL be at the same heading level
 
 #### Scenario: Future target addition follows the same pattern
@@ -259,7 +259,7 @@ The `specshift finalize` version-bump step SHALL edit only `src/VERSION`. Manife
 
 The compile script SHALL read the version string from `src/VERSION` and stamp it into the three version-bearing root manifest/marketplace files: `.claude-plugin/plugin.json` (`.version`), `.claude-plugin/marketplace.json` (`.plugins[].version`), and `.codex-plugin/plugin.json` (`.version`). The script SHALL use `jq` to update only the version field in each file, preserving all non-version keys and values semantically. JSON formatting (whitespace, indentation, key ordering) may be normalized by `jq`'s pretty-printer; consumers depend on the JSON's semantic content, not on byte-level formatting. After stamping, the script SHALL re-read each of the three files and verify that the stamped version equals the SoT. Any mismatch SHALL fail the build with an error naming the offending file.
 
-The Codex marketplace catalog file `.agents/plugins/marketplace.json` is the fourth root file but SHALL NOT receive a version stamp — the documented Codex catalog schema does not include a `plugins[].version` field; the version is sourced from `.codex-plugin/plugin.json` referenced by `plugins[0].source.path`. The compile script SHALL still verify the catalog file's presence and shape (see "Codex Marketplace Catalog Schema" requirement) at build time. The release CI cross-check (`.github/workflows/release.yml`) SHALL also include the catalog file in its presence/shape verification before tag creation.
+The Codex marketplace catalog file `.agents/plugins/marketplace.json` is the fourth root file but SHALL NOT receive a version stamp — the documented Codex catalog schema does not include a `plugins[].version` field. The compile script SHALL still verify the catalog file's presence and shape (see "Codex Marketplace Catalog Schema" requirement) at build time. It SHALL also regenerate the Codex marketplace payload at `plugins/specshift/` by copying the stamped root `.codex-plugin/plugin.json` and the compiled `skills/specshift/` tree. The release CI cross-check (`.github/workflows/release.yml`) SHALL include the catalog file and generated payload in its verification before tag creation.
 
 The script SHALL also stamp the version into the compiled workflow template's `plugin-version` frontmatter field (existing behavior, retained).
 
@@ -296,6 +296,7 @@ The script SHALL also stamp the version into the compiled workflow template's `p
 - **WHEN** the release workflow runs
 - **THEN** the workflow SHALL verify that `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json` declare the same version as `src/VERSION`
 - **AND** SHALL verify that `.agents/plugins/marketplace.json` exists at the repo root
+- **AND** SHALL verify that `plugins/specshift/.codex-plugin/plugin.json` and `plugins/specshift/skills/specshift/SKILL.md` exist
 - **AND** SHALL fail the workflow with a maintainer-actionable error naming any offending file before creating the release tag
 
 #### Scenario: Workflow template version stamped from same source
@@ -308,7 +309,7 @@ The script SHALL also stamp the version into the compiled workflow template's `p
 
 - **Codex manifest schema change**: If the Codex CLI plugin schema evolves (e.g., new required fields in `interface`), the compile script SHALL not silently drop unknown fields from the manifest — fields present in `.codex-plugin/plugin.json` SHALL be preserved verbatim except for `version`, which is stamped from the version source of truth.
 - **Existing Claude install with old marketplace source**: When existing Claude Code consumers run `claude plugin marketplace update specshift` after the migration, the new marketplace.json with `source: "./"` SHALL be picked up and the new skill tree at `./skills/specshift/` SHALL resolve correctly.
-- **Codex marketplace catalog schema change**: The `codex plugin marketplace add github:owner/repo` install path resolves through `.agents/plugins/marketplace.json`. If the Codex CLI evolves the catalog schema (new required fields, renamed fields, alternative `source` forms), the catalog file SHALL be updated to match; the compile script preserves any field present in the file beyond the documented schema verbatim, so additive schema changes Just Work without script changes.
+- **Codex marketplace catalog schema change**: The `codex plugin marketplace add owner/repo` install path resolves through `.agents/plugins/marketplace.json`. If the Codex CLI evolves the catalog schema (new required fields, renamed fields, alternative `source` forms), the catalog file SHALL be updated to match; the compile script preserves any field present in the file beyond the documented schema verbatim, so additive schema changes Just Work without script changes.
 - **Branding assets absent**: If `interface.logo`, `composerIcon`, `brandColor`, or `screenshots` are not provided, the Codex listing SHALL still install correctly, displaying without branding rather than rejecting the manifest.
 - **Mixed-target consumer project**: A consumer project may use both Claude Code and Codex. AGENTS.md is the single agnostic source of truth — Codex reads it natively. Claude Code reads CLAUDE.md and expands the `@AGENTS.md` import. Both files are generated on fresh init so a project that adds the second target later requires no additional bootstrap setup.
 - **Per-target manifest field drift**: Hand-edited per-target manifests carry agnostic metadata (`name`, `description`, `author`, `repository`, `license`, `keywords`) that SHALL be reviewed manually for parity. Only the `version` field is enforced by the compile script — drift in other fields is a maintainer-review concern, not a compile-time error.
@@ -320,6 +321,6 @@ The script SHALL also stamp the version into the compiled workflow template's `p
 
 - The Codex CLI's plugin manifest schema (`.codex-plugin/plugin.json`) and skill discovery paths described in OpenAI's `developers.openai.com/codex` documentation are stable as of 2026-04-28. <!-- ASSUMPTION: Codex CLI plugin schema stable -->
 - Claude Code's `@AGENTS.md` import syntax loads the referenced file into the session context at startup, as documented at `code.claude.com/docs/de/memory#agents-md`. <!-- ASSUMPTION: Claude Code AGENTS.md import behavior -->
-- The `codex plugin marketplace add github:owner/repo` install path resolves through `.agents/plugins/marketplace.json` at the repository root and follows its `plugins[0].source.path` reference to `.codex-plugin/plugin.json`. An earlier iteration of this spec assumed `.codex-plugin/plugin.json` alone was auto-discovered; that assumption was falsified by a user-observed install failure on the `0.2.5-beta` release. The catalog file is now the supported install surface. <!-- ASSUMPTION: Codex catalog-driven install -->
+- The `codex plugin marketplace add owner/repo` install path resolves through `.agents/plugins/marketplace.json` at the repository root and follows its `plugins[0].source.path` reference to `plugins/specshift/`. An earlier iteration of this spec assumed `.codex-plugin/plugin.json` alone was auto-discovered; that assumption was falsified by a user-observed install failure on the `0.2.5-beta` release. Local verification on `codex-cli 0.125.0` also showed root-path entries are skipped by `/plugins`; the catalog therefore points at the generated non-empty plugin root under `plugins/specshift/`. <!-- ASSUMPTION: Codex catalog-driven install -->
 - Both Claude Code and Codex resolve plugin-bundled assets referenced in skill prose (e.g., "the plugin's `templates/` directory") relative to the skill's installed location; neither runtime requires environment-variable interpolation in skill body text for asset paths to work. <!-- ASSUMPTION: Agnostic asset resolution -->
 - `jq` is available on every maintainer's build machine (used by the compile script for in-place manifest editing). <!-- ASSUMPTION: jq build dependency -->

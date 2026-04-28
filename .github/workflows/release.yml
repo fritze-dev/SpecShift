@@ -57,7 +57,8 @@ jobs:
             elif [ "$mode" = "shape" ]; then
               # Shape-only verification for the Codex marketplace catalog:
               # the documented schema does not include plugins[].version; we
-              # verify the catalog is well-formed and references a single plugin.
+              # verify the catalog is well-formed and references the generated
+              # Codex payload under plugins/specshift.
               if ! jq -e \
                 '.name == "specshift"
                  and (.interface.displayName | type == "string")
@@ -65,11 +66,27 @@ jobs:
                  and ((.plugins | length) == 1)
                  and (.plugins[0].source | type == "object")
                  and (.plugins[0].source.source == "local")
-                 and (.plugins[0].source.path | type == "string" and endswith(".codex-plugin"))
+                 and (.plugins[0].source.path == "./plugins/specshift")
+                 and (.plugins[0].policy.installation == "AVAILABLE")
+                 and (.plugins[0].policy.authentication == "ON_INSTALL")
+                 and (.plugins[0].category == "Coding")
                  and ((.plugins[0] | has("version")) | not)' \
                 "$file" >/dev/null 2>&1; then
                 echo "Error: $label at $file does not match the documented Codex catalog schema" >&2
                 echo "Maintainer: see docs/specs/multi-target-distribution.md (Requirement: Codex Marketplace Catalog Schema)." >&2
+                MISMATCH=1
+              fi
+              if [ ! -f "plugins/specshift/.codex-plugin/plugin.json" ]; then
+                echo "Error: generated Codex payload missing plugins/specshift/.codex-plugin/plugin.json" >&2
+                MISMATCH=1
+              fi
+              if [ ! -f "plugins/specshift/skills/specshift/SKILL.md" ]; then
+                echo "Error: generated Codex payload missing plugins/specshift/skills/specshift/SKILL.md" >&2
+                MISMATCH=1
+              fi
+              payload_version=$(jq -r '.version // empty' plugins/specshift/.codex-plugin/plugin.json 2>/dev/null || true)
+              if [ "$payload_version" != "$VERSION" ]; then
+                echo "Error: generated Codex payload manifest declares version '$payload_version', expected '$VERSION' (from src/VERSION)" >&2
                 MISMATCH=1
               fi
             fi

@@ -18,9 +18,9 @@ The CONSTITUTION's `## Testing` section explicitly states: "Framework: None (plu
 #### Codex Discovery via Marketplace Add
 
 - [ ] **Scenario: Codex install resolves via catalog**
-  - Setup: a Codex user runs `codex plugin marketplace add github:fritze-dev/specshift` after this change is merged
+- Setup: a Codex user runs `codex plugin marketplace add fritze-dev/SpecShift` after this change is merged
   - Action: Codex resolves the repository
-  - Verify: Codex reads `.agents/plugins/marketplace.json` at the repository root, follows `plugins[].source.path` to `.codex-plugin/plugin.json`, and `codex plugin install specshift` succeeds
+- Verify: Codex reads `.agents/plugins/marketplace.json` at the repository root, follows `plugins[].source.path` to `plugins/specshift/`, and the plugin appears in `/plugins`
   - Verification surface: re-run by the user who reported the original failure (post-merge); audit.md verifies the catalog file's existence and shape
 
 - [ ] **Scenario: Codex marketplace catalog file shipped**
@@ -41,7 +41,7 @@ The CONSTITUTION's `## Testing` section explicitly states: "Framework: None (plu
   - Setup: `.agents/plugins/marketplace.json` exists with one plugin entry
   - Action: inspect `plugins[0].source`
   - Verify: object containing `source: "local"` and `path` (non-empty string ending in `.codex-plugin`)
-  - Verification surface: `jq -e '.plugins[0].source | (type == "object") and (.source == "local") and (.path | endswith(".codex-plugin"))' .agents/plugins/marketplace.json` (audit step)
+- Verification surface: `jq -e '.plugins[0].source | (type == "object") and (.source == "local") and (.path == "./plugins/specshift")' .agents/plugins/marketplace.json` plus local `codex plugin marketplace add` and app-server `plugin/install` smoke tests
 
 - [ ] **Scenario: Catalog plugin entry omits version field**
   - Setup: `.agents/plugins/marketplace.json` exists with one plugin entry
@@ -86,7 +86,7 @@ The CONSTITUTION's `## Testing` section explicitly states: "Framework: None (plu
 - [ ] **Scenario: README contains both install sections (updated)**
   - Setup: `README.md` after this change is applied
   - Action: inspect the Installation section
-  - Verify: Claude Code subsection unchanged; Codex subsection shows `codex plugin marketplace add github:fritze-dev/specshift` followed by `codex plugin install specshift`; Codex Update subsection shows `codex plugin marketplace update specshift && codex plugin update specshift`; both subsections at the same heading level
+- Verify: Claude Code subsection unchanged; Codex subsection shows `codex plugin marketplace add fritze-dev/SpecShift` followed by a `/plugins` install/enable instruction; Codex Update subsection shows `codex plugin marketplace upgrade specshift`; both subsections at the same heading level
   - Verification surface: read-only inspection of README.md during audit
 
 #### File Ownership / Constitution Narrative

@@ -6,7 +6,9 @@ set -euo pipefail
 # are hand-edited at the root (`.claude-plugin/plugin.json`,
 # `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`,
 # `.agents/plugins/marketplace.json`). The compiled skill tree lives at
-# ./skills/specshift/ and is shared between both targets.
+# ./skills/specshift/. Codex also gets a generated marketplace payload at
+# ./plugins/specshift/ because Codex marketplace entries must point at a
+# non-empty plugin-root path under the marketplace root.
 #
 # Version source of truth: src/VERSION (plain text, single line, SemVer).
 # This script reads that value and stamps it into the three version-bearing
@@ -27,6 +29,7 @@ VERSION_FILE="src/VERSION"
 
 PLUGIN_ROOT="."
 SKILL_DIR="$PLUGIN_ROOT/skills/specshift"
+CODEX_DISTRIBUTION_DIR="$PLUGIN_ROOT/plugins/specshift"
 CLAUDE_MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 CLAUDE_MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 CODEX_MANIFEST="$PLUGIN_ROOT/.codex-plugin/plugin.json"
@@ -131,10 +134,12 @@ fi
 # --- Clean previous build outputs ---
 # Per-target manifests and marketplace files are hand-edited at the root and
 # SHALL NOT be removed. Only generated outputs are cleaned: the shared skill
-# tree and any legacy compiled tree from the pre-multi-target layout.
+# tree, the generated Codex marketplace payload, and any legacy compiled tree
+# from the pre-multi-target layout.
 
 echo "Building release at $PLUGIN_ROOT/ (version: $PLUGIN_VERSION) ..."
 rm -rf "$SKILL_DIR"
+rm -rf "$CODEX_DISTRIBUTION_DIR"
 rm -rf "$LEGACY_SKILL_DIR"
 rm -rf "$LEGACY_CLAUDE_MANIFEST_DIR"
 
@@ -196,11 +201,14 @@ verify_catalog_shape() {
      and ((.plugins | length) == 1)
      and (.plugins[0].source | type == "object")
      and (.plugins[0].source.source == "local")
-     and (.plugins[0].source.path | type == "string" and endswith(".codex-plugin"))
+     and (.plugins[0].source.path == "./plugins/specshift")
+     and (.plugins[0].policy.installation == "AVAILABLE")
+     and (.plugins[0].policy.authentication == "ON_INSTALL")
+     and (.plugins[0].category == "Coding")
      and ((.plugins[0] | has("version")) | not)' \
     "$file" >/dev/null 2>&1; then
     echo "Error: Codex marketplace catalog at $file does not match the documented schema." >&2
-    echo "       Expected top-level name=\"specshift\", interface.displayName, plugins[1] with source.{source: \"local\", path: \"…/.codex-plugin\"}, no plugins[].version." >&2
+    echo "       Expected source.path=\"./plugins/specshift\", policy AVAILABLE/ON_INSTALL, category Coding, and no plugins[].version." >&2
     exit 1
   fi
   echo "Codex marketplace catalog shape verified ($file)"
@@ -300,6 +308,31 @@ for action_file in "$ACTIONS_SRC"/*.md; do
   ((total_requirements += extracted_count)) || true
 done
 
+# --- Build Codex marketplace payload ---
+
+mkdir -p "$CODEX_DISTRIBUTION_DIR/.codex-plugin"
+mkdir -p "$CODEX_DISTRIBUTION_DIR/skills"
+cp "$CODEX_MANIFEST" "$CODEX_DISTRIBUTION_DIR/.codex-plugin/plugin.json"
+cp -r "$SKILL_DIR" "$CODEX_DISTRIBUTION_DIR/skills/specshift"
+
+if [[ ! -f "$CODEX_DISTRIBUTION_DIR/.codex-plugin/plugin.json" ]]; then
+  echo "Error: generated Codex payload is missing .codex-plugin/plugin.json" >&2
+  exit 1
+fi
+
+if [[ ! -f "$CODEX_DISTRIBUTION_DIR/skills/specshift/SKILL.md" ]]; then
+  echo "Error: generated Codex payload is missing skills/specshift/SKILL.md" >&2
+  exit 1
+fi
+
+payload_version="$(jq -r '.version // empty' "$CODEX_DISTRIBUTION_DIR/.codex-plugin/plugin.json")"
+if [[ "$payload_version" != "$PLUGIN_VERSION" ]]; then
+  echo "Error: generated Codex payload version ($payload_version) does not match src/VERSION ($PLUGIN_VERSION)." >&2
+  exit 1
+fi
+
+echo "Generated Codex marketplace payload: $CODEX_DISTRIBUTION_DIR/"
+
 # --- Summary ---
 
 echo ""
@@ -314,6 +347,7 @@ echo "  - $CLAUDE_MARKETPLACE (Claude marketplace, hand-edited + version-stamped
 echo "  - $CODEX_MANIFEST (Codex manifest, hand-edited + version-stamped)"
 echo "  - $CODEX_MARKETPLACE (Codex marketplace catalog, hand-edited + shape-checked)"
 echo "  - $SKILL_DIR/ (shared skill tree)"
+echo "  - $CODEX_DISTRIBUTION_DIR/ (generated Codex marketplace payload)"
 echo ""
 
 if [[ "$warnings" -gt 0 ]]; then

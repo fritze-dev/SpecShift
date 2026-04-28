@@ -28,16 +28,15 @@ claude plugin marketplace update specshift && claude plugin update specshift@spe
 
 ```bash
 # Add the marketplace
-codex plugin marketplace add github:fritze-dev/specshift
+codex plugin marketplace add fritze-dev/SpecShift
 
-# Install the plugin
-codex plugin install specshift
+# Then open /plugins and install or enable SpecShift.
 ```
 
 Update:
 
 ```bash
-codex plugin marketplace update specshift && codex plugin update specshift
+codex plugin marketplace upgrade specshift
 ```
 
 > **Existing Claude Code installs:** the `0.2.5-beta` release moves the marketplace `source` from `./.claude` to `./` and the compiled skill from `.claude/skills/specshift/` to `./skills/specshift/`. Run `claude plugin marketplace update specshift && claude plugin update specshift@specshift` once after upgrading to pick up the new layout.
@@ -116,7 +115,10 @@ SpecShift ships from a single repository to both Claude Code and Codex CLI via a
 ├── .codex-plugin/                 # Codex target (hand-edited at root)
 │   └── plugin.json                # version-bearing per-plugin manifest (referenced by the catalog below)
 ├── .agents/plugins/               # Codex marketplace catalog (hand-edited at root)
-│   └── marketplace.json           # entry point for `codex plugin marketplace add github:owner/repo`
+│   └── marketplace.json           # entry point for `codex plugin marketplace add owner/repo`
+├── plugins/specshift/              # Generated Codex marketplace payload
+│   ├── .codex-plugin/plugin.json
+│   └── skills/specshift/
 ├── skills/specshift/              # Compiled, shared skill tree (both targets)
 │   ├── SKILL.md
 │   ├── templates/

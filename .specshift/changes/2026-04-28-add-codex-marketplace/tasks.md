@@ -4,7 +4,7 @@
 
 - [ ] 1.1. Create `.agents/plugins/marketplace.json` at the repo root with the documented Codex schema:
   - top-level `name: "specshift"`, `interface.displayName: "SpecShift"`
-  - `plugins` array with one entry: `name: "specshift"`, `description` (matching `.codex-plugin/plugin.json`'s description), `source: { "source": "local", "path": "../../.codex-plugin" }`, `policy: { "installation": "user-required", "authentication": "none" }`, `category: "Coding"`
+- `plugins` array with one entry: `name: "specshift"`, `description` (matching `.codex-plugin/plugin.json`'s description), `source: { "source": "local", "path": "./plugins/specshift" }`, `policy: { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }`, `category: "Coding"`
   - no `version` field on the entry
 
 ## 2. Implementation
@@ -12,7 +12,8 @@
 - [ ] 2.1. [P] Update `scripts/compile-skills.sh`:
   - add `CODEX_MARKETPLACE="$PLUGIN_ROOT/.agents/plugins/marketplace.json"` next to the existing path constants
   - extend the preflight `for f in ...` loop to require the catalog file
-  - after the three `stamp_version` calls, add a `verify_catalog_shape` helper that uses `jq -e` to assert: top-level `name == "specshift"`, `interface.displayName` is a string, `plugins | length == 1`, `plugins[0].source.source == "local"`, `plugins[0].source.path | endswith(".codex-plugin")`, `plugins[0] | has("version") | not`
+- after the three `stamp_version` calls, add a `verify_catalog_shape` helper that uses `jq -e` to assert: top-level `name == "specshift"`, `interface.displayName` is a string, `plugins | length == 1`, `plugins[0].source.source == "local"`, `plugins[0].source.path == "./plugins/specshift"`, policy `AVAILABLE`/`ON_INSTALL`, category `Coding`, `plugins[0] | has("version") | not`
+- generate `plugins/specshift/` by copying the stamped `.codex-plugin/plugin.json` and compiled `skills/specshift/` tree; verify the generated manifest version matches `src/VERSION`
   - add the catalog file to the summary output
 - [ ] 2.2. [P] Update `.github/workflows/release.yml`:
   - add a fourth entry to the cross-check loop tagged with a `shape-only` mode
@@ -24,8 +25,8 @@
   - in `## Consequences > Negative`, add an entry covering "the maintainer must keep the catalog's `plugins[].source.path` aligned with `.codex-plugin/`'s repository-root location"
   - update the "Live install verification" Negative consequence: replace "deferred" with the concrete observation "verified post-merge by the user who reported the install failure"
 - [ ] 2.4. [P] Update `README.md` Codex install section:
-  - replace the `codex /plugins` block with the canonical two-step install (`codex plugin marketplace add github:fritze-dev/specshift` then `codex plugin install specshift`)
-  - add an "Update" subsection mirroring Claude's, using `codex plugin marketplace update specshift && codex plugin update specshift`
+- replace the `codex /plugins` block with `codex plugin marketplace add fritze-dev/SpecShift` plus a `/plugins` install/enable instruction
+- add an "Update" subsection using `codex plugin marketplace upgrade specshift`
   - keep both Installation subsections at the same heading level
 - [ ] 2.5. [P] Update `AGENTS.md` File Ownership entry for `.codex-plugin/plugin.json`:
   - flip the "no separate Codex marketplace catalog file is shipped" sentence to acknowledge the catalog at `.agents/plugins/marketplace.json` with the documented Codex schema
@@ -62,4 +63,4 @@
 ## 5. Post-Merge Reminders
 
 - Update plugin locally (`claude plugin marketplace update specshift && claude plugin update specshift@specshift`) — applies when change modifies files under `src/` or `.claude/skills/`
-- Verify Codex install path: re-run `codex plugin marketplace add github:fritze-dev/specshift` and confirm the plugin is found and `codex plugin install specshift` succeeds (this is the live datum that closes issue #51's verification criterion)
+- Verify Codex install path: re-run `codex plugin marketplace add fritze-dev/SpecShift` and confirm the plugin appears in `/plugins` and can be enabled (this is the live datum that closes issue #51's verification criterion)

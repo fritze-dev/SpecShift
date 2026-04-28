@@ -13,7 +13,7 @@ PR #46 (merged as 5fe9d66, "Multi-Target Distribution") shipped Codex CLI plugin
 - `README.md` Codex install section currently shows `codex /plugins`, which is the in-session browse command, not the install command (also flagged in issue #51).
 - `AGENTS.md` File Ownership section states "Codex consumers install via `codex plugin marketplace add github:fritze-dev/specshift` which auto-discovers `.codex-plugin/plugin.json` — no separate Codex marketplace catalog file is shipped."
 
-The user has now reported (issue #51 origin and the current request) that running `codex plugin marketplace add github:fritze-dev/specshift` does not find the plugin. This falsifies the auto-discovery assumption captured in `multi-target-distribution.md` Assumptions section ("Codex single-plugin auto-discovery"). Issue #51 acceptance criterion branch (b) applies: ship `.agents/plugins/marketplace.json`.
+The user has now reported (issue #51 origin and the current request) that running `codex plugin marketplace add fritze-dev/SpecShift` does not surface the plugin. This falsifies the auto-discovery assumption captured in `multi-target-distribution.md` Assumptions section ("Codex single-plugin auto-discovery"). Issue #51 acceptance criterion branch (b) applies: ship `.agents/plugins/marketplace.json` plus a generated plugin payload that Codex can resolve from `/plugins`.
 
 ## 2. External Research
 
@@ -53,7 +53,7 @@ Selected approach: ship `.agents/plugins/marketplace.json` with the documented s
 | Scope | Clear | Add catalog file, flip spec/ADR, fix README/AGENTS.md, extend compile script + CI cross-check |
 | Behavior | Clear | New file shape is defined by Codex's documented schema and pre-existing spec text |
 | Data Model | Clear | JSON object: top-level `name` + `interface.displayName`; `plugins[]` with `source: {source, path}`, `policy`, `category` |
-| UX | Clear | Codex consumer runs `codex plugin marketplace add github:fritze-dev/specshift` and `codex plugin install specshift` — same install path the spec already documented |
+| UX | Clear | Codex consumer runs `codex plugin marketplace add fritze-dev/SpecShift`, then installs or enables SpecShift from `/plugins` |
 | Integration | Clear | Compile script + release CI both need a fourth entry; everything else is doc edits |
 | Edge Cases | Clear | The compile script preserves non-version keys; absence of `plugins[].version` in the catalog means cross-check is shape-only for that file |
 | Constraints | Clear | Per-target manifests stay hand-edited; only `version` and per-target metadata are touched by automation |
