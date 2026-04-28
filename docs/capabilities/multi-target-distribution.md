@@ -2,7 +2,7 @@
 title: "Multi-Target Distribution"
 capability: "multi-target-distribution"
 description: "Ship SpecShift to Claude Code and OpenAI Codex CLI from one repository with one shared skill body and one agnostic version source of truth."
-lastUpdated: "2026-04-27"
+lastUpdated: "2026-04-28"
 ---
 # Multi-Target Distribution
 
@@ -48,7 +48,7 @@ The plugin maintains `src/templates/agents.md` (full body, agnostic SoT) and `sr
 
 ### Agnostic Skill Body
 
-The shared skill body (`SKILL.md`, `templates/`, action specs and the spec files those actions link into) is authored in tool-agnostic language: plugin-bundled-asset references use prose like "the plugin's `templates/` directory" rather than runtime-specific environment variables, product names appear only where the surrounding paragraph is target-scoped (e.g., describing Claude Code's `@AGENTS.md` memory-import behavior), and worktree path patterns refer to the configured `.specshift/WORKFLOW.md` `worktree.path_pattern` value rather than a hardcoded `.claude/worktrees/...` string. The compiled tree contains 0 `${CLAUDE_PLUGIN_ROOT}` references and 0 hardcoded `.claude/worktrees/...` strings.
+The shared skill body (`SKILL.md`, `templates/`, action specs and the spec files those actions link into) is authored in tool-agnostic language: plugin-bundled-asset references use prose like "the plugin's `templates/` directory" rather than runtime-specific environment variables, and product names appear only where the surrounding paragraph is target-scoped (e.g., describing Claude Code's `@AGENTS.md` memory-import behavior). The compiled tree contains 0 `${CLAUDE_PLUGIN_ROOT}` references.
 
 ### Version Source of Truth & Symmetric Stamping
 

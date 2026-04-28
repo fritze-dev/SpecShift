@@ -177,7 +177,7 @@ Before asking the user for merge confirmation, the review action SHALL post a PR
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain, CI checks are passing, and no requested review is pending without a decision (i.e., every requested reviewer has submitted a decision — approved, changes-requested, or commented), the review action SHALL ask the user for explicit merge confirmation before proceeding. If a review was requested (via `review.request_review` configuration) but no review decision has been submitted yet, the action SHALL report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later; it SHALL NOT offer merge. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL first set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle), commit and push the change so it is included in the squash merge. The action SHALL then merge the PR via squash using available GitHub tooling. The squash commit message SHALL be composed rather than using GitHub's default (which concatenates individual commit messages). The commit title SHALL be the PR title followed by the PR number in parentheses (e.g., `Fix auth timeout (#42)`). The commit body SHALL contain the proposal's **Why** section (problem statement), followed by a blank line and the **What Changes** bullet list, followed by any issue-closing references (e.g., `Closes #31`). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain, CI checks are passing, and no requested review is pending without a decision (i.e., every requested reviewer has submitted a decision — approved, changes-requested, or commented), the review action SHALL ask the user for explicit merge confirmation before proceeding. If a review was requested (via `review.request_review` configuration) but no review decision has been submitted yet, the action SHALL report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later; it SHALL NOT offer merge. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL first set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle), commit and push the change so it is included in the squash merge. The action SHALL then merge the PR via squash using available GitHub tooling. The squash commit message SHALL be composed rather than using GitHub's default (which concatenates individual commit messages). The commit title SHALL be the PR title followed by the PR number in parentheses (e.g., `Fix auth timeout (#42)`). The commit body SHALL contain the proposal's **Why** section (problem statement), followed by a blank line and the **What Changes** bullet list, followed by any issue-closing references (e.g., `Closes #31`). After the merge, the action SHALL delete the local and remote feature branch.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
@@ -189,7 +189,7 @@ When no unresolved review threads remain, CI checks are passing, and no requeste
 - **AND** the user confirms
 - **THEN** the action sets proposal `status` to `completed`, commits, and pushes
 - **AND** merges the PR via squash with a composed commit message
-- **AND** triggers post-merge cleanup per change-workspace.md
+- **AND** deletes the local and remote feature branch
 
 #### Scenario: CI checks pending delays merge
 - **GIVEN** no unresolved review threads
@@ -277,34 +277,3 @@ When `auto_approve` is `true` and `review` is listed in the `actions` array, the
 - **WHEN** the user invokes `specshift review` in a new session
 - **THEN** the action SHALL read the current PR state from GitHub
 - **AND** SHALL continue processing from the current state (not restart from scratch)
-
-### Requirement: Post-Merge Worktree Cleanup
-
-When a PR is merged from within a worktree (via any merge method), the system SHALL perform immediate cleanup of the completed worktree. The cleanup sequence SHALL be: (1) switch working directory to the main worktree, (2) remove the completed worktree, (3) delete the local branch, (4) delete the remote branch. The system SHALL detect that it is inside a worktree by checking `git rev-parse --git-dir` for a path containing `/worktrees/`. This immediate cleanup complements lazy cleanup at `specshift propose` — lazy cleanup catches worktrees from merges that happened outside the agent session, while immediate cleanup handles in-session merges.
-
-**User Story:** As a developer I want the worktree cleaned up immediately after my PR is merged, so that I don't have stale worktrees lingering until the next `specshift propose`.
-
-#### Scenario: Cleanup after successful local merge
-
-- **GIVEN** the agent is working inside a worktree at `.specshift/worktrees/fix-auth` on branch `fix-auth`
-- **AND** the agent merges the PR which succeeds
-- **WHEN** the merge completes
-- **THEN** the system SHALL switch the working directory to the main worktree
-- **AND** remove the worktree
-- **AND** delete the local branch
-- **AND** delete the remote branch
-- **AND** report "Cleaned up worktree: fix-auth (merged)"
-
-#### Scenario: Cleanup skipped when not in worktree
-
-- **GIVEN** the agent is working in the main working tree (not a worktree)
-- **WHEN** a merge completes
-- **THEN** the system SHALL NOT attempt worktree cleanup
-
-#### Scenario: Worktree removal fails due to dirty state
-
-- **GIVEN** the agent is inside a worktree and a merge completes
-- **AND** the worktree has uncommitted changes
-- **WHEN** `git worktree remove` fails
-- **THEN** the system SHALL report the failure and suggest manual cleanup
-- **AND** SHALL NOT block the workflow

@@ -2,12 +2,12 @@
 title: "Project Init"
 capability: "project-init"
 description: "One-command project initialization with template merge, codebase scanning, constitution generation, agnostic bootstrap-file generation (AGENTS.md + CLAUDE.md), Claude Code Web settings generation, and health checks"
-lastUpdated: "2026-04-27"
+lastUpdated: "2026-04-28"
 ---
 
 # Project Init
 
-Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution from your codebase, generating both bootstrap files (`AGENTS.md` as the agnostic source of truth and `CLAUDE.md` as a one-line `@AGENTS.md` import stub), generating Claude Code Web settings for cloud sessions, configuring optional worktree isolation, and running health checks for spec and documentation drift.
+Sets up a project for the spec-driven workflow via `specshift init` -- installing templates, generating a constitution from your codebase, generating both bootstrap files (`AGENTS.md` as the agnostic source of truth and `CLAUDE.md` as a one-line `@AGENTS.md` import stub), generating Claude Code Web settings for cloud sessions, and running health checks for spec and documentation drift.
 
 ## Purpose
 
@@ -27,8 +27,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 - **Constitution section-level merge** -- detects missing sections from newer template versions and offers to generate content for them based on the codebase
 - **Codebase scanning** -- analyzes tech stack, frameworks, languages, file structure, and coding conventions to populate the constitution with project-specific values
 - **Constitution generation** -- produces Tech Stack, Architecture Rules, Code Style, Constraints, Conventions, and Standard Tasks sections from scan results
-- **Environment checks** -- detects GitHub tooling availability, git version (2.5+ for worktree support), and `.gitignore` configuration
-- **Worktree opt-in** -- offers to enable worktree-based change isolation when GitHub tooling is available, including GitHub merge strategy configuration
+- **Environment checks** -- detects GitHub tooling availability and authentication status, reported informationally without blocking init
 - **Legacy migration** -- detects old schema-based layouts and automatically migrates to the WORKFLOW.md format
 - **Idempotent re-initialization** -- skips already-completed steps when run on an initialized project
 - **Spec drift detection** -- compares existing specs against the codebase and reports discrepancies with suggested corrective actions
@@ -39,7 +38,7 @@ A single `specshift init` command covers fresh installs, legacy migrations, and 
 
 ### Fresh Project Initialization
 
-When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template, creates a CONSTITUTION.md placeholder, and generates CLAUDE.md from the bootstrap template. If GitHub tooling is available and authenticated, it offers to enable worktree mode and configure the GitHub repository for rebase-merge. The command validates that all files are in place and reports a summary. If CLAUDE.md already exists, init skips generation and preserves the existing file.
+When you run `specshift init` on a project without the workflow installed, the system copies Smart Templates from the plugin's templates directory, installs WORKFLOW.md from the plugin template, creates a CONSTITUTION.md placeholder, and generates `AGENTS.md` and `CLAUDE.md` from the bootstrap templates. The command validates that all files are in place and reports a summary. If the bootstrap files already exist, init skips their generation and preserves the existing files.
 
 ### Codebase Scanning and Constitution Generation
 
@@ -63,7 +62,7 @@ As a health check, init verifies generated documentation against current specs a
 
 ### Environment Checks
 
-Init checks GitHub tooling availability and authentication, git version for worktree support, and `.gitignore` for the `/.claude/` entry. Results are informational -- they do not block init but determine which optional features are available.
+Init checks GitHub tooling availability and authentication. Results are informational -- they do not block init but determine which optional features (e.g., PR creation during the workflow) are available.
 
 ## Known Limitations
 
@@ -78,4 +77,4 @@ Init checks GitHub tooling availability and authentication, git version for work
 - If WORKFLOW.md exists alongside legacy `schema.yaml` (partial manual migration), init preserves WORKFLOW.md and skips migration.
 - If the plugin `template-version` is lower than the local version (plugin downgrade), init warns and skips rather than downgrading.
 - If an empty repository has no source code files, init generates a minimal constitution with placeholder sections.
-- If the CLAUDE.md bootstrap template is missing from the plugin, init skips CLAUDE.md generation with a warning rather than blocking.
+- If the CLAUDE.md or AGENTS.md bootstrap template is missing from the plugin, init skips the corresponding bootstrap-file generation with a warning rather than blocking.

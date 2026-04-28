@@ -2,7 +2,7 @@
 title: "Review Lifecycle"
 capability: "review-lifecycle"
 description: "Re-entrant PR review-to-merge state machine with comment processing, self-review, summary posting, and mandatory merge confirmation"
-lastUpdated: "2026-04-15"
+lastUpdated: "2026-04-28"
 ---
 
 # Review Lifecycle
@@ -29,7 +29,7 @@ The review action is designed as a re-entrant state machine rather than a sessio
 - **Pre-merge summary comment** -- posts a PR comment summarizing threads resolved, fixes applied, self-check result, and review cycles completed; uses an HTML marker for idempotent updates on re-entrant runs
 - **Review-pending gate** -- blocks merge offer while a requested review has no decision yet; reports pending status and suggests re-running later
 - **Mandatory merge confirmation** -- always requires explicit user confirmation before merging, regardless of `auto_approve` setting
-- **Post-merge cleanup** -- removes worktree, deletes local and remote branches after successful merge (when in worktree mode)
+- **Post-merge branch deletion** -- deletes the local and remote feature branch after successful merge
 
 ## Behavior
 
@@ -47,7 +47,7 @@ Before asking for merge confirmation, the action posts a summary comment on the 
 
 ### Merge with Mandatory Confirmation
 
-When no unresolved threads remain, CI checks pass, and no requested review is pending without a decision, the action asks the user for explicit merge confirmation. If a requested review has not been submitted yet, the action reports "Review pending — waiting for reviewer decision" and suggests re-running later. After confirmation, the action sets the proposal status to `completed` on the feature branch (committing and pushing so the status change is included in the squash merge), then merges the PR and performs post-merge cleanup if in a worktree.
+When no unresolved threads remain, CI checks pass, and no requested review is pending without a decision, the action asks the user for explicit merge confirmation. If a requested review has not been submitted yet, the action reports "Review pending — waiting for reviewer decision" and suggests re-running later. After confirmation, the action sets the proposal status to `completed` on the feature branch (committing and pushing so the status change is included in the squash merge), then merges the PR and deletes the local and remote feature branch.
 
 ## Known Limitations
 

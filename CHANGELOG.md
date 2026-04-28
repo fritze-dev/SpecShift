@@ -3,6 +3,35 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.6-beta] — 2026-04-28
+
+### Remove Worktrees from SpecShift Workflow
+
+SpecShift no longer owns a worktree lifecycle. Worktree isolation is a host/tool concern — Claude Code, the Codex CLI, and plain `git worktree` already provide it. Carrying our own creation, lazy stale cleanup, post-merge cleanup, and change-context fallback added significant surface area without giving users anything they could not get from their host. Removing it tightens SpecShift's scope to "file-based change workspaces under `.specshift/changes/`" and shrinks the propose / finalize / review actions and the change-workspace spec correspondingly. Closes #47.
+
+#### Removed
+- `worktree:` config block in `.specshift/WORKFLOW.md` and `src/templates/workflow.md` (was: `enabled`, `path_pattern`, `auto_cleanup`, `stale_days`)
+- `Create Worktree-Based Workspace`, `Lazy Worktree Cleanup at Change Creation`, and `Post-Merge Worktree Cleanup` requirements from `docs/specs/change-workspace.md`
+- `GitHub Merge Strategy Configuration` requirement and worktree opt-in / git-2.5+ / `.gitignore /.claude/` env-checks from `docs/specs/project-init.md` (the rebase-merge config was tied exclusively to worktree opt-in; the review action squash-merges)
+- Worktree-convention fallback (former step 3) from the router's Change Context Detection in `src/skills/specshift/SKILL.md` — detection is now a 2-tier sequence: proposal frontmatter `branch:` lookup → directory listing prompt
+- Worktree-related links from `src/actions/{propose,finalize,review}.md` (action manifests no longer pull deleted requirements)
+- `Worktree-path references` sub-rule from the `Agnostic Skill Body` requirement in `docs/specs/multi-target-distribution.md` (referenced a config key that no longer exists)
+- `worktree:` field documentation from the proposal-tracking frontmatter in both `src/templates/changes/proposal.md` and `.specshift/templates/changes/proposal.md`
+- `worktree.enabled: true` reference from `AGENTS.md`'s `**.specshift/**` File Ownership note
+
+#### Changed
+- **BREAKING (consumer config):** Consumers who set `worktree.enabled: true` in their project's `.specshift/WORKFLOW.md` will silently get the file-based workspace flow. The config key is no longer read by any action. Existing on-disk worktrees are not auto-cleaned by SpecShift anymore — users may run `git worktree remove <path>` manually. Hosts (Claude Code's Agent isolation, Codex CLI, `git worktree`) continue to provide worktree affordances independently of SpecShift
+- `src/templates/workflow.md` `template-version` 9 → 10; `src/templates/changes/proposal.md` 2 → 3 (per CONSTITUTION's "Template-version discipline")
+- Compile script (`bash scripts/compile-skills.sh`) regenerates `./skills/specshift/` so the shipped skill tree stops mentioning worktrees
+
+#### Specs
+- Modified: `change-workspace.md` v5 (4 requirements; was 7), `project-init.md` v7 (11 requirements; was 13), `artifact-pipeline.md` v6 (13 requirements; was 13 with worktree-config scenarios trimmed), `review-lifecycle.md` v4 (purpose paragraph trimmed; merge sequence ends with branch deletion only), `workflow-contract.md` v10 (frontmatter list trimmed; Router Dispatch Pattern documented as 2-tier), `multi-target-distribution.md` v5 (Agnostic Skill Body sub-rules renumbered)
+
+#### Migration
+- For consumers actively using worktree mode: remove the `worktree:` block from your `.specshift/WORKFLOW.md` (silently ignored otherwise) and clean up any on-disk worktrees with `git worktree remove`
+- Existing in-flight proposals carrying a `worktree: <path>` frontmatter field are treated as legacy/read-only — SpecShift no longer writes the field on new proposals and ignores it on read. No migration tooling is needed
+- Historical change directories under `.specshift/changes/2026-03-30-worktree-based-change-lifecycle/`, `2026-04-09-worktree-fetch-main/`, `2026-04-11-fix-stale-worktree-detection/`, and `2026-03-30-fix-squash-merge-cleanup/` are intentionally untouched as historical record
+
 ## [v0.2.5-beta] — 2026-04-27
 
 ### Multi-Target Distribution (Claude Code + Codex CLI)

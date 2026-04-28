@@ -15,7 +15,7 @@ Central orchestration for the spec-driven workflow. The first argument determine
 ## Load Configuration
 
 Read `.specshift/WORKFLOW.md` once. Extract from YAML frontmatter:
-- `templates_dir`, `pipeline`, `actions` (array of action names), `worktree`, `auto_approve`, `plugin-version`, `review`
+- `templates_dir`, `pipeline`, `actions` (array of action names), `auto_approve`, `plugin-version`, `review`
 
 Read from markdown body:
 - `## Context` section — follow its instructions (typically: read CONSTITUTION.md)
@@ -51,11 +51,10 @@ If WORKFLOW.md was missing during Load Configuration and action is not `init`: t
 For `propose`, `apply`, `finalize`, `review`:
 1. Get current branch: `git rev-parse --abbrev-ref HEAD`
 2. **Proposal frontmatter lookup**: Scan `.specshift/changes/*/proposal.md` for a proposal whose YAML frontmatter `branch` field matches the current branch. If found, auto-select that change.
-3. **Fallback — worktree convention**: If no matching proposal, check if inside a worktree (`git rev-parse --git-dir` contains `/worktrees/`), derive change name from branch, search for `.specshift/changes/*-<branch-name>/`.
-4. If detected: announce "Detected change context: using change '<name>'"
-5. If not detected and action is `apply`: list changes with `status: active` and ask the user to select.
-5b. If not detected and action is `finalize` or `review`: list changes with `status: review` and ask the user to select.
-6. If not detected and action is `propose`: the user may be starting a new change — proceed to propose dispatch which handles workspace creation.
+3. If detected: announce "Detected change context: using change '<name>'"
+4. If not detected and action is `apply`: list changes with `status: active` and ask the user to select.
+4b. If not detected and action is `finalize` or `review`: list changes with `status: review` and ask the user to select.
+5. If not detected and action is `propose`: the user may be starting a new change — proceed to propose dispatch which handles workspace creation.
 
 ## Dispatch
 

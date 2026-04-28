@@ -1,18 +1,12 @@
 ---
-template-version: 9
-plugin-version: 0.2.5-beta
+template-version: 10
+plugin-version: 0.2.6-beta
 templates_dir: .specshift/templates
 pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
 
 actions: [init, propose, apply, finalize, review]
 # Add custom actions here (e.g. qa-review) and define matching
 # ## Action: <name> sections in the body below.
-
-# worktree:
-#   enabled: false
-#   path_pattern: .specshift/worktrees/{change}
-#   auto_cleanup: false
-#   stale_days: 14
 
 auto_approve: true
 
@@ -39,8 +33,7 @@ must be written in English regardless of docs_language.
 ### Instruction
 
 Create change workspace if needed, then traverse the pipeline generating artifacts.
-If no change exists: ask user what to build, derive kebab-case name, create workspace (with worktree if enabled).
-Lazy worktree cleanup: before creating, check for stale worktrees. Auto-clean completed proposals and merged PRs. For closed PRs or branches inactive beyond stale_days, prompt the user before cleanup. Read proposals from worktree filesystem paths.
+If no change exists: ask user what to build, derive kebab-case name, create the change directory under `.specshift/changes/`.
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
@@ -101,7 +94,7 @@ State assessment: determine PR number from current branch, read PR state (draft,
 - **Pre-merge summary:** If CI is passing, post a summary comment on the PR (threads processed/resolved, fixes list, self-check result, cycles completed). Use `<!-- specshift:review-summary -->` marker to detect and update existing summary on re-entrant runs. If posting fails, log warning and continue.
 - **Review-pending gate:** If a review was requested (via `review.request_review` config) but no review decision has been submitted yet, report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later. Do NOT offer merge.
 - **Merge confirmation:** If no review is pending, ask user for explicit merge confirmation.
-- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: clean up worktree if applicable.
+- **Merge execution:** After user confirms, set proposal status to `completed`, commit and push (so the status change is included in the squash). Then merge the PR via squash. Compose the commit message — title: `<PR title> (#<number>)`, body: proposal Why section, blank line, What Changes bullets, then issue-closing references (e.g., `Closes #N`). Do not duplicate issue-closing references already present in the Why section. Do not use GitHub's default squash message. Post-merge: delete the local and remote feature branch.
 When auto_approve is true and `review.request_review` is `false` or absent: skip Review dispatch and review waiting, proceed to CI gate + Pre-merge summary + Merge confirmation.
 When auto_approve is true and `review.request_review` is configured (`copilot` or `true`): dispatch the review and wait for the decision normally — auto_approve does NOT skip review when a review is explicitly configured.
 If session may end before review arrives: report state and suggest re-running specshift review later.

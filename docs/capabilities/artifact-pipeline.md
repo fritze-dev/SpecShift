@@ -1,8 +1,8 @@
 ---
 title: "Artifact Pipeline"
 capability: "artifact-pipeline"
-description: "8-stage pipeline with dependency gating, artifact frontmatter, consolidation checks, and worktree-aware PR integration"
-lastUpdated: "2026-04-15"
+description: "8-stage pipeline with dependency gating, artifact frontmatter, consolidation checks, and incremental PR integration"
+lastUpdated: "2026-04-28"
 ---
 
 # Artifact Pipeline
@@ -20,12 +20,12 @@ The pipeline uses WORKFLOW.md for declarative orchestration and Smart Templates 
 ## Features
 
 - **Eight-Stage Pipeline** (`specshift propose`): Research, proposal, specs, design, preflight, tests, tasks, and audit execute in strict dependency order. Each stage produces a verifiable artifact file.
-- **Artifact Output Frontmatter**: Proposals include `status`, `branch`, `capabilities` (new/modified/removed), and optionally `worktree`. Designs include `has_decisions` (boolean). Actions prefer frontmatter over markdown parsing.
+- **Artifact Output Frontmatter**: Proposals include `status`, `branch`, and `capabilities` (new/modified/removed). Designs include `has_decisions` (boolean). Actions prefer frontmatter over markdown parsing.
 - **Explicit Dependency Declarations**: Each Smart Template declares its dependencies via a `requires` field. Dependencies are enforced by verifying file existence.
 - **Apply Gate**: Implementation is gated by the tasks artifact. Apply cannot begin until `tasks.md` exists and is non-empty.
 - **Propose as Single Entry Point**: `specshift propose` handles workspace creation, progress display, checkpoint/resume, and full artifact generation. Displays artifact status showing which stages are done, ready, or blocked. The `auto_approve` configuration (defaults to `true`) controls whether checkpoints pause for user confirmation.
 - **WORKFLOW.md-Owned Workflow Rules**: The tasks template's `instruction` contains the Definition of Done rule and standard tasks directive. WORKFLOW.md action instructions contain the post-apply workflow sequence.
-- **Incremental Commits with Draft PR**: After each artifact, the system commits with `specshift(<change-name>): <artifact-id>` and pushes. On the first commit, a feature branch and draft PR are created. The post-artifact hook is worktree-aware.
+- **Incremental Commits with Draft PR**: After each artifact, the system commits with `specshift(<change-name>): <artifact-id>` and pushes. On the first commit, a feature branch and draft PR are created.
 - **Post-Implementation Commit Before Approval**: After apply's auto-verify passes, the system commits implementation changes with `specshift(<change-name>): implementation` and pushes before pausing for user approval.
 - **Standard Tasks in Every Task List**: The tasks template includes universal post-implementation steps. Constitution extras from `## Standard Tasks` are appended. Post-merge items are scope-aware -- items with scope hints are only included when the change affects the described file areas.
 - **Capability Granularity Guidance**: The proposal template defines what constitutes a capability versus a feature detail, with merging heuristics (shared actor/trigger/data model).
@@ -40,7 +40,7 @@ When progressing through the pipeline, the system enforces the order: research, 
 
 ### Propose Creates and Manages Workspaces (`specshift propose`)
 
-When invoked with a description or name and no matching change exists, propose creates a new change workspace (with worktree if enabled). When invoked without arguments and existing changes are present, propose lists active changes and lets you select one. It displays artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
+When invoked with a description or name and no matching change exists, propose creates a new change workspace. When invoked without arguments and existing changes are present, propose lists active changes and lets you select one. It displays artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
 
 ### Auto-Approve Controls Pipeline Checkpoint Behavior
 
@@ -48,7 +48,7 @@ The `auto_approve` workflow configuration defaults to `true` in WORKFLOW.md fron
 
 ### Artifact Output Frontmatter
 
-When the proposal is generated, it includes YAML frontmatter with `status: active`, `branch`, optionally `worktree`, and `capabilities` (structured new/modified/removed lists). When the design is generated, it includes `has_decisions: true` if the Decisions section contains entries. Actions that need to identify affected capabilities read the proposal's `capabilities` frontmatter field.
+When the proposal is generated, it includes YAML frontmatter with `status: active`, `branch`, and `capabilities` (structured new/modified/removed lists). When the design is generated, it includes `has_decisions: true` if the Decisions section contains entries. Actions that need to identify affected capabilities read the proposal's `capabilities` frontmatter field.
 
 ### Dependency Checks Are Enforced via File Existence
 
@@ -75,4 +75,3 @@ The proposal template requires reviewing existing specs for domain overlap, chec
 - If `tasks.md` contains no checkbox items, the apply phase is still gated by `tasks.md` existence.
 - If the feature branch already exists, the system reuses it rather than failing.
 - If push succeeds but draft PR creation fails, the failure is noted but the pipeline is not blocked.
-- If `worktree.path_pattern` does not contain `{change}`, the system reports an error during propose.

@@ -2,7 +2,7 @@
 title: "Workflow Contract"
 capability: "workflow-contract"
 description: "WORKFLOW.md pipeline orchestration, Smart Templates, inline actions, custom actions, and router dispatch"
-lastUpdated: "2026-04-14"
+lastUpdated: "2026-04-28"
 ---
 
 # Workflow Contract
@@ -19,7 +19,7 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 
 ## Features
 
-- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (8 stages), `actions` array, `template-version`, `plugin-version`, optional `worktree`, `auto_approve`, `review`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (8 stages), `actions` array, `template-version`, `plugin-version`, optional `auto_approve`, `review`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
 - **Review action configuration** -- optional `review` object in WORKFLOW.md frontmatter with `request_review` field (`false` by default, `copilot` for Copilot review, `true` for repo default reviewers). The review action automates the PR review-to-merge lifecycle: processing review comments, running self-check, and merging with mandatory user confirmation
 - **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, baked into the compiled workflow template at compile time. The router compares the project's `plugin-version` against the compiled template's version on every action (except init) and displays an advisory warning on mismatch
 - **Smart Template format** -- each template carries `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields in YAML frontmatter, with the output structure as the markdown body
