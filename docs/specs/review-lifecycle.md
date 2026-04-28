@@ -2,12 +2,12 @@
 order: 15
 category: finalization
 status: stable
-version: 3
-lastModified: 2026-04-15
+version: 4
+lastModified: 2026-04-28
 ---
 ## Purpose
 
-Defines the `specshift review` action behavior: a re-entrant PR review-to-merge state machine that reads GitHub PR state, manages the draft-to-ready transition, processes review comments, runs self-review cycles with a safety limit, and executes the merge with mandatory user confirmation. Complements the Review Action Configuration requirement in workflow-contract.md (config surface) and the Post-Merge Worktree Cleanup requirement in change-workspace.md (cleanup after merge).
+Defines the `specshift review` action behavior: a re-entrant PR review-to-merge state machine that reads GitHub PR state, manages the draft-to-ready transition, processes review comments, runs self-review cycles with a safety limit, and executes the merge with mandatory user confirmation. Complements the Review Action Configuration requirement in workflow-contract.md (config surface).
 
 ## Requirements
 
@@ -187,7 +187,7 @@ Before asking the user for merge confirmation, the review action SHALL post a PR
 
 ### Requirement: Merge Execution with Mandatory Confirmation
 
-When no unresolved review threads remain, CI checks are passing, and no requested review is pending without a decision (i.e., every requested reviewer has submitted a decision — approved, changes-requested, or commented), the review action SHALL ask the user for explicit merge confirmation before proceeding. If a review was requested (via `review.request_review` configuration) but no review decision has been submitted yet, the action SHALL report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later; it SHALL NOT offer merge. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL first set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle), commit and push the change so it is included in the squash merge. The action SHALL then merge the PR via squash using available GitHub tooling. The squash commit message SHALL be composed rather than using GitHub's default (which concatenates individual commit messages). The commit title SHALL be the PR title followed by the PR number in parentheses (e.g., `Fix auth timeout (#42)`). The commit body SHALL contain the proposal's **Why** section (problem statement), followed by a blank line and the **What Changes** bullet list, followed by any issue-closing references (e.g., `Closes #31`). Post-merge cleanup (worktree removal, branch deletion) SHALL follow the Post-Merge Worktree Cleanup requirement in change-workspace.md.
+When no unresolved review threads remain, CI checks are passing, and no requested review is pending without a decision (i.e., every requested reviewer has submitted a decision — approved, changes-requested, or commented), the review action SHALL ask the user for explicit merge confirmation before proceeding. If a review was requested (via `review.request_review` configuration) but no review decision has been submitted yet, the action SHALL report "Review pending — waiting for reviewer decision" and suggest re-running `specshift review` later; it SHALL NOT offer merge. This confirmation SHALL be required regardless of the `auto_approve` setting — `auto_approve` controls only whether the review action is auto-dispatched from finalize, not whether the merge itself is automatic (as defined in the Review Action Configuration requirement of workflow-contract.md). If CI checks are pending, the action SHALL report the status and suggest waiting or re-invoking later. If CI checks are failing, the action SHALL report the failures and stop without offering merge. After user confirmation, the action SHALL first set the proposal's `status` frontmatter to `completed` (completing the `active → review → completed` lifecycle), commit and push the change so it is included in the squash merge. The action SHALL then merge the PR via squash using available GitHub tooling. The squash commit message SHALL be composed rather than using GitHub's default (which concatenates individual commit messages). The commit title SHALL be the PR title followed by the PR number in parentheses (e.g., `Fix auth timeout (#42)`). The commit body SHALL contain the proposal's **Why** section (problem statement), followed by a blank line and the **What Changes** bullet list, followed by any issue-closing references (e.g., `Closes #31`). After the merge, the action SHALL delete the local and remote feature branch.
 
 **User Story:** As a developer I want the merge to always require my explicit approval, so that I maintain control over what reaches the main branch even in fully automated workflows.
 
@@ -199,7 +199,7 @@ When no unresolved review threads remain, CI checks are passing, and no requeste
 - **AND** the user confirms
 - **THEN** the action sets proposal `status` to `completed`, commits, and pushes
 - **AND** merges the PR via squash with a composed commit message
-- **AND** triggers post-merge cleanup per change-workspace.md
+- **AND** deletes the local and remote feature branch
 
 #### Scenario: CI checks pending delays merge
 - **GIVEN** no unresolved review threads

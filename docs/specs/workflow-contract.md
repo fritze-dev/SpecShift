@@ -2,8 +2,8 @@
 order: 3
 category: reference
 status: stable
-version: 9
-lastModified: 2026-04-14
+version: 10
+lastModified: 2026-04-28
 ---
 ## Purpose
 
@@ -20,7 +20,6 @@ The system SHALL support an `.specshift/WORKFLOW.md` file as the pipeline orches
 - `templates_dir` (path to Smart Templates directory)
 - `pipeline` (ordered array of artifact step IDs — each generates a file)
 - `actions` (array of action names, e.g., `[init, propose, apply, finalize]` — each has a corresponding `## Action: <name>` body section)
-- `worktree` (optional object with `enabled`, `path_pattern`, `auto_cleanup`)
 - `auto_approve` (optional boolean, defaults to `true` — when true, the full propose→apply→finalize→review flow runs end-to-end without checkpoints on success paths; when false, pauses at every checkpoint including design review, preflight, user testing, and cross-action transitions)
 - `review` (optional object — configuration for the `review` custom action's PR review-to-merge lifecycle; see "Review Action Configuration" requirement)
 - `plugin-version` (string, machine-managed — stamped by `specshift init` from the plugin's `plugin.json` version field. Used by the router for version mismatch detection. Consumers SHALL NOT edit this field manually.)
@@ -124,10 +123,10 @@ The system SHALL provide 5 built-in actions: `init` (project initialization and 
 ### Requirement: Router Dispatch Pattern
 
 The system SHALL provide a single router skill that handles all user-facing commands. The router SHALL validate commands against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing, the router SHALL fall back to the built-in actions: `init`, `propose`, `apply`, `finalize`, `review`. The router SHALL read WORKFLOW.md exactly once and implement shared orchestration logic in the following phases:
-1. **Load Configuration**: Read `.specshift/WORKFLOW.md` once. Extract all frontmatter fields (`templates_dir`, `pipeline`, `actions`, `worktree`, `auto_approve`, `plugin-version`) and all body sections (`## Context`, `## Action: <name>`). Follow `## Context` instructions (typically: read CONSTITUTION.md). If WORKFLOW.md is missing: note it and fall back to built-in defaults.
+1. **Load Configuration**: Read `.specshift/WORKFLOW.md` once. Extract all frontmatter fields (`templates_dir`, `pipeline`, `actions`, `auto_approve`, `plugin-version`) and all body sections (`## Context`, `## Action: <name>`). Follow `## Context` instructions (typically: read CONSTITUTION.md). If WORKFLOW.md is missing: note it and fall back to built-in defaults.
 2. **Identify Action**: Parse the first argument and validate it against the loaded `actions` array. If WORKFLOW.md was missing and action is not `init`: stop and suggest running `specshift init`.
 3. **Plugin Version Check** (skip for `init`): Read the `plugin-version` field from the compiled workflow template at `${SKILL_DIR}/templates/workflow.md` (the current plugin version, injected at compile time) and compare it against the `plugin-version` field from the project's WORKFLOW.md frontmatter. If either `plugin-version` is missing or empty: display a note suggesting `specshift init` to enable version tracking. If versions do not match: display an advisory warning with installed vs current version and suggest `specshift init`. If versions match: proceed silently. The check is advisory — the dispatched action SHALL proceed regardless.
-4. **Change Context Detection** (skip for `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches, fall back to worktree convention if inside a worktree.
+4. **Change Context Detection** (skip for `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches; if no match is found, list active changes and prompt the user.
 5. **Dispatch**: Load compiled requirements from `actions/<action>.md` (relative to the skill) for built-in actions. Use the `### Instruction` from the `## Action: <name>` section (already loaded during Load Configuration) as primary directive, bounded by compiled requirements. For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — execute with instruction + requirements. For custom actions — execute instruction directly with change context (no compiled requirements, agent decides execution mode).
 
 **User Story:** As a developer I want a single entry point that handles built-in and custom actions with shared logic, so that change detection and context loading happen once and consumer projects can extend the workflow.

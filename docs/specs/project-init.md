@@ -2,8 +2,8 @@
 order: 12
 category: setup
 status: stable
-version: 6
-lastModified: 2026-04-27
+version: 7
+lastModified: 2026-04-28
 ---
 ## Purpose
 
@@ -14,13 +14,11 @@ Handles project initialization via `specshift init`, including template installa
 ### Requirement: Install Workflow
 The system SHALL provide `specshift init` as the single entry point for project setup. The init command SHALL: (1) copy pipeline Smart Templates from the plugin's `templates/` directory into the project's `.specshift/templates/` directory — excluding bootstrap templates (`workflow.md`, `constitution.md`, `agents.md`, `claude.md`) which are used only to generate their target files, (2) generate `.specshift/WORKFLOW.md` from the plugin's workflow template (skip if WORKFLOW.md already exists), (3) generate `.specshift/CONSTITUTION.md` from the plugin's constitution template if none exists, and (4) generate the bootstrap files (`AGENTS.md` + `CLAUDE.md`) per the "Bootstrap Files Generation" requirement. The init command SHALL be idempotent — running it on an already-initialized project SHALL skip completed steps.
 
-The init command SHALL check for GitHub tooling availability (gh CLI, MCP tools, or API). If GitHub tooling is available and authenticated, the init command SHALL ask the user whether to enable worktree-based change isolation. If the user opts in, the init command SHALL uncomment the `worktree:` section in the generated WORKFLOW.md and set `enabled: true`. The init command SHALL also offer to configure the GitHub repository merge strategy for rebase-merge using available GitHub tooling.
-
 The init command SHALL NOT install any external CLI tools or require Node.js/npm as prerequisites.
 
 The init command SHALL ensure target directories exist (via `mkdir -p`) before copying files.
 
-**User Story:** As a new user I want a single `specshift init` command that sets up everything including optional worktree mode, so that I do not have to manually configure the project.
+**User Story:** As a new user I want a single `specshift init` command that sets up the project, so that I do not have to manually configure templates, constitution, and bootstrap files.
 
 #### Scenario: First-time project initialization
 - **GIVEN** a project directory without the spec-driven workflow installed
@@ -37,19 +35,6 @@ The init command SHALL ensure target directories exist (via `mkdir -p`) before c
 - **AND** the plugin ships a `workflow.md` bootstrap template
 - **WHEN** the user runs `specshift init`
 - **THEN** the system SHALL copy workflow.md to `.specshift/WORKFLOW.md`
-
-#### Scenario: Worktree opt-in during init
-- **GIVEN** GitHub tooling is available and authenticated
-- **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL ask whether to enable worktree-based change isolation
-- **AND** if the user opts in, SHALL uncomment the `worktree:` section in WORKFLOW.md and set `enabled: true`
-- **AND** SHALL offer to configure the GitHub repo for rebase-merge
-
-#### Scenario: No GitHub tooling available
-- **GIVEN** no GitHub tooling is available or not authenticated
-- **WHEN** the user runs `specshift init`
-- **THEN** the system SHALL skip the worktree opt-in question
-- **AND** SHALL leave the `worktree:` section commented out in WORKFLOW.md
 
 ### Requirement: Legacy Migration
 The init command SHALL detect legacy project layouts (presence of `openspec/schemas/opsx-enhanced/schema.yaml` without `.specshift/WORKFLOW.md`) and perform migration: (1) generate WORKFLOW.md from schema.yaml content and config.yaml settings, (2) move templates from `openspec/schemas/opsx-enhanced/templates/` to `.specshift/templates/` converting them to Smart Template format, (3) rename `.specshift/constitution.md` to `.specshift/CONSTITUTION.md`, (4) remove the `openspec/schemas/` directory and `openspec/config.yaml` after successful migration.
@@ -83,7 +68,7 @@ When `specshift init` runs on an already-initialized project (re-init after plug
    - If the plugin `template-version` is higher AND the local content has been customized: merge is needed. The system SHALL present both versions to the user and ask them to resolve differences. Report: "Template <name> has both local customizations and plugin updates — merge required."
    - If the local template has no `template-version` field (legacy): treat as version 0 and apply the same logic (likely results in silent update if content matches plugin template, or merge prompt if customized).
 
-The merge detection SHALL apply to all Smart Templates including docs templates in subdirectories, WORKFLOW.md, and CONSTITUTION.md. WORKFLOW.md is especially important for merge detection because the plugin frequently updates behavioral fields (`apply.instruction`, `context`) while users customize project-specific fields (`worktree`, `docs_language`, pipeline order). The existing skip-if-exists behavior for WORKFLOW.md is replaced by version-based merge detection.
+The merge detection SHALL apply to all Smart Templates including docs templates in subdirectories, WORKFLOW.md, and CONSTITUTION.md. WORKFLOW.md is especially important for merge detection because the plugin frequently updates behavioral fields (`apply.instruction`, `context`) while users customize project-specific fields (`docs_language`, pipeline order). The existing skip-if-exists behavior for WORKFLOW.md is replaced by version-based merge detection.
 
 For CONSTITUTION.md, the merge operates at **section level**: the system SHALL compare the template's section headings (e.g., `## Tech Stack`, `## Architecture Rules`, `## Standard Tasks`) against the existing CONSTITUTION.md. Missing sections from a newer template version SHALL be offered to the user for interactive generation (the agent reads the codebase and proposes content for the new section, as bootstrap does). Existing sections with user content SHALL be preserved. The generated CONSTITUTION.md SHALL include a `template-version` field in YAML frontmatter to track which template version generated its structure.
 
@@ -149,7 +134,7 @@ The init command SHALL validate after all steps complete. Validation SHALL confi
 
 ### Requirement: WORKFLOW.md Template File
 
-The plugin SHALL include a workflow template file at `templates/workflow.md` (within the plugin's bundled templates directory) containing the default WORKFLOW.md content with YAML frontmatter (`templates_dir`, `pipeline`, `apply`, `context`, `docs_language`) and a commented-out `worktree:` section. The `specshift init` skill SHALL copy this template to `.specshift/WORKFLOW.md` instead of generating the content inline. This ensures WORKFLOW.md is maintained as a template file consistent with the constitution template pattern.
+The plugin SHALL include a workflow template file at `templates/workflow.md` (within the plugin's bundled templates directory) containing the default WORKFLOW.md content with YAML frontmatter (`templates_dir`, `pipeline`, `actions`, `auto_approve`, `review`, `docs_language`). The `specshift init` skill SHALL copy this template to `.specshift/WORKFLOW.md` instead of generating the content inline. This ensures WORKFLOW.md is maintained as a template file consistent with the constitution template pattern.
 
 **User Story:** As a plugin maintainer I want WORKFLOW.md content maintained as a template file, so that it is consistent with the constitution template and easier to update across versions.
 
@@ -157,17 +142,11 @@ The plugin SHALL include a workflow template file at `templates/workflow.md` (wi
 
 - **GIVEN** the plugin's workflow template at `templates/workflow.md`
 - **WHEN** its content is inspected
-- **THEN** it SHALL contain `templates_dir`, `pipeline`, `apply`, and `context` in YAML frontmatter
-
-#### Scenario: Template contains commented-out worktree section
-
-- **GIVEN** the plugin's workflow template at `templates/workflow.md`
-- **WHEN** its content is inspected
-- **THEN** it SHALL contain a commented-out `worktree:` section with `enabled`, `path_pattern`, and `auto_cleanup` fields
+- **THEN** it SHALL contain `templates_dir`, `pipeline`, `actions`, and `auto_approve` in YAML frontmatter
 
 ### Requirement: Environment Checks During Init
 
-The init command SHALL check the environment for: (1) GitHub tooling availability (gh CLI, MCP tools, or API) and authentication status, (2) git version by running `git --version` and verifying it is 2.5+ (required for worktree support), (3) `.gitignore` contains a `/.claude/` entry (required for worktree paths to be excluded from version control). The results SHALL be reported in the init summary. The environment checks SHALL NOT block init — they only inform which optional features (worktree mode, PR creation, merge strategy) are available. If git version is below 2.5, the system SHALL skip the worktree opt-in question and report that worktree mode requires git 2.5+. If `/.claude/` is not in `.gitignore`, the system SHALL offer to add it when the user opts into worktree mode.
+The init command SHALL check the environment for GitHub tooling availability (gh CLI, MCP tools, or API) and authentication status. The result SHALL be reported in the init summary. The environment check SHALL NOT block init — it only informs which optional features (PR creation) are available.
 
 **User Story:** As a user I want init to detect my environment capabilities, so that I know which features are available without manual checking.
 
@@ -176,63 +155,13 @@ The init command SHALL check the environment for: (1) GitHub tooling availabilit
 - **GIVEN** GitHub tooling is available and authenticated
 - **WHEN** the user runs `specshift init`
 - **THEN** the system reports "GitHub tooling: available and authenticated"
-- **AND** offers worktree mode and merge strategy configuration
 
 #### Scenario: No GitHub tooling found
 
 - **GIVEN** no GitHub tooling is available
 - **WHEN** the user runs `specshift init`
 - **THEN** the system reports "GitHub tooling: not found"
-- **AND** skips worktree and merge strategy options
-
-#### Scenario: Git version supports worktrees
-
-- **GIVEN** git version is 2.5 or higher
-- **WHEN** the user runs `specshift init`
-- **THEN** the system reports "git: version X.Y (worktree support: yes)"
-
-#### Scenario: Git version too old for worktrees
-
-- **GIVEN** git version is below 2.5
-- **WHEN** the user runs `specshift init`
-- **THEN** the system reports "git: version X.Y (worktree support: no — requires 2.5+)"
-- **AND** skips the worktree opt-in question
-
-#### Scenario: Gitignore missing .claude/ entry
-
-- **GIVEN** `.gitignore` does not contain `/.claude/`
-- **AND** the user opts into worktree mode
-- **WHEN** init configures worktree mode
-- **THEN** the system SHALL offer to add `/.claude/` to `.gitignore`
-- **AND** if the user agrees, append the entry to `.gitignore`
-
-#### Scenario: Gitignore already has .claude/ entry
-
-- **GIVEN** `.gitignore` already contains `/.claude/`
-- **WHEN** the user runs `specshift init`
-- **THEN** the system reports ".gitignore: /.claude/ entry present"
-
-### Requirement: GitHub Merge Strategy Configuration
-
-When the user opts in during init and GitHub tooling is available, the system SHALL configure the GitHub repository merge strategy for rebase-merge by setting `allow_rebase_merge=true` on the repository using available GitHub tooling. The system SHALL report the configuration result. If the API call fails (e.g., insufficient permissions), the system SHALL report the failure and continue init.
-
-**User Story:** As a team lead I want the repo configured for rebase-merge during init, so that worktree-based changes merge cleanly with linear history.
-
-#### Scenario: Configure rebase-merge strategy
-
-- **GIVEN** the user opts in to worktree mode during init
-- **AND** GitHub tooling is authenticated with repo admin permissions
-- **WHEN** init configures the merge strategy
-- **THEN** the system sets `allow_rebase_merge=true` on the repository using available GitHub tooling
-- **AND** reports "GitHub merge strategy: rebase-merge enabled"
-
-#### Scenario: Merge strategy configuration fails
-
-- **GIVEN** the user opts in to worktree mode
-- **AND** GitHub tooling lacks admin permissions
-- **WHEN** init attempts to configure the merge strategy
-- **THEN** the system reports the failure
-- **AND** continues with the rest of init
+- **AND** notes that PR creation will be skipped during the workflow
 
 ### Requirement: First-Run Codebase Scan
 The `specshift init` command SHALL analyze the entire project codebase on first run (when no `.specshift/CONSTITUTION.md` exists or it is a placeholder). The scan SHALL identify the tech stack, frameworks, languages, file structure, configuration patterns, dependency management approach, coding conventions, and version files (e.g., `package.json`, `pyproject.toml`, `Cargo.toml`, `plugin.json`, `setup.cfg`). The scan results SHALL be used as input for constitution generation. The init command SHALL handle projects of any size, skipping binary files and respecting `.gitignore` patterns.
@@ -462,8 +391,7 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 - **Bootstrap files manually edited after init**: User edits to `AGENTS.md` or `CLAUDE.md` are authoritative. Re-running init SHALL NOT overwrite either file.
 - **Template merge with subdirectories**: The merge detection SHALL recursively process templates in subdirectories (e.g., `templates/docs/spec.md`, `templates/docs/capability.md`).
 - **Plugin downgrades**: If the plugin `template-version` is lower than the local `template-version`, the system SHALL warn and skip (do not downgrade).
-- **GitHub tooling available but not authenticated**: Report "GitHub tooling: available but not authenticated" and skip worktree opt-in.
-- **User declines worktree mode**: Leave WORKFLOW.md with commented-out `worktree:` section — no changes needed.
+- **GitHub tooling available but not authenticated**: Report "GitHub tooling: available but not authenticated" and continue init.
 - If the project has no source code files (empty repository), init SHALL generate a minimal constitution with placeholder sections and inform the user to update it manually.
 - If the codebase uses multiple languages or conflicting conventions, the constitution SHALL document the primary patterns and note the variations as exceptions.
 - If `.specshift/CONSTITUTION.md` exists but `docs/specs/` is empty, init SHALL treat this as a partial first-run and skip constitution generation while proceeding to initial change creation.
@@ -477,7 +405,6 @@ The system SHALL gracefully handle missing documentation directories: if `docs/c
 
 - GitHub tooling availability can be reliably detected at init time (gh CLI via `gh --version`, MCP tools via tool listing, API via token presence). <!-- ASSUMPTION: GitHub tooling detection -->
 - GitHub tooling authentication status can be verified before attempting operations. <!-- ASSUMPTION: GitHub auth check -->
-- `git --version` output contains a parseable version number (e.g., "git version 2.43.0"). <!-- ASSUMPTION: git version parseable -->
 - The init command can reliably detect tech stack and conventions from static file analysis (file extensions, configuration files, package manifests) without executing any project code. <!-- ASSUMPTION: Static analysis sufficient -->
 - Recovery mode's drift detection compares structural and naming patterns rather than performing deep semantic analysis of code behavior. <!-- ASSUMPTION: Structural comparison -->
 - Capability docs in `docs/capabilities/` follow the naming convention `<capability-name>.md` matching the spec directory name in `docs/specs/`. <!-- ASSUMPTION: Naming convention -->

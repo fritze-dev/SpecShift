@@ -2,8 +2,8 @@
 order: 4
 category: change-workflow
 status: stable
-version: 5
-lastModified: 2026-04-27
+version: 6
+lastModified: 2026-04-28
 ---
 ## Purpose
 
@@ -34,7 +34,7 @@ The system SHALL define an 8-stage artifact pipeline with the following stages i
 ### Requirement: Artifact Output Frontmatter
 Certain pipeline artifacts SHALL include YAML frontmatter in their generated output for machine-readable metadata:
 
-- **proposal.md**: SHALL include frontmatter with `status` (active/review/completed), `branch`, optionally `worktree`, and `capabilities` (structured list of new/modified/removed capability names mirroring the body's Capabilities section). Skills that create proposals SHALL populate these fields. Skills that read proposals SHALL use frontmatter fields preferentially over parsing markdown sections.
+- **proposal.md**: SHALL include frontmatter with `status` (active/review/completed), `branch`, and `capabilities` (structured list of new/modified/removed capability names mirroring the body's Capabilities section). Skills that create proposals SHALL populate these fields. Skills that read proposals SHALL use frontmatter fields preferentially over parsing markdown sections.
 - **design.md**: SHALL include frontmatter with `has_decisions` (boolean, `true` if the Decisions section contains at least one entry). Skills that scan for design decisions (docs, docs-verify) SHALL check this field to skip designs without decisions.
 
 Other artifacts (research.md, preflight.md, tasks.md) do not require output frontmatter.
@@ -108,7 +108,7 @@ Implementation (the apply phase) SHALL be gated by completion of the tasks artif
 - **THEN** the system SHALL mark the corresponding `- [ ]` checkbox as `- [x]` in tasks.md
 
 ### Requirement: WORKFLOW.md Owns Pipeline Configuration
-`.specshift/WORKFLOW.md` SHALL serve as the pipeline orchestration file. Its YAML frontmatter SHALL contain: `templates_dir` pointing to the Smart Templates directory, `pipeline` array defining artifact order, `apply` object with `requires` and `instruction`, `context` pointing to the constitution, optionally `docs_language`, and optionally `worktree` object with `enabled` (boolean), `path_pattern` (string with `{change}` placeholder), and `auto_cleanup` (boolean). Post-artifact commit/push/PR logic is handled by the skill during propose pipeline traversal. Skills SHALL read WORKFLOW.md for all pipeline-level configuration.
+`.specshift/WORKFLOW.md` SHALL serve as the pipeline orchestration file. Its YAML frontmatter SHALL contain: `templates_dir` pointing to the Smart Templates directory, `pipeline` array defining artifact order, `apply` object with `requires` and `instruction`, `context` pointing to the constitution, and optionally `docs_language`. Post-artifact commit/push/PR logic is handled by the skill during propose pipeline traversal. Skills SHALL read WORKFLOW.md for all pipeline-level configuration.
 
 **User Story:** As a workflow maintainer I want pipeline orchestration in a single WORKFLOW.md file, so that all pipeline configuration lives in one place.
 
@@ -118,18 +118,8 @@ Implementation (the apply phase) SHALL be gated by completion of the tasks artif
 - **THEN** it SHALL contain `templates_dir`, `pipeline`, `actions`, and `template-version` fields
 - **AND** the `pipeline` array SHALL include `audit` as the final stage
 
-#### Scenario: WORKFLOW.md contains optional worktree configuration
-- **GIVEN** the `.specshift/WORKFLOW.md` file with worktree mode enabled
-- **WHEN** its frontmatter is inspected
-- **THEN** it SHALL contain a `worktree` object with `enabled: true`, `path_pattern`, and `auto_cleanup` fields
-
-#### Scenario: WORKFLOW.md without worktree configuration
-- **GIVEN** the `.specshift/WORKFLOW.md` file without a `worktree` section
-- **WHEN** a skill reads WORKFLOW.md
-- **THEN** the skill SHALL treat worktree mode as disabled and use existing directory-based behavior
-
 ### Requirement: Post-Artifact Commit and PR Integration
-The `specshift propose` skill SHALL execute post-artifact commit logic after creating each artifact during pipeline traversal. The skill SHALL: (1) check the current branch — if already on `<change-name>` branch (e.g., in a worktree), skip branch creation; if on main, create the branch via `git checkout -b <change-name>`; if on another branch, switch to it via `git checkout <change-name>`, (2) stage and commit the change artifacts with a commit message in the format `specshift(<change-name>): <artifact-id>` (e.g., `specshift(fix-auth): research`), (3) push the branch to the remote, and (4) on the first push only, create a draft PR using available GitHub tooling. This logic lives in the skill (SKILL.md), not in WORKFLOW.md.
+The `specshift propose` skill SHALL execute post-artifact commit logic after creating each artifact during pipeline traversal. The skill SHALL: (1) check the current branch — if already on `<change-name>` branch, skip branch creation; if on main, create the branch via `git checkout -b <change-name>`; if on another branch, switch to it via `git checkout <change-name>`, (2) stage and commit the change artifacts with a commit message in the format `specshift(<change-name>): <artifact-id>` (e.g., `specshift(fix-auth): research`), (3) push the branch to the remote, and (4) on the first push only, create a draft PR using available GitHub tooling. This logic lives in the skill (SKILL.md), not in WORKFLOW.md.
 
 **User Story:** As a developer I want every artifact committed incrementally with a draft PR created on the first commit, so that my team has early visibility and every pipeline stage is tracked in version control.
 
@@ -143,11 +133,6 @@ The `specshift propose` skill SHALL execute post-artifact commit logic after cre
 - **GIVEN** a change workspace with an existing feature branch and draft PR
 - **WHEN** the agent finishes creating a subsequent artifact
 - **THEN** the agent SHALL commit and push but SHALL NOT create a new PR
-
-#### Scenario: Worktree skips branch creation
-- **GIVEN** a change workspace in a git worktree already on the `<change-name>` branch
-- **WHEN** the agent finishes creating an artifact
-- **THEN** the agent SHALL skip the branch creation step and proceed directly to staging, committing, and pushing
 
 #### Scenario: Graceful degradation without GitHub tooling
 - **GIVEN** no GitHub tooling is available (no gh CLI, no MCP tools, no API access)
@@ -302,7 +287,7 @@ The specs Smart Template's `instruction` field SHALL include an overlap verifica
 - **THEN** the agent SHALL reclassify `admin-filters` as a Modified Capability on `admin-table-view` and update the proposal before editing the spec file
 
 ### Requirement: Propose as Single Entry Point for Pipeline Traversal
-The `specshift propose` command SHALL serve as the single entry point for all pipeline traversal operations. This includes: (1) creating new change workspaces (with worktree if enabled), (2) checkpoint/resume of partially completed pipelines, and (3) full lifecycle execution from research through tasks. When invoked with a description or name and no existing change matches, propose SHALL create a new change workspace. When invoked without a change name and existing changes are present, propose SHALL list active changes and use AskUserQuestion to let the user select which change to continue, showing the most recently modified change as recommended. When invoked with a description of what to build, propose SHALL derive a kebab-case name and create a new change. The `auto_approve` workflow configuration (defaults to `true` in WORKFLOW.md frontmatter) controls whether pipeline traversal proceeds without user confirmation at checkpoints. When `auto_approve` is absent or `true`, checkpoints are skipped on success paths. When explicitly set to `false`, the pipeline pauses at each checkpoint for user confirmation. Propose SHALL display artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
+The `specshift propose` command SHALL serve as the single entry point for all pipeline traversal operations. This includes: (1) creating new change workspaces, (2) checkpoint/resume of partially completed pipelines, and (3) full lifecycle execution from research through tasks. When invoked with a description or name and no existing change matches, propose SHALL create a new change workspace. When invoked without a change name and existing changes are present, propose SHALL list active changes and use AskUserQuestion to let the user select which change to continue, showing the most recently modified change as recommended. When invoked with a description of what to build, propose SHALL derive a kebab-case name and create a new change. The `auto_approve` workflow configuration (defaults to `true` in WORKFLOW.md frontmatter) controls whether pipeline traversal proceeds without user confirmation at checkpoints. When `auto_approve` is absent or `true`, checkpoints are skipped on success paths. When explicitly set to `false`, the pipeline pauses at each checkpoint for user confirmation. Propose SHALL display artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
 
 **User Story:** As a developer I want a single command that handles workspace creation, progress display, and artifact generation, so that I don't need to remember different commands for different pipeline states.
 
@@ -311,7 +296,6 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **AND** no change with a matching name exists
 - **WHEN** the action processes the input
 - **THEN** it SHALL derive a kebab-case name (e.g., `add-user-auth`) and create a new change directory
-- **AND** SHALL create a worktree if worktree mode is enabled in WORKFLOW.md
 
 #### Scenario: Propose displays artifact status
 - **GIVEN** a change workspace where research.md and proposal.md are complete
@@ -346,8 +330,6 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **Branch already exists:** The agent SHALL reuse the existing branch rather than failing.
 - **Network failure during PR creation:** The pipeline SHALL NOT be blocked.
 - **Auto-continue transitions:** The skill's post-artifact commit logic runs after each artifact individually.
-- **Worktree config with invalid path_pattern**: If `path_pattern` does not contain `{change}`, the system SHALL report an error during `specshift propose`.
-- **Worktree config with empty path_pattern**: SHALL default to `.specshift/worktrees/{change}`.
 
 ## Assumptions
 
