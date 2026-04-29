@@ -84,7 +84,7 @@ Before dispatching a review request, the action SHALL verify the working tree is
 
 ### Requirement: Review Comment Processing
 
-The review action SHALL process unresolved review comment threads on the PR. For each unresolved thread, the action SHALL: read the comment content, determine if the feedback is actionable within the current change scope, implement the fix if actionable, reply to the thread explaining the action taken, and resolve the thread. If a comment requires a fundamental change beyond the current scope (e.g., architectural redesign, new requirements), the action SHALL NOT attempt the fix; instead it SHALL inform the user and suggest starting a new `specshift propose` for the requested change. After processing all threads: the action SHALL commit and push the fixes, then run the built-in review skill for self-check to verify the fixes did not introduce regressions. If the self-review finds issues, the action SHALL fix them before proceeding.
+The review action SHALL process unresolved review comment threads on the PR. For each unresolved thread, the action SHALL: read the comment content, determine if the feedback is actionable within the current change scope, implement the fix if actionable, reply to the thread explaining the action taken, and resolve the thread. If a comment requires a fundamental change beyond the current scope (e.g., architectural redesign, new requirements), the action SHALL NOT attempt the fix; instead it SHALL inform the user and suggest starting a new `specshift propose` for the requested change. After processing all threads, the action SHALL commit and push the fixes, then run the self-check defined by the Self-Check Mandatory After Comment Processing requirement before proceeding.
 
 **User Story:** As a developer I want review comments automatically addressed and verified, so that the review-fix cycle is handled without manual intervention for straightforward feedback.
 
@@ -103,12 +103,61 @@ The review action SHALL process unresolved review comment threads on the PR. For
 - **AND** informs the user with a suggestion to run `specshift propose` for the requested change
 - **AND** does NOT resolve the thread
 
-#### Scenario: Self-review after fixes catches regression
+### Requirement: Self-Check Mandatory After Comment Processing
+
+The review action SHALL invoke a self-check on the current branch as the final verification step before the Pre-Merge Summary Comment.
+
+**Timing precondition:** The self-check SHALL be invoked AFTER the external review decision (per `review.request_review` configuration) is known. The action SHALL NOT invoke the self-check before any external reviewer has had the opportunity to comment. If `review.request_review` is `copilot` or `true`, the self-check runs after the requested reviewer has submitted a decision and any review comments have been processed (Comment Processing requirement). If `review.request_review` is `false` or absent, the self-check runs after Comment Processing for any pre-existing comments, OR (in the no-comments / no-reviewer case) immediately before the Pre-Merge Summary Comment. A self-check marker that anchors a HEAD commit predating the review decision is invalid.
+
+**Invocation form:** The self-check SHALL be invoked by spawning a subagent whose prompt invokes the `review` skill on the current HEAD. The subagent boundary is the canonical form — it provides context isolation, since the review reads many files and produces detailed findings that should not pollute the main conversation. The subagent's prompt SHALL invoke the `review` skill directly; custom-prompted general-purpose subagents that perform a hand-written checklist do NOT satisfy this requirement. Inline invocation of the `review` skill via the Skill tool from the main conversation MAY be used only as a fallback when subagent spawning is unavailable in the execution environment.
+
+**Marker:** Upon completion, the self-check SHALL produce a marker that anchors the result to the current HEAD commit: a PR comment containing the literal string `<!-- specshift:self-check -->` followed by the HEAD commit SHA and a brief findings summary (PASS, or FIX with each finding listed). If the self-check finds issues, the action SHALL fix them, commit and push, and re-invoke the self-check until the marker reports PASS for the latest HEAD.
+
+**Gate:** The Pre-Merge Summary Comment SHALL refuse to post when no `<!-- specshift:self-check -->` marker exists for the current HEAD commit; in that case the action SHALL stop and report that the self-check is missing or stale.
+
+**User Story:** As a developer I want the self-check after comment processing to be enforced and observable, so that it cannot be skipped silently and the merge gate refuses to proceed without it.
+
+#### Scenario: Self-check invoked after fix commit
+- **GIVEN** the review action has committed and pushed fixes for review comments
+- **WHEN** the action proceeds to the post-comment-processing phase
+- **THEN** it SHALL invoke the built-in review skill as a self-check on the current branch
+- **AND** SHALL post a PR comment containing the `<!-- specshift:self-check -->` marker, the current HEAD commit SHA, and the findings summary
+
+#### Scenario: Self-check after fixes catches regression
 - **GIVEN** the review action has implemented fixes for review comments
 - **AND** committed and pushed the changes
 - **WHEN** the built-in review skill runs as self-check
 - **THEN** it detects a new issue introduced by the fixes
-- **AND** the action fixes the regression before proceeding
+- **AND** the marker comment reports FIX with the finding listed
+- **AND** the action fixes the regression, commits, pushes, and re-invokes the self-check until the marker reports PASS
+
+#### Scenario: Pre-merge summary refuses without self-check marker
+- **GIVEN** the review action has reached the Pre-Merge Summary Comment phase
+- **AND** no `<!-- specshift:self-check -->` marker comment exists for the current HEAD commit
+- **WHEN** the action attempts to post the pre-merge summary
+- **THEN** it SHALL stop and report "Self-check missing for HEAD <sha> — invoke the review skill on this branch before merging"
+- **AND** SHALL NOT post the pre-merge summary
+- **AND** SHALL NOT offer merge confirmation
+
+#### Scenario: Stale self-check marker forces re-invocation
+- **GIVEN** a `<!-- specshift:self-check -->` marker comment exists pointing at commit `abc123`
+- **AND** new commits have been pushed since, advancing HEAD to `def456`
+- **WHEN** the action checks for the self-check marker
+- **THEN** it SHALL treat the marker as stale (HEAD mismatch)
+- **AND** SHALL re-invoke the self-check before proceeding to the pre-merge summary
+
+#### Scenario: Self-check invoked before review decision is invalid
+- **GIVEN** `review.request_review` is `copilot` (or `true`) and the requested reviewer has not yet submitted a decision
+- **WHEN** the action posts a `<!-- specshift:self-check -->` marker pre-emptively, anchored to the current HEAD
+- **THEN** the marker SHALL be considered invalid (premature) regardless of its findings summary
+- **AND** the Pre-Merge Summary Comment SHALL NOT treat it as a valid gate satisfaction
+- **AND** the action SHALL re-invoke the self-check after the review decision is received and any review comments have been processed
+
+#### Scenario: Custom-prompted subagent does not satisfy self-check
+- **GIVEN** a subagent is spawned with a hand-written review checklist instead of an explicit invocation of the `review` skill
+- **WHEN** the subagent posts a `<!-- specshift:self-check -->` marker comment claiming PASS
+- **THEN** the marker SHALL NOT satisfy the self-check requirement
+- **AND** the action SHALL re-invoke the self-check using a subagent whose prompt explicitly invokes the `review` skill on the current HEAD
 
 ### Requirement: Review Cycle Safety Limit
 
@@ -140,7 +189,7 @@ The review action SHALL support iterative review cycles: after processing commen
 
 ### Requirement: Pre-Merge Summary Comment
 
-Before asking the user for merge confirmation, the review action SHALL post a PR comment summarizing the review activity. The summary comment SHALL include: (1) the number of review threads processed and resolved, (2) a brief list of fixes implemented, (3) the self-check result (pass or fail, and whether any findings were fixed), (4) the number of review cycles completed, and (5) a final status line in the format: `Ready for merge — N threads resolved, M fixes applied, self-check passed`. If no review threads were processed (e.g., no comments were posted by a reviewer), the summary SHALL still be posted with zeroed counts to confirm the action assessed the PR. If posting the comment fails (tooling error, permission issue), the action SHALL log a warning and continue to the merge confirmation — a failed summary SHALL NOT block the merge flow. On re-entrant invocations, the action SHALL check whether a summary comment has already been posted (by searching for a `<!-- specshift:review-summary -->` marker in the comment body); if found, the action SHALL update the existing comment rather than posting a duplicate.
+Before asking the user for merge confirmation, the review action SHALL post a PR comment summarizing the review activity. The action SHALL only post the summary when a `<!-- specshift:self-check -->` marker exists for the current HEAD commit (gate defined by the Self-Check Mandatory After Comment Processing requirement). The summary comment SHALL include: (1) the number of review threads processed and resolved, (2) a brief list of fixes implemented, (3) the self-check result (pass or fail, and whether any findings were fixed), (4) the number of review cycles completed, and (5) a final status line in the format: `Ready for merge — N threads resolved, M fixes applied, self-check passed`. If no review threads were processed (e.g., no comments were posted by a reviewer), the summary SHALL still be posted with zeroed counts to confirm the action assessed the PR. If posting the comment fails (tooling error, permission issue), the action SHALL log a warning and continue to the merge confirmation — a failed summary SHALL NOT block the merge flow. On re-entrant invocations, the action SHALL check whether a summary comment has already been posted (by searching for a `<!-- specshift:review-summary -->` marker in the comment body); if found, the action SHALL update the existing comment rather than posting a duplicate.
 
 **User Story:** As a developer (and anyone watching the PR) I want a summary comment posted before merge, so that there is a clear audit trail of what the AI did during the review process.
 

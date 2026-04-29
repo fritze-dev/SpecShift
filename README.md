@@ -61,9 +61,9 @@ By default, `auto_approve` is enabled — the pipeline runs end-to-end from prop
 
 ## How It Works
 
-SpecShift runs an 8-stage pipeline for every change:
+SpecShift runs an artifact pipeline for every change:
 
-**Research** → **Propose** → **Specs** → **Design** → **Preflight** → **Tests** → **Tasks** → **Review**
+**Research** → **Propose** → **Specs** → **Design** → **Preflight** → **Tests** → **Tasks** → **Audit**
 
 Each stage produces a Markdown artifact. The pipeline is driven by Smart Templates and configured via `.specshift/WORKFLOW.md`.
 

@@ -1,7 +1,7 @@
 # Requirements
 
 - [Propose as Single Entry Point for Pipeline Traversal](../../docs/specs/artifact-pipeline.md#requirement-propose-as-single-entry-point-for-pipeline-traversal)
-- [Eight-Stage Pipeline](../../docs/specs/artifact-pipeline.md#requirement-eight-stage-pipeline)
+- [Pipeline Stages and Dependencies](../../docs/specs/artifact-pipeline.md#requirement-pipeline-stages-and-dependencies)
 - [Artifact Dependencies](../../docs/specs/artifact-pipeline.md#requirement-artifact-dependencies)
 - [Post-Artifact Commit and PR Integration](../../docs/specs/artifact-pipeline.md#requirement-post-artifact-commit-and-pr-integration)
 - [Create Change Workspace](../../docs/specs/change-workspace.md#requirement-create-change-workspace)
