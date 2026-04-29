@@ -3,7 +3,7 @@
      branch: git branch name for this change
      capabilities: machine-readable mirror of the Capabilities section below
 ---
-status: review
+status: completed
 branch: claude/fix-friction-issues-VGcah
 capabilities:
   new: []
