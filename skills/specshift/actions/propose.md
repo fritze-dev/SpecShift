@@ -196,9 +196,7 @@ If a match is found, the router SHALL auto-select the change and announce: "Dete
 
 ### Requirement: Preflight Quality Check
 
-The preflight stage's Smart Template SHALL declare `requires: [design]`, meaning preflight SHALL only run when a design.md artifact exists. When design is skipped (e.g., for trivially scoped changes that produce no design.md), preflight SHALL also be skipped, and the tasks artifact SHALL include a `## Validation Notes` section that captures the equivalent assumption and side-effect findings inline.
-
-When design is present, the system SHALL run a mandatory quality review before task creation when the user invokes `specshift propose`. The preflight check SHALL cover seven dimensions: (A) Traceability Matrix -- mapping each capability from the proposal's frontmatter `capabilities` field (falling back to parsing the Capabilities section if frontmatter is absent) to its corresponding spec at `docs/specs/<capability>.md` and verifying that the spec has been updated to reflect the proposed changes, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, (F) Marker Audit -- auditing all assumption and review markers from spec.md and design.md, and (G) Draft Spec Validation -- verifying that all specs with `status: draft` have a `change` value matching the current change directory name. Specs with `status: draft` belonging to a different change SHALL be flagged as BLOCKED. Specs with `status: draft` and no `change` field SHALL be flagged as WARNING. The Marker Audit SHALL:
+The system SHALL run a mandatory quality review before task creation when the user invokes `specshift propose`. The preflight check SHALL cover seven dimensions: (A) Traceability Matrix -- mapping each capability from the proposal's frontmatter `capabilities` field (falling back to parsing the Capabilities section if frontmatter is absent) to its corresponding spec at `docs/specs/<capability>.md` and verifying that the spec has been updated to reflect the proposed changes, (B) Gap Analysis -- identifying missing edge cases, error handling, and empty states, (C) Side-Effect Analysis -- assessing impact on existing systems and regression risks, (D) Constitution Check -- verifying consistency with project rules in constitution.md, (E) Duplication and Consistency -- detecting overlaps and contradictions across specs, (F) Marker Audit -- auditing all assumption and review markers from spec.md and design.md, and (G) Draft Spec Validation -- verifying that all specs with `status: draft` have a `change` value matching the current change directory name. Specs with `status: draft` belonging to a different change SHALL be flagged as BLOCKED. Specs with `status: draft` and no `change` field SHALL be flagged as WARNING. The Marker Audit SHALL:
 1. Collect all `<!-- ASSUMPTION: ... -->` tags and verify each has an accompanying visible list item. Assumptions written entirely inside HTML comments (no visible text) SHALL be flagged as format violations.
 2. Rate each valid assumption as Acceptable Risk, Needs Clarification, or Blocking.
 3. Scan for any remaining `<!-- REVIEW -->` or `<!-- REVIEW: ... -->` markers. Any REVIEW marker found SHALL be rated as Blocking, because REVIEW markers must be resolved before implementation.
@@ -274,10 +272,3 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 - **THEN** the system SHALL abort the preflight
 - **AND** SHALL report which required artifacts are missing
 - **AND** SHALL suggest running `specshift propose` to generate them
-
-#### Scenario: Design skipped routes validation findings into tasks
-
-- **GIVEN** a trivially scoped change where the design stage produces no design.md
-- **WHEN** the pipeline reaches the preflight stage
-- **THEN** the system SHALL skip preflight (its `requires: [design]` contract is unmet)
-- **AND** the tasks artifact SHALL include a `## Validation Notes` section capturing the assumption and side-effect findings that preflight would otherwise have produced

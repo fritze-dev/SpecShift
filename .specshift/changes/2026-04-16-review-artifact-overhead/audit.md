@@ -53,7 +53,7 @@ All 5 capabilities verified against implementation.
 #### Scenario Coverage
 The 18 NEW or MODIFIED scenarios listed in `tests.md` were verified by direct check against the modified specs and the implementation:
 - artifact-pipeline (4 scenarios): pipeline order, skip-prevention, all-stages-produce-artifacts, legacy-shape — all reflected in spec text + WORKFLOW.md pipeline array
-- quality-gates (4 scenarios): preflight-present and preflight-absent fallbacks; audit Testing dimension reworded — all reflected in spec + audit template
+- quality-gates (2 scenarios): audit Testing dimension reworded; "Pre-Implementation Side-Effect Cross-Check" renamed — all reflected in spec + audit template
 - test-generation (3 scenarios): framework-configured triggers automated tests; no-framework verifies via audit; legacy tests.md tolerated — all reflected in spec + tasks template
 - documentation (5 scenarios): enrichment from § Discovery + design; legacy tolerance; has_decisions ADR gate; 2-sentence Context floor; optional Consequences; auto-dispatch capability scoping — all reflected in spec + adr/capability templates + workflow Action: finalize
 - workflow-contract (4 scenarios): per-stage requires loading; sub-agent for apply, finalize, propose-internal — all reflected in spec + SKILL.md dispatches + Sub-Agent Dispatch section

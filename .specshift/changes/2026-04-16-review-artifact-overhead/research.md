@@ -44,7 +44,7 @@ PR #60 enforced semantic-heading discipline: positional references (`step 3.2`, 
 | `src/templates/changes/research.md` | Research template | Delete |
 | `src/templates/changes/tests.md` | Tests template | Delete |
 | `src/templates/changes/design.md` | Design template | Refine Non-Goals instruction; bump version |
-| `src/templates/changes/tasks.md` | Tasks template | Update `requires:`, add apply-phase test guidance, conditional Validation Notes; bump v5 → v6 |
+| `src/templates/changes/tasks.md` | Tasks template | Update `requires:`, add apply-phase test guidance; bump v5 → v6 |
 | `src/templates/changes/audit.md` | Audit template | Update references for removed artifacts |
 | `src/templates/docs/adr.md` | ADR template | Streamline format |
 | `src/templates/docs/capability.md` | Capability doc template | Update enrichment source |
@@ -102,7 +102,6 @@ N/A — all changes are internal to the SpecShift plugin architecture. No extern
 - **Checkpoint/resume for in-progress changes**: Changes started with the old eight-stage pipeline need graceful handling. The router should treat `research.md` existence as "proposal stage in progress" for legacy changes (currently no in-flight changes — risk is theoretical but should be guarded).
 - **Compilation validation**: `scripts/compile-skills.sh` enforces template-version bumps. All modified templates need version increments. Proposal v3 → v4, tasks v5 → v6 (PR #60 already bumped these to v3/v5).
 - **Self-referential change**: This change modifies the pipeline that will be used to implement it. The first run still uses the old pipeline; changes take effect after merge.
-- **Preflight depends on design**: When design is conditional (skipped for simple changes), preflight is also skipped. Tasks gets a Validation Notes section instead.
 - **Multi-target agnostic discipline**: SKILL.md and template language must avoid Claude-Code-only or Codex-only assumptions. Sub-agent dispatch is described as intent ("spawn a sub-agent"), not as specific tool calls.
 - **PR #60 semantic-heading rule**: All template restructures and new spec sections must use semantic headings. Positional references (`step 3.2`) are disallowed.
 
@@ -115,9 +114,9 @@ N/A — all changes are internal to the SpecShift plugin architecture. No extern
 | Data Model | Clear | WORKFLOW.md pipeline array; template frontmatter `requires:` chains; proposal frontmatter `capabilities:` for finalize scoping |
 | UX | Clear | No user-facing command changes; same `specshift propose/apply/finalize/review` flow |
 | Integration | Clear | Compilation enforces template versions; finalize auto-dispatch passes capabilities; sub-agent dispatch applies to both Claude Code and Codex |
-| Edge Cases | Clear | Backward compat for legacy changes; design-skipped validation; framework vs no-framework testing; no in-flight changes currently |
+| Edge Cases | Clear | Backward compat for legacy changes; framework vs no-framework testing; no in-flight changes currently |
 | Constraints | Clear | Self-referential change; template-version discipline; router immutability; agnostic-skill principle |
-| Terminology | Clear | "Discovery" (merged research section), "Validation Notes" (in tasks when no design), "context contract" (per-stage `requires:`), "sub-agent dispatch" (PR #60 pattern) |
+| Terminology | Clear | "Discovery" (merged research section), "context contract" (per-stage `requires:`), "sub-agent dispatch" (PR #60 pattern) |
 | Non-Functional | Clear | Token reduction is a consequence, not the primary goal; no performance regression; multi-target compatible |
 
 ## Open Questions

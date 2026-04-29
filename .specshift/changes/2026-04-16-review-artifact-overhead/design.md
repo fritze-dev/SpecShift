@@ -37,10 +37,9 @@ The change touches all three architectural layers (per CONSTITUTION § Architect
 - `src/templates/changes/tasks.md`
   - `requires: [preflight]` (was `[tests]`).
   - Apply-phase test guidance section: when Constitution § Testing declares a framework, generate automated tests; when "None", verify Gherkin scenarios in audit.
-  - Conditional Validation Notes section when design (and therefore preflight) is skipped.
   - `template-version` 5 → 6.
 - `src/templates/changes/audit.md`
-  - References updated: preflight.md → "design.md § Validation when preflight present, else tasks.md § Validation Notes"; tests.md → "specs (direct scenario verification)".
+  - References updated: tests.md → "specs (direct scenario verification)".
   - `template-version` bumped.
 - `src/templates/docs/adr.md`
   - Context length: 2-6 sentences (was 4-6).
@@ -82,7 +81,7 @@ Each metric is verified as PASS/FAIL during QA in audit.md.
 
 - Sub-agent dispatch is not mandatory. The router MAY spawn a sub-agent or MAY execute inline; templates and SKILL.md describe intent only and do not enforce a specific execution mode.
 - Auto-migration of legacy change directories. Existing changes containing `research.md` or `tests.md` retain their structure; finalize tooling tolerates both shapes but does not rewrite legacy files.
-- Named pipeline profiles (e.g., lite/full). Conditional design (when design is skipped, preflight is also skipped, tasks gains Validation Notes) provides sufficient flexibility for simple changes.
+- Named pipeline profiles (e.g., lite/full). The pipeline keeps strict non-skippable stages; flexibility for simpler changes can be considered as a separate change if needed.
 
 ## Decisions
 

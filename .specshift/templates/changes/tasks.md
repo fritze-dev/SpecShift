@@ -31,14 +31,6 @@ instruction: |
   findings define risk resolution, and explicit user approval
   gates implementation completeness.
 
-  Conditional Validation Notes:
-  - When design.md (and therefore preflight.md) is skipped for a small
-    change, tasks.md gains a `## Validation Notes` section near the top
-    documenting the abbreviated validation contract: which specs apply,
-    which scenarios will be verified in audit, and any assumptions that
-    would normally appear in design.md. When design and preflight are
-    present, omit this section.
-
   The apply phase covers Foundation through QA Loop & Human Approval.
   For documentation-only changes (no code), implementation sections may
   be empty — the QA loop alone is sufficient.

@@ -17,7 +17,7 @@ instruction: |
   - **Scenario Coverage**: verify GIVEN/WHEN/THEN conditions are handled, by direct check against the specs (specs are the source of truth — no separate test-listing artifact).
   - **Design Adherence**: check implementation follows design.md decisions
   - **Scope Control**: verify all changed files trace to tasks or design
-  - **Validation Side-Effects**: verify identified side effects are addressed. Read validation context from design.md § Validation when preflight.md is present, otherwise from tasks.md § Validation Notes.
+  - **Validation Side-Effects**: verify identified side effects are addressed. Read validation context from preflight.md.
   - **Test Coverage**: when the project Constitution § Testing declares a framework, verify the implementation includes automated tests covering the scenarios; when "None" or absent, verify each Gherkin scenario from the affected specs is exercised by the implementation (direct scenario verification).
 
   Auto-fix stale cross-references before presenting findings.

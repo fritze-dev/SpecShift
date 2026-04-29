@@ -1,7 +1,7 @@
 ---
 title: "Quality Gates"
 capability: "quality-gates"
-description: "Preflight checks during propose (with design-skipped fallback), audit.md verification during apply, and docs drift detection during init"
+description: "Preflight checks during propose, audit.md verification during apply, and docs drift detection during init"
 lastUpdated: "2026-04-29"
 ---
 
@@ -29,7 +29,7 @@ Preflight covers seven distinct dimensions (traceability, gaps, side effects, co
 - **Verify Completion (Draft-to-Stable Flip)**: When verify passes and the change is approved, spec tracking fields are finalized: `status` flips to `stable`, `change` is removed, `version` increments, `lastModified` is set. The proposal's `status` is set to `completed`.
 - **Seven Preflight Dimensions**: Traceability Matrix, Gap Analysis, Side-Effect Analysis, Constitution Check, Duplication and Consistency, Marker Audit, and Draft Spec Validation.
 - **Test Coverage Verification**: Verify checks scenario coverage directly against the specs. When Constitution § Testing declares a framework, generated test files are checked for presence; when "None" or absent, every Gherkin scenario from the affected specs is verified directly via the audit dimension.
-- **Pre-Implementation Side-Effect Cross-Check (with design-skipped fallback)**: Verify cross-checks identified side-effects against tasks, diff, and codebase evidence. The primary source is `preflight.md` § Side-Effect Analysis when present; when design (and therefore preflight) is skipped, the fallback source is `tasks.md § Validation Notes`.
+- **Pre-Implementation Side-Effect Cross-Check**: Verify reads `preflight.md` § Side-Effect Analysis and cross-checks each identified side-effect against tasks, diff, and codebase evidence.
 - **Diff-Based Verification**: Verify loads the full branch diff as primary evidence. Codebase keyword search serves as a fallback.
 - **Task-Diff Mapping**: For each completed task, verify checks that the diff contains corresponding changes matching both file paths and content.
 - **Diff Scope Check**: Every file in the diff must be traceable to a task or design component. Untraced files are a single grouped SUGGESTION.
