@@ -31,7 +31,21 @@ None.
 
 ### Verdict
 
-PASS.
+PASS (after Fix Loop tweak applied 2026-04-29).
+
+### Fix Loop Entries
+
+**Tweak (2026-04-28, post-Copilot-review-cycle-1):** Three findings from Copilot's first review cycle on PR #60:
+- `README.md:66` pipeline arrow ended with `**Review**` → fixed to `**Audit**`.
+- `docs/README.md:8` and `:58` had hardcoded "8-stage" → rewritten to "artifact pipeline" without count.
+- This audit's Line 49 referenced pre-bump `0.2.7-beta` → updated to `0.2.8-beta` (post-finalize stamped value).
+
+**Tweak (2026-04-29, user-testing review of own enforcement contract):** During the User Testing gate the user identified two ambiguities in the Self-Check Mandatory After Comment Processing requirement that this PR introduces, exposed by my own (incorrect) behavior in the first review cycle:
+
+1. **Timing precondition not explicit:** the requirement said "After committing and pushing review-comment fixes" without stating that the self-check SHALL NOT run before the external review decision is known. My Cycle-0 marker (HEAD `7dde2124`, posted before Copilot reviewed) satisfied the marker-existence gate by the letter but contradicted the intent. **Fix:** added explicit Timing precondition section to the requirement plus new scenario "Self-check invoked before review decision is invalid".
+2. **Invocation form too permissive:** the `or spawn a subagent that runs the equivalent of /review` clause let me run a custom-prompted general-purpose subagent with a hand-written 10-point checklist and call that "/review equivalent". **Fix:** flipped canonical/fallback ordering — subagent-invoking-`review`-skill is the canonical form, inline Skill-tool is the fallback. Custom-prompted subagents explicitly do NOT satisfy. New scenario "Custom-prompted subagent does not satisfy self-check".
+
+Spec version bumped 5 → 6; `src/templates/workflow.md` template-version 12 → 13; `.specshift/WORKFLOW.md` template-version 10 → 11; `docs/capabilities/review-lifecycle.md` updated. No `src/VERSION` re-bump (post-finalize Tweak; same release v0.2.8-beta).
 
 ### Detailed Verification
 
