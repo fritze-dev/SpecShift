@@ -2,7 +2,7 @@
 title: "Review Lifecycle"
 capability: "review-lifecycle"
 description: "Re-entrant PR review-to-merge state machine with comment processing, mandatory self-check, summary posting, and merge confirmation"
-lastUpdated: "2026-04-28"
+lastUpdated: "2026-04-29"
 ---
 
 # Review Lifecycle
