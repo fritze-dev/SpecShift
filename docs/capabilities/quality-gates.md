@@ -2,7 +2,7 @@
 title: "Quality Gates"
 capability: "quality-gates"
 description: "Preflight checks during propose, audit.md verification during apply, and docs drift detection during init"
-lastUpdated: "2026-04-10"
+lastUpdated: "2026-04-29"
 ---
 
 # Quality Gates
@@ -28,11 +28,11 @@ Preflight covers seven distinct dimensions (traceability, gaps, side effects, co
 - **Draft Spec Gate in Verify**: Verify checks all specs modified by the change for `status: draft`. Any remaining drafts produce a CRITICAL issue.
 - **Verify Completion (Draft-to-Stable Flip)**: When verify passes and the change is approved, spec tracking fields are finalized: `status` flips to `stable`, `change` is removed, `version` increments, `lastModified` is set. The proposal's `status` is set to `completed`.
 - **Seven Preflight Dimensions**: Traceability Matrix, Gap Analysis, Side-Effect Analysis, Constitution Check, Duplication and Consistency, Marker Audit, and Draft Spec Validation.
-- **Test Coverage Verification**: Verify includes an 8th dimension checking that generated tests cover all spec scenarios and that automated test stubs exist for automatable scenarios when a framework is configured.
+- **Test Coverage Verification**: Verify checks scenario coverage directly against the specs. When Constitution § Testing declares a framework, generated test files are checked for presence; when "None" or absent, every Gherkin scenario from the affected specs is verified directly via the audit dimension.
+- **Pre-Implementation Side-Effect Cross-Check**: Verify reads `preflight.md` § Side-Effect Analysis and cross-checks each identified side-effect against tasks, diff, and codebase evidence.
 - **Diff-Based Verification**: Verify loads the full branch diff as primary evidence. Codebase keyword search serves as a fallback.
 - **Task-Diff Mapping**: For each completed task, verify checks that the diff contains corresponding changes matching both file paths and content.
 - **Diff Scope Check**: Every file in the diff must be traceable to a task or design component. Untraced files are a single grouped SUGGESTION.
-- **Preflight Side-Effect Cross-Check**: Verify reads `preflight.md` Section C and cross-checks each side-effect against tasks, diff, and codebase evidence.
 - **Documentation Drift Detection** (`specshift init`): Checks capability docs, ADRs, and README against specs across three dimensions with CLEAN/DRIFTED/OUT OF SYNC verdicts. Uses `has_decisions` frontmatter for efficient ADR scanning.
 - **Auto-Fix for Mechanical WARNINGs**: Stale cross-references, inconsistent naming, and outdated text are fixed inline. Judgment-required WARNINGs remain as open issues.
 

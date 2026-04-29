@@ -1,9 +1,9 @@
 ---
 id: tasks
-template-version: 5
+template-version: 6
 description: Implementation checklist with QA loop
 generates: tasks.md
-requires: [tests]
+requires: [preflight]
 instruction: |
   Create a clean implementation checklist based on design and pre-flight.
   Use `- [ ]` checkbox format — the apply phase parses these for tracking.
@@ -15,9 +15,15 @@ instruction: |
   in the QA Loop (before Auto-Verify).
   Add the QA loop with an explicit human approval gate.
 
-  Reference generated test files from tests.md. Implementation tasks
-  should make failing tests pass. Additional test tasks may be added
-  for cases not covered by Gherkin scenarios.
+  Apply-phase test guidance (driven by the project Constitution § Testing):
+  - When Constitution § Testing declares a framework (name, test directory,
+    file pattern, conventions), the apply phase generates automated tests
+    as part of implementation tasks. Add explicit test-generation tasks
+    before the corresponding implementation tasks (red-phase first), and
+    add traceability comments mapping tests to spec scenarios.
+  - When Constitution § Testing is "None" or absent, no automated tests
+    are generated; scenario verification happens during audit.md by
+    direct check of Gherkin GIVEN/WHEN/THEN against the implementation.
 
   Definition of Done is emergent from artifacts — there is no
   separate DoD checklist. Gherkin scenarios define functional

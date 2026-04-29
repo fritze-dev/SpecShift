@@ -1,8 +1,8 @@
 ---
 title: "Workflow Contract"
 capability: "workflow-contract"
-description: "WORKFLOW.md pipeline orchestration, Smart Templates, inline actions, custom actions, and router dispatch"
-lastUpdated: "2026-04-28"
+description: "WORKFLOW.md pipeline orchestration, Smart Templates, inline actions, custom actions, router dispatch, per-stage context contracts, and sub-agent dispatch"
+lastUpdated: "2026-04-29"
 ---
 
 # Workflow Contract
@@ -19,7 +19,9 @@ A slim WORKFLOW.md handles pipeline orchestration (stage ordering, apply gate, p
 
 ## Features
 
-- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (8 stages), `actions` array, `template-version`, `plugin-version`, optional `auto_approve`, `review`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **WORKFLOW.md pipeline orchestration** -- YAML frontmatter with `templates_dir`, `pipeline` array (six stages: proposal, specs, design, preflight, tasks, audit), `actions` array, `template-version`, `plugin-version`, optional `auto_approve`, `review`, and `docs_language`; markdown body with `## Context` and `## Action: <name>` sections
+- **Per-Stage Context Contract** -- the router loads only the artifacts named by each stage's `requires:` chain (and the action's read contract for apply/finalize) instead of "read all change artifacts". Apply reads only proposal+design+tasks+affected specs. Finalize reads only proposal+design+audit+listed-capability specs (capability list is passed in via auto-dispatch from apply).
+- **Sub-Agent Dispatch for Pipeline Stages (optional)** -- the router MAY spawn a sub-agent that invokes the workflow skill on bounded artifact context for apply, finalize, and propose-internal stage generation. Described tool-agnostically; the router can also execute inline. Hosts that lack a sub-agent primitive remain conformant.
 - **Review action configuration** -- optional `review` object in WORKFLOW.md frontmatter with `request_review` field (`false` by default, `copilot` for Copilot review, `true` for repo default reviewers). The review action automates the PR review-to-merge lifecycle: processing review comments, running self-check, and merging with mandatory user confirmation
 - **Plugin version tracking** -- `plugin-version` field in WORKFLOW.md frontmatter, baked into the compiled workflow template at compile time. The router compares the project's `plugin-version` against the compiled template's version on every action (except init) and displays an advisory warning on mismatch
 - **Smart Template format** -- each template carries `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields in YAML frontmatter, with the output structure as the markdown body
@@ -58,6 +60,14 @@ Custom actions listed in the `actions` array have their `## Action: <name>` sect
 ### Router Validates Actions Dynamically
 
 The router validates the invoked command against the `actions` array from WORKFLOW.md frontmatter. If WORKFLOW.md is missing (pre-init), the router falls back to the 5 built-in actions. If the action is not recognized, the router reports the error and lists available actions.
+
+### Per-Stage Context Contracts Bound What Each Stage Reads
+
+The router consults each stage's `requires:` chain (declared in the Smart Template's YAML frontmatter) and reads only those artifacts when preparing context for stage generation. For built-in actions, the action's read contract is similarly bounded: apply reads only `proposal.md` (capabilities), `design.md` (architecture, metrics), `tasks.md`, and the affected specs from `proposal.md` frontmatter `capabilities:`; finalize reads only `proposal.md`, `design.md`, `audit.md`, and the listed capabilities' specs (the capability list is passed in via auto-dispatch from apply). The router SHALL NOT pre-load artifact bodies into a sub-agent prompt — the sub-agent reads only what its declared contract names.
+
+### Sub-Agent Dispatch for Pipeline Stages
+
+The router MAY spawn a sub-agent for apply, finalize, or propose-internal stage generation. The sub-agent prompt names the action, the change identifier, the stage's read inputs (from `requires:`) and write declaration (from `generates:`), and instructs the sub-agent to invoke the workflow skill on that bounded context. The proven precedent is the review action's self-check step (introduced in v0.2.8-beta), which spawns a sub-agent that re-invokes the review skill on the current HEAD. Sub-agent dispatch is OPTIONAL — the router MAY execute inline when sub-agent overhead would exceed the isolation benefit; templates and instructions describe intent, not enforcement.
 
 ## Known Limitations
 

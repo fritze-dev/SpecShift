@@ -2,8 +2,8 @@
 order: 14
 category: documentation
 status: stable
-version: 2
-lastModified: 2026-04-10
+version: 3
+lastModified: 2026-04-29
 ---
 ## Purpose
 
@@ -14,9 +14,11 @@ Provides all generated documentation: capability docs, Architecture Decision Rec
 ### Requirement: Generate Enriched Capability Documentation
 The `specshift finalize` command SHALL generate user-facing documentation from the specs located in `docs/specs/<capability>.md`. The command SHALL produce one documentation file per capability, placed under `docs/capabilities/<capability>.md`. The agent SHALL read the capability doc template at `.specshift/templates/docs/capability.md` for the expected output format. Generated documentation SHALL use clear, user-facing language that explains what the capability does, how to use it, and what behavior to expect. Documentation SHALL NOT include implementation details, internal architecture references, or normative specification language (SHALL/MUST). The agent SHALL transform requirement descriptions into natural explanations, convert Gherkin scenarios into readable usage examples or behavioral descriptions, and organize content with appropriate headings. If a User Story is present in the spec, the agent SHALL use it to inform the documentation's framing and context. The `docs/capabilities/` directory SHALL be created if it does not exist.
 
-Additionally, when generating a capability doc, the agent SHALL look up completed change directories at `.specshift/changes/*/` to find changes whose proposal frontmatter `capabilities` field lists the capability being documented (falling back to parsing the Capabilities section if frontmatter is absent). For each relevant change found, the agent SHALL read `proposal.md`, `research.md`, `design.md`, and `preflight.md` (where they exist) and enrich the capability doc with:
+Additionally, when generating a capability doc, the agent SHALL look up completed change directories at `.specshift/changes/*/` to find changes whose proposal frontmatter `capabilities` field lists the capability being documented (falling back to parsing the Capabilities section if frontmatter is absent). For each relevant change found, the agent SHALL read `proposal.md` (including its `§ Discovery` block, which absorbs the discovery work formerly captured in `research.md`) and `design.md` (where they exist), plus `preflight.md` for any preflight-derived inputs, and enrich the capability doc with:
 - A "Purpose" section (max 3 sentences) describing what the capability does and why it matters. ALWAYS derive from the spec's `## Purpose` section using problem-framing: frame as what goes wrong WITHOUT this capability, consider the User Stories ("so that...") for motivation. Change proposals provide context for Rationale, NOT for Purpose. The agent SHALL NOT use proposal "Why" sections as the Purpose — they describe change motivation, not capability purpose. The agent SHALL NOT restate the spec Purpose section verbatim.
-- A "Rationale" section (max 3-5 sentences) summarizing design context: key decisions, alternatives explored, why this approach was chosen. For enriched capabilities: derived from `research.md` and `design.md`. For initial-spec-only: derived from spec requirements, scenarios, and assumptions — explain WHY the design works this way (e.g., why kebab-case naming, why date-prefix sorting, why certain constraints exist). Only omit Rationale if truly no design reasoning is derivable from the spec itself. The Rationale SHALL describe the current design in present tense. The agent SHALL NOT narrate change history (e.g., "was later added", "initially... then...", "a subsequent change introduced..."). Every Rationale sentence SHALL answer "why does it work this way?" not "how did it get this way?".
+- A "Rationale" section (max 3-5 sentences) summarizing design context: key decisions, alternatives explored, why this approach was chosen. For enriched capabilities: derived from `proposal.md § Discovery` and `design.md`. For initial-spec-only: derived from spec requirements, scenarios, and assumptions — explain WHY the design works this way (e.g., why kebab-case naming, why date-prefix sorting, why certain constraints exist). Only omit Rationale if truly no design reasoning is derivable from the spec itself. The Rationale SHALL describe the current design in present tense. The agent SHALL NOT narrate change history (e.g., "was later added", "initially... then...", "a subsequent change introduced..."). Every Rationale sentence SHALL answer "why does it work this way?" not "how did it get this way?".
+
+**Backward compatibility for legacy enrichment:** Legacy change directories may contain a separate `research.md` artifact rather than a `§ Discovery` block in `proposal.md`. The agent SHALL accept either source: if `research.md` exists, treat it as the discovery input; otherwise read `proposal.md § Discovery`. The two paths produce equivalent enrichment.
 - A "Known Limitations" section (max 5 bullets) derived from `design.md` Non-Goals that describe current technical constraints (rewritten as "Does not support X"), `design.md` Risks (user-relevant risks), and `preflight.md` Assumption Audit (assumptions rated "Acceptable Risk" that affect users). Omit this section entirely if empty.
 - A "Future Enhancements" section (max 5 bullets) derived from `design.md` Non-Goals that are explicitly deferred or represent natural extensions of the capability. Items marked "(deferred)" or "(separate feature)" SHALL be included. Sensible out-of-scope items that would genuinely improve the capability MAY be included. Change-level scope boundaries (e.g., "No changes to other skills") SHALL NOT be included. Link to GitHub Issues where they exist. Omit this section entirely if no actionable future ideas.
 
@@ -139,6 +141,8 @@ The `specshift finalize` command SHALL support incremental generation by default
 
 **Multi-capability mode:** When the user provides multiple capability names as a comma-separated list (e.g., `specshift finalize artifact-pipeline,documentation`), the agent SHALL process only the listed capabilities. Each listed capability SHALL always be regenerated regardless of change dates (same as single-capability mode). The agent SHALL NOT perform the full change date scan for unlisted capabilities. Changes SHALL only be read for the listed capabilities. If a listed capability does not exist in `docs/specs/`, the agent SHALL warn and skip it. This mode is designed for the post-apply workflow where the caller already knows which capabilities were affected.
 
+**Auto-dispatch from apply:** When `auto_approve` triggers automatic dispatch from apply to finalize, the dispatching action SHALL pass the affected capability list derived from `proposal.md` frontmatter `capabilities:` (the union of `new`, `modified`, and `removed` entries) as the multi-capability argument. Finalize SHALL regenerate ONLY those capabilities' docs and SHALL NOT scan other historical changes. This bounds finalize work to the change actually being completed, regardless of how many historical changes exist under `.specshift/changes/`.
+
 **Content-aware writes:** After generating a capability doc, the agent SHALL compare the generated content against the existing file content, excluding the `lastUpdated` frontmatter field. If the content is identical, the agent SHALL NOT write the file and SHALL NOT bump the `lastUpdated` timestamp. This prevents false timestamp updates when regeneration produces unchanged output.
 
 **Output summary:** The agent SHALL report which capabilities were regenerated, which were skipped (no newer changes), and which had unchanged content (regenerated but not written).
@@ -198,6 +202,14 @@ The `specshift finalize` command SHALL support incremental generation by default
 - **GIVEN** 18 capabilities exist, 2 have newer completed changes, and 1 of those produces identical content
 - **WHEN** the developer runs `specshift finalize`
 - **THEN** the output shows 1 capability regenerated, 1 skipped (unchanged content), and 16 skipped (no newer changes)
+
+#### Scenario: Auto-dispatch from apply passes capability list from proposal frontmatter
+- **GIVEN** a change whose `proposal.md` frontmatter declares `capabilities: { new: [foo], modified: [bar], removed: [] }`
+- **AND** `auto_approve` triggers automatic dispatch from apply to finalize
+- **WHEN** the dispatch occurs
+- **THEN** the dispatching action SHALL invoke finalize with the multi-capability argument `foo,bar`
+- **AND** finalize SHALL regenerate ONLY `foo` and `bar` docs
+- **AND** finalize SHALL NOT scan other historical changes for unrelated capabilities
 
 ### Requirement: Language-Aware Documentation Generation
 The `specshift finalize` command SHALL determine the documentation language before generating any output. The agent SHALL read `.specshift/WORKFLOW.md` and extract the `docs_language` field. If the field is missing or set to "English", the agent SHALL generate all documentation in English (default behavior). If a non-English language is specified, the agent SHALL generate all headings and content in the target language for capability docs, ADRs, and the consolidated README.
@@ -389,16 +401,18 @@ The architecture overview content generated as part of `docs/README.md` by `spec
 
 ### Requirement: ADR Generation from Change Decisions
 
-The `specshift finalize` command SHALL generate formal Architecture Decision Records (ADRs) from `## Decisions` tables in completed changes' `design.md` files.
+The `specshift finalize` command SHALL generate formal Architecture Decision Records (ADRs) from `## Decisions` tables in completed changes' `design.md` files. ADR generation SHALL be gated on the `has_decisions` field in `design.md` frontmatter: when `has_decisions: true`, the agent SHALL generate ADRs from that design. When `has_decisions` is `false` or absent, the agent SHALL skip ADR generation for that design entirely.
 
 Each ADR SHALL include:
 - **Status**: "Accepted" with the change date
-- **Context**: From the `design.md` Context section, enriched with `research.md` Approaches and findings from the same change where available. The Context section SHALL be at least 4-6 sentences. It SHALL include what motivated the decision (the problem being solved), what was investigated or researched, and key constraints or trade-offs that shaped the decision. The agent SHALL NOT write thin Context sections like "we chose X over Y because Z".
+- **Context**: From the `design.md` Context section, enriched with the source change's `proposal.md § Discovery` (or legacy `research.md`) where available. The Context section SHALL be 2-6 sentences. It SHALL include what motivated the decision (the problem being solved), and key constraints or trade-offs that shaped the decision. For straightforward decisions, the lower bound (2 sentences) is sufficient; for complex or far-reaching decisions, the upper bound (6 sentences) provides room to capture investigation depth. The agent SHALL NOT pad thin Context sections to hit a minimum.
 - **Decision**: From the Decisions table "Decision" column. Each decision item SHALL include its rationale inline using the em-dash pattern: `**Decision text** — rationale explaining why`. For consolidated ADRs, this is a numbered list of sub-decisions each with inline rationale. For single-decision ADRs, this is a single statement with inline rationale. The Rationale column from the Decisions table SHALL be used as the inline rationale text. There is no separate Rationale section.
 - **Alternatives Considered**: From the Decisions table "Alternatives" column, expanded into bullets
-- **Consequences**: Split into two subsections:
+- **Consequences** (optional for straightforward decisions): When the decision has notable trade-offs or risks, the agent SHALL include this section split into two subsections:
   - **Positive**: Benefits of this decision, derived from the rationale, context, and positive outcomes
   - **Negative**: Drawbacks, risks, or trade-offs, derived from the `design.md` "Risks & Trade-offs" section filtered to relevance for this specific decision where possible
+
+  When the decision is straightforward and has no material trade-offs, the agent MAY omit the Consequences section entirely rather than fill it with placeholder text such as "No significant negative consequences identified".
 - **References**: Internal relative links only — no external URLs (GitHub issues, external docs). The first reference SHALL be the source change backlink (see "ADR Change Backlinks" requirement). The agent SHALL use descriptive text like `[Spec: three-layer-architecture](path)`, NOT raw file paths as link text like `[../../docs/specs/three-layer-architecture.md](path)`. Include the relevant spec file and related ADRs if the decision connects to other decisions. The change backlink provides traceability to GitHub issues via the change's proposal.md.
 
 **References determination:** The agent SHALL determine which specs are relevant to each decision by checking the change's `proposal.md` Capabilities section to find which capabilities were affected. The agent SHALL link to those specs using semantic link text: `[Spec: capability-name](../../docs/specs/capability.md)`. The agent SHALL cross-reference other ADRs from the same change when decisions are related.
@@ -422,7 +436,7 @@ The slug SHALL be derived from the Decision column text using this deterministic
 
 For consolidated ADRs, the slug SHALL be derived from the overarching decision title (e.g., "Rename init skill to setup" → `rename-init-skill-to-setup`), not from individual sub-decision texts.
 
-**Step independence:** ADR generation SHALL read its own source materials independently. The agent SHALL NOT assume that data loaded during an earlier step (e.g., change enrichment in Step 2) is still available — steps may execute in separate contexts. This is especially critical for ADR generation, which needs full change data (design.md, research.md, proposal.md) independently of capability doc generation.
+**Step independence:** ADR generation SHALL read its own source materials independently. The agent SHALL NOT assume that data loaded during an earlier step (e.g., change enrichment from a previous capability doc step) is still available — steps may execute in separate contexts. This is especially critical for ADR generation, which needs full change data (`design.md`, `proposal.md` including its `§ Discovery` block, and legacy `research.md` where present) independently of capability doc generation.
 
 **User Story:** As a developer or contributor I want formal decision records with fully resolved references, so that I never encounter invisible REVIEW markers or broken links in generated ADRs.
 
@@ -443,6 +457,27 @@ For consolidated ADRs, the slug SHALL be derived from the overarching decision t
 - **GIVEN** a `specshift finalize` run that generates multiple ADRs
 - **WHEN** all ADRs are written to disk
 - **THEN** zero `<!-- REVIEW -->` or `<!-- REVIEW: ... -->` markers exist in any generated ADR file
+
+#### Scenario: ADR generation gated on has_decisions frontmatter
+- **GIVEN** a completed change whose `design.md` frontmatter contains `has_decisions: true` and a populated Decisions table
+- **WHEN** the agent runs ADR generation
+- **THEN** the agent SHALL produce ADR files for the decisions in that design
+
+#### Scenario: ADR generation skipped when has_decisions is false or absent
+- **GIVEN** a completed change whose `design.md` frontmatter contains `has_decisions: false` (or no `has_decisions` field at all)
+- **WHEN** the agent runs ADR generation
+- **THEN** the agent SHALL skip that design entirely
+- **AND** SHALL NOT produce any ADR files for that change
+
+#### Scenario: Consequences section omitted for straightforward decision
+- **GIVEN** a decision in `design.md` with no material trade-offs identified in the Risks & Trade-offs section
+- **WHEN** the agent generates the corresponding ADR
+- **THEN** the ADR MAY omit the Consequences section entirely rather than fill it with placeholder text
+
+#### Scenario: Context length within 2-6 sentence range
+- **GIVEN** a straightforward decision whose context is fully captured in 2 sentences
+- **WHEN** the agent generates the ADR
+- **THEN** the Context section SHALL contain 2 sentences without padding to a higher minimum
 
 ### Requirement: ADR Change Backlinks
 Each generated ADR SHALL include a link to its source change directory in the References section. The link SHALL use the format `[Change: <change-name>](../../.specshift/changes/<change-dir>/)` where `<change-name>` is the change directory name without the date prefix (e.g., `improve-docs-quality` from `2026-03-05-improve-docs-quality`). The change link SHALL appear as the first reference, before spec links and related ADR links.
@@ -534,8 +569,8 @@ ADR files generated by `specshift finalize` SHALL respect the `docs_language` se
 - **No specs exist**: If `docs/specs/` is empty, the agent SHALL inform the user and suggest running `specshift propose` to create specs first.
 - **Spec with no scenarios**: The agent SHALL still generate documentation from requirement descriptions, noting that usage examples are unavailable.
 - **Existing documentation files**: The agent SHALL overwrite existing docs with freshly generated content, since specs are the source of truth.
-- **Missing change artifacts**: If a change lacks `design.md`, `research.md`, or `preflight.md`, the agent SHALL skip enrichment from that artifact without error.
-- **Initial-spec research.md too thin**: If the initial-spec change's research.md lacks useful approaches or decisions for a capability, the agent SHALL attempt to derive Rationale from spec requirements and scenarios. Only omit Rationale if truly no design reasoning is derivable from the spec itself.
+- **Missing change artifacts**: If a change lacks `design.md`, `proposal.md § Discovery` (or legacy `research.md`), or `preflight.md`, the agent SHALL skip enrichment from that artifact without error.
+- **Initial-spec discovery too thin**: If the initial-spec change's discovery source (proposal.md § Discovery or legacy research.md) lacks useful approaches or decisions for a capability, the agent SHALL attempt to derive Rationale from spec requirements and scenarios. Only omit Rationale if truly no design reasoning is derivable from the spec itself.
 - **No Non-Goals but Risks exist**: The agent SHALL still generate a Known Limitations section from the Risks data alone.
 - **All Non-Goals are scope boundaries**: If every Non-Goal is a change-level scope boundary (e.g., "No changes to other skills"), the agent SHALL omit Known Limitations — these are not capability limitations.
 - **Step executed in subagent context**: The agent SHALL produce identical output quality regardless of whether the step executes in the main context or a delegated subagent. Step independence ensures this.
@@ -562,7 +597,7 @@ ADR files generated by `specshift finalize` SHALL respect the `docs_language` se
 - **No negative consequences identifiable**: If the design.md Risks section has no content relevant to a specific decision, the agent SHALL write "No significant negative consequences identified" under the Negative subsection rather than leaving it empty.
 - **No related specs identifiable**: If a decision is cross-cutting and not tied to a specific capability spec, the References section SHALL link to the constitution or the most relevant architectural spec.
 - **Manual ADR with missing sections**: If a manual ADR lacks `## Decision` or `## Rationale`, the agent SHALL use the ADR title (from `# ADR-MNNN:` heading) as the decision text and leave the rationale column empty in the README table.
-- **Change without research.md or proposal.md**: The agent SHALL still generate ADRs using only `design.md` data. Missing enrichment files reduce Context depth but do not prevent generation.
+- **Change without proposal.md § Discovery or legacy research.md**: The agent SHALL still generate ADRs using only `design.md` data. Missing enrichment sources reduce Context depth but do not prevent generation.
 - **Spec was split into multiple successors**: The agent SHALL replace a broken spec link with all successor spec links (e.g., `docs-generation` → `documentation`).
 - **No earlier ADR exists for the system being modified**: The agent SHALL skip the cross-reference — not all systems have a founding ADR.
 - **Existing ADRs with external URLs**: When regenerating ADRs that previously contained GitHub issue links, the agent SHALL omit those links. The change backlink is sufficient for traceability.
@@ -584,7 +619,7 @@ ADR files generated by `specshift finalize` SHALL respect the `docs_language` se
 - The constitution at `.specshift/CONSTITUTION.md` is the source of truth for tech stack and conventions. <!-- ASSUMPTION: Constitution maintained by workflow -->
 - The consolidated README template at `.specshift/templates/docs/readme.md` defines the expected output structure. <!-- ASSUMPTION: Template created as part of this change -->
 - ADR files are always generated before README generation within a single `specshift finalize` run. <!-- ASSUMPTION: Step ordering guarantees this -->
-- Change artifacts (design.md, research.md, proposal.md) follow the templates defined in the workflow schema. <!-- ASSUMPTION: Artifacts created by schema-driven workflow -->
+- Change artifacts (design.md, proposal.md including its § Discovery block, and legacy research.md where present) follow the templates defined in the workflow schema. <!-- ASSUMPTION: Artifacts created by schema-driven workflow -->
 - The ADR template at `.specshift/templates/docs/adr.md` defines the expected output structure. <!-- ASSUMPTION: Template created as part of doc-ecosystem change -->
 - Completed changes are immutable — existing change content does not change after completion, ensuring stable ADR numbering for incremental generation. <!-- ASSUMPTION: Completed changes not modified -->
 - Spec renames/splits are infrequent and the agent can determine successors from context. <!-- ASSUMPTION: Major spec restructuring is rare -->

@@ -1,8 +1,8 @@
 ---
 title: "Documentation"
 capability: "documentation"
-description: "Capability docs, ADRs, and consolidated README generated from specs and change artifacts"
-lastUpdated: "2026-04-10"
+description: "Capability docs, ADRs (gated on has_decisions), and consolidated README generated from specs and change artifacts; finalize scoped to affected capabilities via proposal frontmatter"
+lastUpdated: "2026-04-29"
 ---
 
 # Documentation
@@ -22,20 +22,22 @@ Capability docs are generated per-spec rather than per-change because users thin
 - **Enriched capability docs** -- one doc per spec at `docs/capabilities/<name>.md`, with Purpose, Rationale, Features, Behavior, Known Limitations, Future Enhancements, and Edge Cases sections derived from specs and change artifacts
 - **Incremental generation** -- compares spec `lastModified` against doc `lastUpdated` to skip unchanged capabilities; content-aware writes prevent false timestamp bumps
 - **Single-capability and multi-capability modes** -- target specific capabilities for regeneration, bypassing date checks
-- **ADR generation** -- formal Architecture Decision Records from design.md Decisions tables, with inline rationale, alternatives, consequences, and validated references
+- **ADR generation (conditional on `has_decisions`)** -- formal Architecture Decision Records from design.md Decisions tables, with inline rationale, alternatives, consequences (optional for straightforward decisions), and validated references. Generation is gated on `design.md` frontmatter `has_decisions: true`; if absent or false, no ADR is generated.
+- **Streamlined ADR format** -- Context length 2-6 sentences with anti-padding guidance (was 4-6); Consequences section optional for straightforward decisions whose impact is obvious from Context.
 - **ADR consolidation** -- related decisions from the same change grouped into a single ADR with numbered sub-decisions
 - **Manual ADR preservation** -- files matching `adr-M*.md` are never overwritten or renumbered
 - **ADR change backlinks** -- every generated ADR links back to its source change directory
 - **Reference validation** -- spec and change links in ADRs are verified via glob; broken links are auto-resolved or resolved via user prompt
 - **Consolidated README** -- `docs/README.md` combines System Architecture, Tech Stack, Key Design Decisions (ADR-sourced), Conventions, and a category-grouped capabilities table
 - **Conditional README regeneration** -- README is only regenerated when capability docs, ADRs, or constitution content change
+- **Finalize scoped to affected capabilities** -- when auto_approve dispatches finalize from apply, the dispatching action passes the capability list from `proposal.md` frontmatter (union of new/modified/removed); finalize regenerates only those capabilities' docs (and any ADR if `has_decisions`), avoiding a full scan of all historical changes.
 - **Language-aware generation** -- respects `docs_language` from WORKFLOW.md; translates headings and content while preserving product names, commands, and file paths
 
 ## Behavior
 
 ### Capability Doc Generation (`specshift finalize`)
 
-For each spec, the system reads the spec and looks up completed changes whose proposal lists the capability. It enriches the doc with Purpose (problem-framing from the spec), Rationale (design context from research and design artifacts), Known Limitations (from design Non-Goals and risks), and Future Enhancements (deferred items from Non-Goals). Behavior subsections map one-to-one to Gherkin scenario groups. Normative language is replaced with natural user-facing explanations. The capability doc template at `.specshift/templates/docs/capability.md` defines the structural format.
+For each spec, the system reads the spec and looks up completed changes whose proposal lists the capability. It enriches the doc with Purpose (problem-framing from the spec), Rationale (design context from `proposal.md § Discovery` and `design.md`, with backward-compat tolerance for legacy `research.md`), Known Limitations (from design Non-Goals and risks), and Future Enhancements (deferred items from Non-Goals). Behavior subsections map one-to-one to Gherkin scenario groups. Normative language is replaced with natural user-facing explanations. The capability doc template at `.specshift/templates/docs/capability.md` defines the structural format.
 
 ### Incremental Detection
 
@@ -43,7 +45,7 @@ Before generating each doc, the system compares the spec's `lastModified` field 
 
 ### ADR Generation (`specshift finalize`)
 
-For each completed change with `has_decisions: true` in its design.md frontmatter, the system reads the Decisions table and generates ADRs. Each ADR includes Status, Context (at least 4-6 sentences), Decision (with inline rationale via em-dash pattern), Alternatives Considered, Consequences (Positive/Negative), and References. The slug is derived deterministically from the decision text. Cross-references to related ADRs are added when clear thematic relationships exist.
+For each completed change with `has_decisions: true` in its design.md frontmatter, the system reads the Decisions table and generates ADRs. Each ADR includes Status, Context (2-6 sentences with anti-padding guidance — straightforward decisions use the lower bound), Decision (with inline rationale via em-dash pattern), Alternatives Considered, optional Consequences (only when non-obvious from Context), and References. When `has_decisions` is absent or `false`, no ADR is generated. The slug is derived deterministically from the decision text. Cross-references to related ADRs are added when clear thematic relationships exist.
 
 ### ADR Consolidation
 

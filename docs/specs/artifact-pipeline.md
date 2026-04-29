@@ -2,34 +2,42 @@
 order: 4
 category: change-workflow
 status: stable
-version: 7
-lastModified: 2026-04-28
+version: 8
+lastModified: 2026-04-29
 ---
 ## Purpose
 
-Defines the artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit) driven by WORKFLOW.md and Smart Templates, with strict dependency gating that ensures no stage is skipped, implementation is gated by task completion, and verification produces an audit.md artifact.
+Defines the artifact pipeline (proposal, specs, design, preflight, tasks, audit) driven by WORKFLOW.md and Smart Templates, with strict dependency gating that ensures no stage is skipped, implementation is gated by task completion, and verification produces an audit.md artifact.
 
 ## Requirements
 
-### Requirement: Pipeline Stages and Dependencies
-The system SHALL define an artifact pipeline with the following stages in order: research, proposal, specs, design, preflight, tests, tasks, and audit. This stage list is the single source of truth for the pipeline's stage set; other specs and documentation SHALL reference it rather than restating a count. Each stage SHALL produce a verifiable artifact file. The pipeline stages SHALL execute in strict dependency order: research has no dependencies, proposal requires research, specs requires proposal, design requires specs, preflight requires design, tests requires preflight, tasks requires tests, and audit requires tasks. The audit artifact is generated during the apply phase (after implementation) rather than during artifact-forward generation. No stage SHALL be skippable; each MUST complete before the change is considered complete. The pipeline order SHALL be declared in the `pipeline` array of `.specshift/WORKFLOW.md` frontmatter. Each stage's metadata (generates, requires, instruction) SHALL be defined in the corresponding Smart Template's YAML frontmatter.
+### Requirement: Six-Stage Pipeline
+The system SHALL define an artifact pipeline with the following stages in order: proposal, specs, design, preflight, tasks, and audit. This stage list is the single source of truth for the pipeline's stage set; other specs and documentation SHALL reference it rather than restating a count. Each stage SHALL produce a verifiable artifact file. The pipeline stages SHALL execute in strict dependency order: proposal has no dependencies, specs requires proposal, design requires specs, preflight requires design, tasks requires preflight, and audit requires tasks. Discovery work (current-state analysis, approaches, coverage assessment, decisions) is captured as a fixed Discovery block within proposal.md rather than a separate research stage. Automated test generation occurs during the apply phase as part of implementation tasks (see test-generation spec) rather than as a pipeline stage. The audit artifact is generated during the apply phase (after implementation) rather than during artifact-forward generation. No stage SHALL be skippable; each MUST complete before the change is considered complete. The pipeline order SHALL be declared in the `pipeline` array of `.specshift/WORKFLOW.md` frontmatter as the source of truth. Each stage's metadata (generates, requires, instruction) SHALL be defined in the corresponding Smart Template's YAML frontmatter.
 
-**User Story:** As a developer I want a structured pipeline that guides me from research through to implementation tasks, so that no critical thinking step is skipped and every decision is documented.
+**Backward compatibility:** Legacy change directories that contain `research.md` and/or `tests.md` artifacts (created under the previous eight-stage pipeline) SHALL retain their existing structure. Tooling that reads change artifacts for enrichment (e.g., capability doc generation, audit cross-checks) SHALL handle both shapes: the new shape (Discovery inside proposal.md) and the old shape (separate research.md and/or tests.md files).
+
+**User Story:** As a developer I want a structured pipeline that guides me from proposal through to implementation tasks, so that no critical thinking step is skipped and every decision is documented.
 
 #### Scenario: Pipeline stages execute in dependency order
 - **GIVEN** a new change workspace with no artifacts generated
 - **WHEN** the user progresses through the pipeline
-- **THEN** the system SHALL enforce the order: research first, then proposal, then specs, then design, then preflight, then tests, then tasks, then audit
+- **THEN** the system SHALL enforce the order: proposal first, then specs, then design, then preflight, then tasks, then audit
 
 #### Scenario: Skipping a stage is prevented
-- **GIVEN** a change workspace where only research.md has been generated
-- **WHEN** a user or agent attempts to generate specs (skipping proposal)
-- **THEN** the system SHALL reject the attempt and report that the proposal artifact must be completed first
+- **GIVEN** a change workspace where only proposal.md has been generated
+- **WHEN** a user or agent attempts to generate design (skipping specs)
+- **THEN** the system SHALL reject the attempt and report that the specs artifact must be completed first
 
 #### Scenario: All stages produce verifiable artifacts
 - **GIVEN** a completed pipeline run
 - **WHEN** the change workspace is inspected
-- **THEN** it SHALL contain research.md, proposal.md, one or more `docs/specs/<capability>.md` files, design.md, preflight.md, tests.md, tasks.md, and audit.md
+- **THEN** it SHALL contain proposal.md, one or more `docs/specs/<capability>.md` files, design.md, preflight.md, tasks.md, and audit.md
+
+#### Scenario: Legacy change retains old artifacts
+- **GIVEN** a completed change directory created under the previous eight-stage pipeline containing both research.md and tests.md
+- **WHEN** downstream tooling reads the change for enrichment
+- **THEN** the tooling SHALL accept the legacy shape and use research.md as the discovery source
+- **AND** SHALL NOT require migration of the legacy files
 
 ### Requirement: Artifact Output Frontmatter
 Certain pipeline artifacts SHALL include YAML frontmatter in their generated output for machine-readable metadata:
@@ -37,7 +45,7 @@ Certain pipeline artifacts SHALL include YAML frontmatter in their generated out
 - **proposal.md**: SHALL include frontmatter with `status` (active/review/completed), `branch`, and `capabilities` (structured list of new/modified/removed capability names mirroring the body's Capabilities section). Skills that create proposals SHALL populate these fields. Skills that read proposals SHALL use frontmatter fields preferentially over parsing markdown sections.
 - **design.md**: SHALL include frontmatter with `has_decisions` (boolean, `true` if the Decisions section contains at least one entry). Skills that scan for design decisions (docs, docs-verify) SHALL check this field to skip designs without decisions.
 
-Other artifacts (research.md, preflight.md, tasks.md) do not require output frontmatter.
+Other artifacts (preflight.md, tasks.md) do not require output frontmatter.
 
 **User Story:** As a skill author I want artifacts to carry machine-readable metadata, so that downstream skills can query artifact properties without parsing markdown sections.
 
@@ -68,24 +76,24 @@ Each artifact in the pipeline SHALL declare its dependencies explicitly in the S
 **User Story:** As a developer I want the system to enforce artifact dependencies automatically, so that I cannot accidentally generate a design before the specs are written.
 
 #### Scenario: Dependency check passes
-- **GIVEN** a change workspace with completed research.md and proposal.md
-- **WHEN** the system checks dependencies for the specs artifact
-- **THEN** the dependency check SHALL pass because both research and proposal (the transitive chain) are complete
+- **GIVEN** a change workspace with completed proposal.md and specs
+- **WHEN** the system checks dependencies for the design artifact
+- **THEN** the dependency check SHALL pass because proposal and specs (the transitive chain) are complete
 
 #### Scenario: Dependency check fails
-- **GIVEN** a change workspace with only research.md completed
+- **GIVEN** a change workspace with only proposal.md completed
 - **WHEN** the system checks dependencies for the design artifact
-- **THEN** the dependency check SHALL fail and report that proposal and specs must be completed first
+- **THEN** the dependency check SHALL fail and report that specs must be completed first
 
 #### Scenario: Smart Template declares dependencies explicitly
 - **GIVEN** a Smart Template file (e.g., `.specshift/templates/changes/proposal.md`)
 - **WHEN** its YAML frontmatter is inspected
-- **THEN** it SHALL have a `requires` field listing its direct dependencies by artifact ID (e.g., `[research]`)
+- **THEN** it SHALL have a `requires` field listing its direct dependencies by artifact ID (e.g., `[]` for proposal, `[proposal]` for specs)
 
 #### Scenario: Artifact status computed from file existence
-- **GIVEN** a change workspace with research.md and proposal.md present
+- **GIVEN** a change workspace with proposal.md present
 - **WHEN** a skill computes artifact status by reading WORKFLOW.md and Smart Templates
-- **THEN** research and proposal SHALL be marked as "done", specs as "ready", and design/preflight/tasks as "blocked"
+- **THEN** proposal SHALL be marked as "done", specs as "ready", and design/preflight/tasks as "blocked"
 
 ### Requirement: Apply Gate
 Implementation (the apply phase) SHALL be gated by completion of the tasks artifact. The apply phase SHALL NOT begin until tasks.md exists and is non-empty. The apply phase SHALL track progress against the task checklist in tasks.md, marking items complete as implementation proceeds. WORKFLOW.md SHALL declare this gate via the `apply.requires` field referencing the tasks artifact.
@@ -93,12 +101,12 @@ Implementation (the apply phase) SHALL be gated by completion of the tasks artif
 **User Story:** As a project lead I want implementation to be gated by task completion in the pipeline, so that developers cannot start coding before the full analysis and planning cycle is done.
 
 #### Scenario: Apply is blocked without tasks
-- **GIVEN** a change workspace where preflight.md is the latest completed artifact and tasks.md does not exist
+- **GIVEN** a change workspace where preflight.md is the latest completed artifact-forward stage and tasks.md does not exist
 - **WHEN** the user invokes `specshift apply`
 - **THEN** the system SHALL reject the apply attempt and report that tasks.md must be generated first
 
 #### Scenario: Apply proceeds after tasks completion
-- **GIVEN** a change workspace with all 6 artifacts completed including tasks.md
+- **GIVEN** a change workspace with all artifact-forward stages completed including tasks.md
 - **WHEN** the user invokes `specshift apply`
 - **THEN** the system SHALL begin implementation, reading the task checklist from tasks.md
 
@@ -224,7 +232,7 @@ The tasks Smart Template's `instruction` field SHALL include a standard tasks di
 
 ### Requirement: Semantic Heading Structure in Pipeline Artifact Templates
 
-Smart Templates under `.specshift/templates/changes/` and `src/templates/changes/` (research, proposal, design, tests, tasks, preflight, audit) SHALL use semantic heading text without leading numerical (`## 1.`) or alphabetic (`## A.`) prefixes for structural sections. The order of sections in the rendered template body SHALL be the source of truth for presentation order; numerical or alphabetic prefixes SHALL NOT be used as cross-reference identifiers. Generated artifact bodies (e.g., the produced `tasks.md`) inherit this discipline. Cross-references to template sections in other specs, instructions, or documentation SHALL use the section's heading text (e.g., "Standard Tasks section") rather than a positional identifier (e.g., "section 4"). Numerical prefixes in artifact templates produced before this requirement was introduced SHALL be removed when the template is next modified, with a `template-version` bump.
+Smart Templates under `.specshift/templates/changes/` and `src/templates/changes/` (proposal, design, tasks, preflight, audit) SHALL use semantic heading text without leading numerical (`## 1.`) or alphabetic (`## A.`) prefixes for structural sections. The order of sections in the rendered template body SHALL be the source of truth for presentation order; numerical or alphabetic prefixes SHALL NOT be used as cross-reference identifiers. Generated artifact bodies (e.g., the produced `tasks.md`) inherit this discipline. Cross-references to template sections in other specs, instructions, or documentation SHALL use the section's heading text (e.g., "Standard Tasks section") rather than a positional identifier (e.g., "section 4"). Numerical prefixes in artifact templates produced before this requirement was introduced SHALL be removed when the template is next modified, with a `template-version` bump.
 
 This requirement does not apply to: (a) Gherkin-style scenario or step IDs inside specs, (b) the `pipeline:` and `actions:` arrays in WORKFLOW.md frontmatter (which are positional by design), (c) checklist items in `tasks.md` body (which use `- [ ]` / `- [x]` markers, not numbered lists), (d) historical artifacts under `.specshift/changes/<date>-<slug>/` generated by older templates.
 
@@ -311,7 +319,7 @@ The specs Smart Template's `instruction` field SHALL include an overlap verifica
 - **THEN** the agent SHALL reclassify `admin-filters` as a Modified Capability on `admin-table-view` and update the proposal before editing the spec file
 
 ### Requirement: Propose as Single Entry Point for Pipeline Traversal
-The `specshift propose` command SHALL serve as the single entry point for all pipeline traversal operations. This includes: (1) creating new change workspaces, (2) checkpoint/resume of partially completed pipelines, and (3) full lifecycle execution from research through tasks. When invoked with a description or name and no existing change matches, propose SHALL create a new change workspace. When invoked without a change name and existing changes are present, propose SHALL list active changes and use AskUserQuestion to let the user select which change to continue, showing the most recently modified change as recommended. When invoked with a description of what to build, propose SHALL derive a kebab-case name and create a new change. The `auto_approve` workflow configuration (defaults to `true` in WORKFLOW.md frontmatter) controls whether pipeline traversal proceeds without user confirmation at checkpoints. When `auto_approve` is absent or `true`, checkpoints are skipped on success paths. When explicitly set to `false`, the pipeline pauses at each checkpoint for user confirmation. Propose SHALL display artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
+The `specshift propose` command SHALL serve as the single entry point for all pipeline traversal operations. This includes: (1) creating new change workspaces, (2) checkpoint/resume of partially completed pipelines, and (3) full lifecycle execution from proposal through tasks. When invoked with a description or name and no existing change matches, propose SHALL create a new change workspace. When invoked without a change name and existing changes are present, propose SHALL list active changes and use AskUserQuestion to let the user select which change to continue, showing the most recently modified change as recommended. When invoked with a description of what to build, propose SHALL derive a kebab-case name and create a new change. The `auto_approve` workflow configuration (defaults to `true` in WORKFLOW.md frontmatter) controls whether pipeline traversal proceeds without user confirmation at checkpoints. When `auto_approve` is absent or `true`, checkpoints are skipped on success paths. When explicitly set to `false`, the pipeline pauses at each checkpoint for user confirmation. Propose SHALL display artifact status for the current change, showing which artifacts are complete, in progress, or blocked.
 
 **User Story:** As a developer I want a single command that handles workspace creation, progress display, and artifact generation, so that I don't need to remember different commands for different pipeline states.
 
@@ -322,9 +330,9 @@ The `specshift propose` command SHALL serve as the single entry point for all pi
 - **THEN** it SHALL derive a kebab-case name (e.g., `add-user-auth`) and create a new change directory
 
 #### Scenario: Propose displays artifact status
-- **GIVEN** a change workspace where research.md and proposal.md are complete
+- **GIVEN** a change workspace where proposal.md and specs are complete
 - **WHEN** the user runs `specshift propose`
-- **THEN** the system SHALL display the status of all pipeline artifacts (research: done, proposal: done, specs: ready, design: blocked, preflight: blocked, tasks: blocked)
+- **THEN** the system SHALL display the status of all pipeline artifacts (proposal: done, specs: done, design: ready, preflight: blocked, tasks: blocked)
 
 #### Scenario: Propose detects existing change and offers selection
 - **GIVEN** existing changes under `.specshift/changes/` and the user invokes `specshift propose` without specifying a name

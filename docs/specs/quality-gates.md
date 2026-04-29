@@ -2,8 +2,8 @@
 order: 8
 category: development
 status: stable
-version: 3
-lastModified: 2026-04-10
+version: 4
+lastModified: 2026-04-29
 ---
 ## Purpose
 
@@ -92,7 +92,7 @@ The system SHALL produce a `preflight.md` artifact containing findings and a ver
 
 ### Requirement: Post-Implementation Verification (audit.md)
 
-The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing an `audit.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (test coverage: automated tests pass, manual test checklist items verified), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
+The system SHALL verify the implementation against change artifacts as part of `specshift apply`, producing an `audit.md` artifact in the change directory. Verification SHALL assess three dimensions: **Implementation** (Completeness + Correctness: task completion, requirement coverage, and scenario coverage), **Testing** (specs (direct scenario verification): each Gherkin scenario in the affected specs is verified against implementation evidence, plus any automated tests produced during the apply phase pass), and **Scope** (Coherence + Side-Effects: design adherence, diff scope, side-effects, and code pattern consistency). The system SHALL read the proposal's frontmatter `capabilities` field to identify affected specs (falling back to parsing the Capabilities section if frontmatter is absent), then read each spec at `docs/specs/<capability>.md` to verify implementation against.
 
 **Draft spec gate:** As part of verification, the system SHALL check all specs listed in the change's proposal for `status: draft` with `change` matching the current change. If any such specs remain in draft status, the verify report SHALL include a CRITICAL issue: "Spec <name> is still in draft status — must be finalized before merge." This gate ensures no draft specs reach the main branch.
 
@@ -112,9 +112,9 @@ The system SHALL load the branch diff (full content and file list) as part of co
 
 **Diff Scope Check**: For each file in the diff, the system SHALL check whether the file is traceable to a task description in `tasks.md` or a component listed in `design.md`'s Architecture & Components section. Files that appear in the diff but have no connection to any task or design component SHALL be collected and reported as a single SUGGESTION with the list of untraced files, rather than one issue per file.
 
-**Preflight Side-Effect Cross-Check**: The system SHALL read `preflight.md` Section C and cross-check each identified side-effect against `tasks.md` entries, diff content, and codebase evidence. Side-effects with neither a matching task nor detectable evidence SHALL be reported as WARNING. If Section C contains no actionable side-effects, the system SHALL skip the cross-check and note it in the report.
+**Pre-Implementation Side-Effect Cross-Check**: The system SHALL read `preflight.md` Side-Effect Analysis and cross-check each identified side-effect against `tasks.md` entries, diff content, and codebase evidence. Side-effects with neither a matching task nor detectable evidence SHALL be reported as WARNING. If no actionable side-effects are listed, the system SHALL skip the cross-check and note it in the report.
 
-The audit.md generation SHALL serve as both the initial verification (tasks.md step 3.2) and the final verification (step 3.5) in the QA loop. When run as a final verify after the fix loop, the verification SHALL operate identically — checking implementation and scope against the current state of code and artifacts. No special flags or modes are needed; the verification is stateless and always checks the current state. The audit.md artifact is persisted in the change directory, replacing the previous transient verify report.
+The audit.md generation SHALL serve as both the initial verification and the final verification of the post-implementation QA loop defined in `tasks.md § Standard Tasks (Post-Implementation)`. When run as a final verify after the fix loop, the verification SHALL operate identically — checking implementation and scope against the current state of code and artifacts. No special flags or modes are needed; the verification is stateless and always checks the current state. The audit.md artifact is persisted in the change directory, replacing the previous transient verify report.
 
 **User Story:** As a developer I want post-implementation verification that checks my code against the specs, so that I can catch gaps, divergences, and inconsistencies before proceeding.
 
@@ -134,31 +134,32 @@ The audit.md generation SHALL serve as both the initial verification (tasks.md s
 - **AND** `spec-format` frontmatter SHALL be updated to `status: stable`, `change` removed, `version: 6`, `lastModified: 2026-04-08`
 - **AND** `proposal.md` frontmatter SHALL be updated to `status: review`
 
-#### Scenario: Test coverage verification with automated tests
-- **GIVEN** a change with `tests.md` listing 5 automated test files and 2 manual test items
-- **AND** all 5 automated test files exist in the project's test directory
-- **AND** all 2 manual test items are checked off in tests.md
+#### Scenario: Scenario verification with automated tests produced during apply
+- **GIVEN** a change whose specs declare 12 Gherkin scenarios across affected capabilities
+- **AND** the apply phase generated 5 automated test files (Constitution § Testing names a framework)
+- **AND** all 5 automated test files exist in the project's test directory and pass
 - **WHEN** apply generates audit.md
-- **THEN** the Testing dimension SHALL report "5/5 automated tests present, 2/2 manual items verified"
+- **THEN** the Testing dimension SHALL report all 12 scenarios as verified against implementation evidence
+- **AND** SHALL report the 5 automated test files as passing
 - **AND** SHALL NOT raise any test coverage issues
 
-#### Scenario: Test coverage with missing automated test file
-- **GIVEN** a change with `tests.md` listing 3 automated test files
+#### Scenario: Scenario verification with missing automated test file
+- **GIVEN** a change whose apply phase was expected to produce 3 automated test files
 - **AND** only 2 of the 3 test files exist in the project's test directory
 - **WHEN** apply generates audit.md
-- **THEN** the Testing dimension SHALL report a WARNING: "Missing test file: <path>"
+- **THEN** the Testing dimension SHALL report a WARNING: "Missing automated test file: <path>"
 
-#### Scenario: Test coverage with unchecked manual items
-- **GIVEN** a change with `tests.md` containing 4 manual test checklist items
-- **AND** only 2 of the 4 items are checked off
+#### Scenario: Scenario verification with unverified scenario
+- **GIVEN** a change with 4 Gherkin scenarios in the affected specs
+- **AND** only 2 of the 4 scenarios have detectable implementation evidence
 - **WHEN** apply generates audit.md
-- **THEN** the Testing dimension SHALL report a WARNING: "2 manual test items not verified"
+- **THEN** the Testing dimension SHALL report a WARNING: "2 scenarios not verified against implementation evidence"
 
-#### Scenario: Test coverage for project without framework
-- **GIVEN** a project with no test framework configured
-- **AND** `tests.md` contains only manual test items (no automated tests section)
+#### Scenario: Scenario verification for project without framework
+- **GIVEN** a project where Constitution § Testing declares no framework
+- **AND** the apply phase did not generate any automated tests
 - **WHEN** apply generates audit.md
-- **THEN** the Testing dimension SHALL verify only manual checklist completion
+- **THEN** the Testing dimension SHALL verify each Gherkin scenario in the affected specs against implementation evidence
 - **AND** SHALL NOT check for automated test files
 
 #### Scenario: Verification with all checks passing
@@ -232,7 +233,7 @@ The audit.md generation SHALL serve as both the initial verification (tasks.md s
 
 - **GIVEN** a change where the initial verify found 2 CRITICAL issues
 - **AND** the developer fixed both issues in the fix loop
-- **WHEN** the system regenerates audit.md as the final verification step (3.5)
+- **WHEN** the system regenerates audit.md as the final verification step in the post-implementation QA loop
 - **THEN** the verification report SHALL show 0 CRITICAL issues
 - **AND** the report SHALL reflect the current state of all artifacts (including any specs updated during the fix loop)
 - **AND** the final assessment SHALL be "All checks passed. Ready to proceed." or note remaining warnings

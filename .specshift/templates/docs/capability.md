@@ -1,13 +1,16 @@
 ---
 id: docs-capability
-template-version: 2
+template-version: 3
 description: Capability documentation template
 generates: "docs/capabilities/*.md"
 requires: []
 instruction: |
   Generate user-facing capability documentation from specs.
   Derive Purpose from spec Purpose using problem-framing.
-  Derive Rationale from research.md and design.md in completed changes.
+  Derive Rationale from `proposal.md § Discovery` and `design.md` in completed
+  changes. Backward compatibility: if a legacy change directory contains a
+  `research.md` file and its proposal.md does not have a `## Discovery`
+  section, fall back to reading `research.md` for enrichment.
   Write in present tense — describe current design, not change history.
   OMIT empty optional sections entirely.
 ---
@@ -52,7 +55,8 @@ Guidelines:
 
 [3-5 sentences of design context: key decisions, alternatives explored,
  why this specific approach was chosen.
- For enriched capabilities: derived from research.md and design.md.
+ For enriched capabilities: derived from proposal.md § Discovery and design.md
+ (legacy: fall back to research.md if proposal.md lacks § Discovery).
  For initial-spec-only: derived from spec requirements, scenarios, and assumptions.
  OMIT this section if no useful design context available.]
 

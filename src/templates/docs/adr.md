@@ -1,6 +1,6 @@
 ---
 id: docs-adr
-template-version: 1
+template-version: 2
 description: Architecture Decision Record template
 generates: "docs/decisions/adr-*.md"
 requires: []
@@ -8,7 +8,13 @@ instruction: |
   Generate ADRs from completed changes' design.md Decisions tables.
   Use inline rationale via em-dash in the Decision section.
   Use semantic link text for references.
-  Context should be minimum 4-6 sentences.
+  Context should be 2-6 sentences. Do not pad short contexts to hit a length —
+  if the decision is straightforward, two clear sentences are sufficient.
+  Avoid filler restating the decision; Context is for motivation and constraints,
+  not for re-asserting what was decided.
+  The Consequences section is OPTIONAL for straightforward decisions where
+  the positives and negatives are self-evident from Decision and Alternatives.
+  Include Consequences only when it adds non-obvious information.
 ---
 # ADR-NNN: [Decision Title]
 
@@ -18,12 +24,14 @@ Accepted (YYYY-MM-DD)
 
 ## Context
 
-<!-- Minimum 4-6 sentences. Include:
+<!-- 2-6 sentences. Include:
      - What motivated the decision (the problem being solved)
      - What was investigated or researched
      - Key constraints or trade-offs that shaped the decision
-     Enrich with research.md "## 3. Approaches" from the same change if available.
-     Do NOT write thin contexts like "we chose X over Y because Z". -->
+     Enrich with proposal.md "## Discovery" (or legacy research.md) from the
+     same change if available.
+     Anti-padding: do NOT restate the decision here, do NOT repeat
+     alternatives wording, and do NOT pad to hit 4+ sentences if 2 suffice. -->
 
 [Context text]
 
@@ -46,6 +54,11 @@ Accepted (YYYY-MM-DD)
 - [From the Decisions table "Alternatives" column, expanded into bullet points]
 
 ## Consequences
+
+<!-- OPTIONAL section. Omit entirely for straightforward decisions where
+     the positives and negatives are self-evident from Decision and
+     Alternatives. Include only when there are non-obvious consequences
+     worth stating. -->
 
 ### Positive
 

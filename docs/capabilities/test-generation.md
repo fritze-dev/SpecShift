@@ -1,65 +1,63 @@
 ---
 title: "Test Generation"
 capability: "test-generation"
-description: "Automated test stub and manual test plan generation from Gherkin scenarios before implementation"
-lastUpdated: "2026-04-10"
+description: "Apply-phase automated test generation driven by Constitution § Testing; direct scenario verification when no framework is configured"
+lastUpdated: "2026-04-29"
 ---
 
 # Test Generation
 
-Generates test stubs and manual test plans from Gherkin scenarios in specs before implementation begins, enabling test-first development. The `tests` pipeline stage sits between `preflight` and `tasks`, producing a `tests.md` artifact with dual-mode output: automated test files when a framework is configured in the constitution, and a manual verification checklist always.
+Generates tests during the apply phase as part of implementation tasks. When the project Constitution declares a test framework in `## Testing`, the apply phase produces automated test stubs in the configured directory; when "None" or absent, scenario verification happens directly in `audit.md` against the Gherkin scenarios in the affected specs. Test generation is no longer a separate pipeline stage producing a `tests.md` artifact.
 
 ## Purpose
 
-Gherkin scenarios in specs define testable behavior, but without a dedicated pipeline stage they are only used for manual verification during review. This leaves a gap between specification and implementation where test-first development cannot occur. Test Generation bridges that gap by translating scenarios into concrete test artifacts before any code is written, so developers can follow a TDD workflow where implementation makes tests green.
+Gherkin scenarios in specs define testable behavior, but a separate Tests pipeline stage that reformatted those scenarios into a manual checklist added overhead without adding information — and projects without a test framework derived no automation value from it. Folding test generation into the apply phase keeps automated test scaffolding close to implementation tasks for framework-configured projects, and lets framework-less projects rely on direct scenario verification in audit.
 
 ## Rationale
 
-The tests stage is a separate pipeline stage rather than a sub-step of tasks because clean TDD flow requires tests to exist as artifacts before tasks are created -- separate stage means separate dependency tracking. Framework configuration lives in the constitution's `## Testing` section because it fits the three-layer architecture: project-specific config belongs in Layer 1 (constitution), following the precedent set by Tech Stack. A manual checklist is always generated because every project benefits from structured verification, even those with automated tests -- non-automatable scenarios (visual verification, user judgment, multi-system E2E) need manual coverage. Test stubs are LLM-generated rather than template-based because unbounded framework diversity makes per-framework templates infeasible, and the LLM already knows mainstream frameworks.
+Test generation belongs in the apply phase because automated tests ARE code — they belong with the implementation tasks that produce them, not in a separate planning stage. Constitution § Testing is the single source of truth for framework configuration: it already captures the project's test stack at the constitution layer (per the three-layer architecture). For framework-less projects, the audit phase already verifies scenario coverage against the diff and code as part of its standard dimensions; reformatting scenarios into a separate manual checklist duplicated this work. Backward compatibility is preserved: legacy change directories that contain a `tests.md` from the previous Tests stage retain that file unchanged — tooling tolerates the legacy shape gracefully.
 
 ## Features
 
-- **Dual-mode output**: Automated test stubs when a framework is configured, plus a manual verification checklist always
-- **Constitution-based framework configuration**: Test framework, directory, file naming pattern, import style, and conventions read from the constitution's `## Testing` section
-- **Scenario parsing**: Extracts GIVEN/WHEN/THEN clauses from all `#### Scenario:` blocks in spec files, plus edge cases
-- **TDD red-phase stubs**: Generated tests are initially pending/failing (e.g., `test.todo()` for Vitest, `pytest.mark.skip` for pytest)
-- **Traceability comments**: Every test case includes a reference linking back to its source scenario (`// Spec: <capability> > Requirement: <name> > Scenario: <scenario-name>`)
-- **Manual test plan**: Checkbox items with Setup/Action/Verify sub-items derived from GIVEN/WHEN/THEN clauses
-- **Manual edit preservation**: Test cases marked with `@manual` are preserved during regeneration
-- **Test manifest artifact**: `tests.md` in the change workspace with configuration table, file traceability, manual checklist, and summary counts
+- **Framework Configuration via Constitution**: Test framework, directory, file naming pattern, import style, and conventions are declared in the project Constitution's `## Testing` section. "None" or absent means no framework.
+- **Apply-Phase Automated Test Generation**: When a framework is configured, the apply phase generates automated test stubs as part of implementation tasks. Each stub maps GIVEN→arrange, WHEN→act, THEN→assert. Tests are grouped by capability and requirement and include traceability comments linking back to source scenarios.
+- **Scenario Verification Without a Framework**: When Constitution § Testing declares "None" (or is absent), the apply phase does not generate automated tests; instead, the audit phase verifies each Gherkin scenario directly against the implementation. No `tests.md` artifact is produced.
+- **Manual Edit Preservation**: When regenerating tests for a change that modifies existing scenarios, test cases marked with `@manual` (language-appropriate comment syntax) are preserved unchanged.
+- **Backward Compatibility With Legacy `tests.md`**: Legacy change directories that contain a `tests.md` from the previous Tests stage retain that file. Tooling that reads change artifacts (audit cross-checks, capability-doc enrichment) tolerates the legacy shape; new changes do not produce `tests.md`.
 
 ## Behavior
 
-### Framework Configuration via Constitution
+### Framework-Driven Test Generation During Apply
 
-When the constitution has a `## Testing` section specifying a framework (e.g., `vitest`, `pytest`), the tests stage generates automated test stubs in the configured test directory using the specified file naming pattern. When the section is absent, the stage operates in manual-only mode. Partial configuration (only framework and directory) is supported -- missing values are inferred from framework conventions.
+When Constitution § Testing declares a framework, apply-phase implementation tasks include generating automated test stubs in the configured test directory. Each stub initially fails or is marked pending (TDD red-phase) using the framework's convention (e.g., `test.todo()` for Vitest, `pytest.mark.skip` for pytest). Stubs include traceability comments referencing source scenarios.
 
-### Scenario Parsing from Specs
+### Direct Scenario Verification When No Framework
 
-The tests stage parses all `#### Scenario:` blocks from spec files listed in the proposal's capabilities. For each scenario, GIVEN clauses become preconditions, WHEN clauses become actions, and THEN/AND clauses become assertions. The `## Edge Cases` section is also parsed to generate additional test cases for boundary conditions, error states, and empty states.
+When Constitution § Testing is "None" or absent, the apply phase does not produce test files. The audit phase's scenario-coverage dimension verifies each Gherkin scenario from the affected specs directly against the implementation diff and code. No standalone `tests.md` checklist is produced.
 
-### Automated Test Stub Generation
+### Edge-Case Test Generation
 
-When a framework is configured, test stub files are generated in the project's test directory. Each stub maps GIVEN to test setup (arrange), WHEN to test action (act), and THEN/AND to assertions (assert). Tests are grouped by capability and requirement. All stubs initially fail or are marked as pending to support TDD red-phase workflow.
+When a framework is configured, apply-phase test generation includes test cases for items in each spec's `## Edge Cases` section. When a spec has no scenarios for a requirement (a format violation), apply notes the gap in the audit's findings rather than silently skipping.
 
-### Manual Test Plan Generation
+### Manual Edit Preservation During Regeneration
 
-A manual test plan is always generated in `tests.md`. Without a framework, all scenarios become manual checkbox items. With a framework, only non-automatable scenarios (user judgment, visual verification, multi-system E2E) appear in the manual plan. Each item follows the format: checkbox with scenario name, then Setup/Action/Verify sub-items.
+When apply runs against a change that modifies existing scenarios, test files matching the framework's discovery rules are scanned for `@manual` markers. Marked test cases are preserved unchanged; unmarked tests are regenerated to match the current scenarios.
 
-### Manual Edit Preservation
+### Legacy `tests.md` Tolerance
 
-When regenerating tests for a change that modifies existing scenarios, test cases marked with `@manual` (using language-appropriate comment syntax) are preserved unchanged. The manifest reports which tests were preserved versus regenerated.
+Legacy change directories that contain a `tests.md` are accepted by audit cross-checks and capability-doc enrichment. The current pipeline does not produce new `tests.md` files; the audit Test Coverage dimension verifies scenarios directly against specs for both legacy and new changes.
 
 ## Known Limitations
 
-- Test stubs are generated, not executed -- the tests stage does not run any test suite
-- The distinction between automatable and non-automatable scenarios relies on LLM heuristics from scenario content
-- Regeneration replaces all unmarked tests -- only `@manual`-marked tests are preserved
+- Apply-phase test generation produces stubs; the apply phase does not run the test suite.
+- The distinction between automatable and non-automatable scenarios relies on LLM heuristics — visual or judgment-based scenarios may still need manual verification outside the test framework.
+- Regeneration replaces all unmarked tests during apply when a change modifies scenarios; only `@manual`-marked tests survive.
 
 ## Edge Cases
 
-- If a requirement has no scenarios, the system skips it and notes a warning in tests.md
-- If two scenarios across different requirements share the same name, the system disambiguates by prefixing with the requirement name
-- If the test directory does not exist, the system creates it
-- If the proposal lists no capabilities, the tests stage produces a minimal tests.md noting "No capabilities to test"
-- If the constitution specifies an unknown framework, the system falls back to generic test stubs with comments indicating the intended framework
+- If a requirement has no scenarios, apply skips test generation for that requirement and notes the gap in audit findings.
+- If two scenarios across different requirements share the same name, apply disambiguates by prefixing with the requirement name.
+- If the test directory does not exist, apply creates it.
+- If the proposal lists no capabilities, apply skips test generation entirely.
+- If the constitution specifies an unknown framework, apply falls back to generic test stubs with comments indicating the intended framework.
+- Legacy change directories that contain `tests.md` retain the file; new changes do not.
