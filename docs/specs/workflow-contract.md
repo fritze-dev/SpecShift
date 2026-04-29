@@ -56,7 +56,7 @@ All template files SHALL use the Smart Template format: markdown with YAML front
 **User Story:** As a developer I want each template to be self-describing with its own instruction and metadata, so that I can understand what a template does without consulting a separate schema file.
 
 #### Scenario: Smart Template contains required frontmatter fields
-- **GIVEN** a Smart Template file (e.g., `.specshift/templates/changes/research.md`)
+- **GIVEN** a Smart Template file (e.g., `.specshift/templates/changes/proposal.md`)
 - **WHEN** its YAML frontmatter is inspected
 - **THEN** it SHALL contain `id`, `description`, `generates`, `requires`, `instruction`, and `template-version` fields
 
@@ -108,7 +108,7 @@ The system SHALL provide 5 built-in actions: `init` (project initialization and 
 - **AND** SHALL NOT look for compiled requirement files for this action
 
 #### Scenario: Actions are not pipeline steps
-- **GIVEN** a WORKFLOW.md with `pipeline: [research, proposal, specs, design, preflight, tasks, audit]`
+- **GIVEN** a WORKFLOW.md with `pipeline: [proposal, specs, design, preflight, tasks, audit]`
 - **AND** `actions: [init, propose, apply, qa-review, finalize]`
 - **WHEN** the pipeline is traversed
 - **THEN** actions SHALL NOT be included in the pipeline artifact sequence
@@ -127,7 +127,7 @@ The system SHALL provide a single router skill that handles all user-facing comm
 2. **Identify Action**: Parse the first argument and validate it against the loaded `actions` array. If WORKFLOW.md was missing and action is not `init`: stop and suggest running `specshift init`.
 3. **Plugin Version Check** (skip for `init`): Read the `plugin-version` field from the compiled workflow template at `${SKILL_DIR}/templates/workflow.md` (the current plugin version, injected at compile time) and compare it against the `plugin-version` field from the project's WORKFLOW.md frontmatter. If either `plugin-version` is missing or empty: display a note suggesting `specshift init` to enable version tracking. If versions do not match: display an advisory warning with installed vs current version and suggest `specshift init`. If versions match: proceed silently. The check is advisory — the dispatched action SHALL proceed regardless.
 4. **Change Context Detection** (skip for `init`): Get current branch via `git rev-parse --abbrev-ref HEAD`, scan `.specshift/changes/*/proposal.md` for a proposal whose `branch` frontmatter field matches; if no match is found, prompt the user with action-appropriate changes — for `propose` and `apply`, list changes with `status: active`; for `finalize` and `review`, list changes with `status: review`.
-5. **Dispatch**: Load compiled requirements from `actions/<action>.md` (relative to the skill) for built-in actions. Use the `### Instruction` from the `## Action: <name>` section (already loaded during Load Configuration) as primary directive, bounded by compiled requirements. For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — execute with instruction + requirements. For custom actions — execute instruction directly with change context (no compiled requirements, agent decides execution mode).
+5. **Dispatch**: Load compiled requirements from `actions/<action>.md` (relative to the skill) for built-in actions. Use the `### Instruction` from the `## Action: <name>` section (already loaded during Load Configuration) as primary directive, bounded by compiled requirements. Stage and action context SHALL be loaded per the "Per-Stage Context Contract" requirement: each pipeline stage reads only the artifacts named by its `requires:` chain, and apply/finalize read only the artifacts in their action contracts. The router MAY spawn a sub-agent for stage execution, apply, finalize, or propose-internal stage generation per the "Sub-Agent Dispatch for Pipeline Stages" requirement. For `propose` — traverse the pipeline, generate artifacts, handle checkpoint/resume. For `apply`/`finalize`/`init` — execute with instruction + requirements. For custom actions — execute instruction directly with change context (no compiled requirements, agent decides execution mode).
 
 **User Story:** As a developer I want a single entry point that handles built-in and custom actions with shared logic, so that change detection and context loading happen once and consumer projects can extend the workflow.
 
@@ -220,6 +220,83 @@ The system SHALL provide a single router skill that handles all user-facing comm
 - **WHEN** a user invokes `specshift deploy`
 - **THEN** the router SHALL report that `deploy` is not a recognized action
 - **AND** SHALL list the available actions from the `actions` array
+
+### Requirement: Per-Stage Context Contract
+
+The router SHALL load context for each pipeline stage based on that stage's declared `requires:` field in its Smart Template, rather than reading every artifact in the change directory. Each stage SHALL declare its read inputs via `requires:` (the artifacts it depends on) and its write output via `generates:` (the artifact it produces). When the router invokes a stage, it SHALL load only the artifacts named transitively by the stage's `requires:` chain plus the stage's template body, the project constitution, and the relevant specs at `docs/specs/<capability>.md` for capabilities listed in `proposal.md` frontmatter. The router SHALL NOT instruct stage execution to "read all change artifacts".
+
+The apply phase SHALL operate under the same contract: it SHALL read only `proposal.md` (for the capabilities list and discovery context), `design.md` (for architecture and metrics), `tasks.md` (for the implementation checklist), and the affected specs at `docs/specs/<capability>.md`. The apply phase SHALL NOT read unrelated change artifacts (e.g., siblings under `.specshift/changes/`).
+
+The finalize phase SHALL receive a capability list from the dispatching action (sourced from `proposal.md` frontmatter `capabilities:`). It SHALL read only `proposal.md`, `design.md`, `audit.md`, and the listed capabilities' specs. It SHALL NOT scan unrelated historical changes when the capability list is provided.
+
+**User Story:** As a workflow maintainer I want each pipeline stage to declare exactly which artifacts it reads and writes, so that stage execution can be bounded to its actual dependencies rather than the full change history.
+
+#### Scenario: Specs stage loads only its declared dependencies
+- **GIVEN** the specs Smart Template declares `requires: [proposal]` and `generates: docs/specs/<capability>.md`
+- **WHEN** the router invokes the specs stage
+- **THEN** the router SHALL load `proposal.md`, the constitution, and the relevant specs
+- **AND** SHALL NOT load `design.md`, `preflight.md`, `tasks.md`, or `audit.md` (none of which exist yet at this point or are upstream)
+
+#### Scenario: Tasks stage loads transitive chain only
+- **GIVEN** the tasks Smart Template declares `requires: [preflight]`
+- **AND** the chain is `proposal → specs → design → preflight → tasks`
+- **WHEN** the router invokes the tasks stage
+- **THEN** the router SHALL load `proposal.md`, the relevant specs, `design.md`, and `preflight.md`
+- **AND** SHALL NOT instruct the stage to "read all change artifacts"
+
+#### Scenario: Apply dispatch reads bounded context
+- **GIVEN** the user invokes `specshift apply` for a change
+- **WHEN** the router prepares the apply context
+- **THEN** the router SHALL load `proposal.md`, `design.md`, `tasks.md`, and the capabilities' specs
+- **AND** SHALL NOT load artifacts from other changes under `.specshift/changes/`
+
+#### Scenario: Finalize dispatch with capability list reads bounded context
+- **GIVEN** the apply phase auto-dispatches finalize with the capability list `[foo, bar]`
+- **WHEN** the router prepares the finalize context
+- **THEN** the router SHALL load `proposal.md`, `design.md`, `audit.md`, and the specs for `foo` and `bar`
+- **AND** SHALL NOT scan other changes under `.specshift/changes/` for unrelated capabilities
+
+### Requirement: Sub-Agent Dispatch for Pipeline Stages
+
+The router MAY spawn a sub-agent to execute a pipeline stage, the apply phase, the finalize phase, or a propose-internal stage generation. When dispatching to a sub-agent, the router SHALL prepare a prompt that invokes the workflow skill on the artifact context declared by the stage's `requires:` and `generates:` fields. The sub-agent boundary provides context isolation: the sub-agent reads only the bounded context relevant to its stage, and returns its result (typically the generated artifact path or a status summary) to the router. The router SHALL describe sub-agent dispatch in tool-agnostic terms (intent: "spawn a sub-agent that invokes the workflow skill on the given context") and SHALL NOT hardcode any specific host's sub-agent invocation syntax in WORKFLOW.md, Smart Templates, or the workflow skill.
+
+This dispatch pattern follows the proven precedent of the review action's self-check step, which spawns a sub-agent that re-invokes the review skill on the current HEAD. Extending the same pattern to apply, finalize, and propose-internal stage generation closes the loop on bounded execution across the pipeline.
+
+The sub-agent's prompt SHALL include: the action being dispatched, the change identifier, the stage's `requires:` list (so the sub-agent knows which artifacts to read), the stage's `generates:` declaration (so the sub-agent knows what to write), and a reference to the workflow skill to invoke. The router SHALL NOT pre-load the artifact bodies into the prompt — the sub-agent reads them itself within its bounded context.
+
+**User Story:** As a workflow author I want each pipeline stage and dispatched action to run inside an isolated sub-agent context, so that token usage stays bounded and stages do not accumulate context from unrelated artifacts.
+
+#### Scenario: Router spawns sub-agent for apply phase
+- **GIVEN** a change with completed proposal, specs, design, preflight, and tasks
+- **WHEN** the user invokes `specshift apply` and the router elects to dispatch via sub-agent
+- **THEN** the router SHALL prepare a sub-agent prompt that names the action (`apply`), the change identifier, and the apply contract's read inputs (`proposal.md`, `design.md`, `tasks.md`, the affected specs)
+- **AND** the sub-agent SHALL invoke the workflow skill on that bounded context
+- **AND** SHALL return the implementation result (including audit.md path) to the router
+
+#### Scenario: Router spawns sub-agent for finalize phase
+- **GIVEN** apply has completed with audit.md verdict PASS
+- **AND** `proposal.md` frontmatter declares `capabilities: { new: [foo], modified: [bar], removed: [] }`
+- **WHEN** the router auto-dispatches finalize via sub-agent
+- **THEN** the sub-agent prompt SHALL include the capability list `[foo, bar]` and the finalize contract's read inputs
+- **AND** the sub-agent SHALL invoke the workflow skill on that bounded context
+- **AND** SHALL NOT scan unrelated historical changes
+
+#### Scenario: Router spawns sub-agent for propose-internal stage generation
+- **GIVEN** propose is traversing the pipeline and reaches the design stage
+- **WHEN** the router elects to generate the design artifact via sub-agent
+- **THEN** the sub-agent prompt SHALL include the design stage's `requires:` (proposal, specs) and `generates:` (`design.md`)
+- **AND** the sub-agent SHALL invoke the workflow skill on that bounded context
+
+#### Scenario: Sub-agent dispatch described in tool-agnostic terms
+- **GIVEN** the WORKFLOW.md action instructions and the workflow skill describe sub-agent dispatch
+- **WHEN** the descriptions are inspected
+- **THEN** they SHALL describe the dispatch as "spawn a sub-agent that invokes the workflow skill on the given context"
+- **AND** SHALL NOT hardcode any specific host's sub-agent invocation syntax
+
+#### Scenario: Pattern follows review-self-check precedent
+- **GIVEN** the review action's self-check step spawns a sub-agent that re-invokes the review skill on the current HEAD
+- **WHEN** the apply, finalize, and propose-internal stage dispatches are described
+- **THEN** they SHALL follow the same dispatch pattern (sub-agent invokes skill on bounded context)
 
 ### Requirement: Review Action Configuration
 

@@ -2,182 +2,131 @@
 order: 9
 category: development
 status: stable
-version: 1
-lastModified: 2026-04-10
+version: 2
+lastModified: 2026-04-29
 ---
 ## Purpose
 
-Generates test stubs and manual test plans from Gherkin scenarios in specs before implementation begins, enabling test-first development. Supports dual-mode output: automated test files when a framework is configured, and a manual verification checklist always.
+Defines apply-phase test generation behavior: when a project's constitution declares an automated test framework, the apply phase generates automated tests as part of implementation tasks. When no framework is declared, scenario verification is handled directly by audit.md against the Gherkin scenarios in the affected specs. Test generation is no longer a separate pipeline stage producing a tests.md artifact.
 
 ## Requirements
 
 ### Requirement: Framework Configuration via Constitution
 
-The system SHALL read test framework configuration from the project constitution's `## Testing` section. The configuration SHALL include: framework name, test directory path, file naming pattern, import style, and conventions. If the `## Testing` section is absent, the system SHALL treat the project as having no automated test framework.
+The system SHALL read test framework configuration from the project constitution's `## Testing` section. The configuration SHALL include: framework name, test directory path, file naming pattern, import style, and conventions. If the `## Testing` section is absent or declares the framework as "None", the system SHALL treat the project as having no automated test framework and SHALL handle scenario verification via audit.md against the Gherkin scenarios in the affected specs.
 
-**User Story:** As a project maintainer I want to declare my test framework once in the constitution, so that test generation adapts to my project's tooling without per-change configuration.
+**User Story:** As a project maintainer I want to declare my test framework once in the constitution, so that the apply phase generates tests using my project's tooling without per-change configuration.
 
-#### Scenario: Constitution has Testing section
+#### Scenario: Constitution declares a test framework
 - **GIVEN** a constitution with a `## Testing` section specifying `vitest` as framework and `src/__tests__` as test directory
-- **WHEN** the tests pipeline stage reads the constitution
-- **THEN** the system SHALL use `vitest` as the target framework
+- **WHEN** the apply phase begins implementation
+- **THEN** the system SHALL include automated test generation as part of the implementation tasks
 - **AND** SHALL write generated test files to `src/__tests__/`
 
-#### Scenario: Constitution has no Testing section
-- **GIVEN** a constitution without a `## Testing` section
-- **WHEN** the tests pipeline stage reads the constitution
-- **THEN** the system SHALL operate in manual-only mode
-- **AND** SHALL NOT attempt to generate automated test files
+#### Scenario: Constitution declares no framework
+- **GIVEN** a constitution with `## Testing` declaring framework "None" (or no `## Testing` section at all)
+- **WHEN** the apply phase begins implementation
+- **THEN** the system SHALL NOT generate automated test files
+- **AND** scenario verification SHALL be handled by audit.md against Gherkin scenarios in the affected specs
 
 #### Scenario: Testing section with partial configuration
 - **GIVEN** a constitution with `## Testing` specifying only framework name and test directory
-- **WHEN** the tests pipeline stage reads the constitution
+- **WHEN** the apply phase begins
 - **THEN** the system SHALL use the provided values and infer missing values (file pattern, import style) from the framework's conventions
 
-### Requirement: Scenario Parsing from Specs
+### Requirement: Apply-Phase Automated Test Generation
 
-The system SHALL parse all `#### Scenario:` blocks from spec files listed in the proposal's capabilities. For each scenario, the system SHALL extract the GIVEN clause (preconditions), WHEN clause (trigger/action), and THEN/AND clauses (expected outcomes). The system SHALL also parse the `## Edge Cases` section and generate additional test cases for documented boundary conditions, error states, and empty states.
+When Constitution § Testing declares a framework, the apply phase SHALL generate automated tests as part of implementation tasks rather than as a dedicated pipeline stage. The system SHALL parse all `#### Scenario:` blocks from the spec files listed in the proposal's `capabilities` frontmatter (or, as a fallback, the parsed Capabilities section). For each scenario, the system SHALL extract the GIVEN clause (preconditions), WHEN clause (trigger/action), and THEN/AND clauses (expected outcomes). Each generated test SHALL map GIVEN to test setup (arrange), WHEN to test action (act), and THEN/AND to assertions (assert). Tests SHALL be grouped by capability and requirement.
 
-**User Story:** As a developer I want all my Gherkin scenarios automatically translated into test cases, so that no specified behavior is left untested.
+Each generated test SHALL include a traceability comment in the source file linking back to the originating scenario. For most languages this takes the form `// Spec: <capability> > Requirement: <name> > Scenario: <scenario-name>`; the comment syntax SHALL match the target language (e.g., `#` for Python).
 
-#### Scenario: Parse standard Gherkin scenario
-- **GIVEN** a spec with a scenario containing GIVEN, WHEN, and THEN clauses
-- **WHEN** the tests stage parses the spec
-- **THEN** the system SHALL extract the precondition from GIVEN, the action from WHEN, and the assertion from THEN
+**User Story:** As a developer I want automated tests generated alongside my implementation when my project has a test framework, so that scenario coverage is enforced by code rather than by a separate manual checklist.
 
-#### Scenario: Parse scenario with AND clause
-- **GIVEN** a spec with a scenario containing GIVEN, WHEN, THEN, and AND clauses
-- **WHEN** the tests stage parses the spec
-- **THEN** the system SHALL extract the AND clause as an additional assertion alongside THEN
-
-#### Scenario: Parse Edge Cases section
-- **GIVEN** a spec with an Edge Cases section listing 3 boundary conditions
-- **WHEN** the tests stage parses the spec
-- **THEN** the system SHALL generate additional test cases for each documented edge case
-
-#### Scenario: Multiple capabilities in proposal
-- **GIVEN** a proposal listing 2 new capabilities and 1 modified capability
-- **WHEN** the tests stage runs
-- **THEN** the system SHALL parse scenarios from all 3 capability specs
-
-### Requirement: Automated Test Stub Generation
-
-When a test framework is configured in the constitution, the system SHALL generate test stub files in the project's test directory. Each test stub SHALL map GIVEN to test setup (arrange), WHEN to test action (act), and THEN/AND to assertions (assert). Generated tests SHALL initially fail or be marked as pending (TDD red phase) using the framework's convention (e.g., `test.todo()` for Vitest, `pytest.mark.skip` for pytest). The system SHALL group tests by capability and requirement.
-
-**User Story:** As a developer I want failing test stubs generated before I write code, so that I can follow a test-first workflow where implementation makes tests green.
-
-#### Scenario: Generate Vitest test stubs
+#### Scenario: Apply phase generates Vitest tests
 - **GIVEN** a constitution with framework `vitest` and file pattern `{name}.test.ts`
-- **AND** a spec with 3 scenarios for capability `user-auth`
-- **WHEN** the tests stage generates automated tests
+- **AND** affected specs declaring 3 scenarios for capability `user-auth`
+- **WHEN** the apply phase generates automated tests
 - **THEN** the system SHALL create `user-auth.test.ts` in the configured test directory
-- **AND** the file SHALL contain 3 test stubs using `test.todo()` or equivalent
-- **AND** each test SHALL map GIVEN to setup, WHEN to action, THEN to assertion comments
+- **AND** the file SHALL contain 3 tests mapping GIVEN/WHEN/THEN to arrange/act/assert
+- **AND** each test SHALL include a traceability comment to its source scenario
 
-#### Scenario: Generate pytest test stubs
+#### Scenario: Apply phase generates pytest tests
 - **GIVEN** a constitution with framework `pytest` and file pattern `test_{name}.py`
-- **AND** a spec with 2 scenarios for capability `data-export`
-- **WHEN** the tests stage generates automated tests
+- **AND** affected specs declaring 2 scenarios for capability `data-export`
+- **WHEN** the apply phase generates automated tests
 - **THEN** the system SHALL create `test_data_export.py` in the configured test directory
-- **AND** the file SHALL contain 2 test stubs using `pytest.mark.skip` or equivalent
+- **AND** each test SHALL include a `#`-prefixed traceability comment
 
-#### Scenario: Tests initially fail (TDD red phase)
-- **GIVEN** generated test stubs for a new capability
-- **WHEN** the test suite is executed before any implementation
-- **THEN** all generated tests SHALL be in a pending/skipped/failing state
+#### Scenario: Edge Cases produce additional tests
+- **GIVEN** an affected spec whose `## Edge Cases` section lists 3 boundary conditions
+- **WHEN** the apply phase generates automated tests
+- **THEN** the system SHALL produce additional test cases for each documented edge case
 
-### Requirement: Traceability Comments
+#### Scenario: Multiple capabilities in scope
+- **GIVEN** a proposal listing 2 new capabilities and 1 modified capability
+- **WHEN** the apply phase generates automated tests
+- **THEN** the system SHALL parse scenarios from all 3 capability specs and produce tests for each
 
-Every generated test case (automated or manual) SHALL include a traceability reference linking it back to its source scenario. For automated tests, this SHALL be a code comment in the format `// Spec: <capability> > Requirement: <name> > Scenario: <scenario-name>` (or the language's comment syntax equivalent). For manual test items, the traceability SHALL be implicit in the hierarchical structure (grouped by capability and requirement).
+### Requirement: Scenario Verification Without a Framework
 
-#### Scenario: Automated test includes traceability comment
-- **GIVEN** a scenario "Valid credentials succeed" under requirement "Login Validation" in capability `user-auth`
-- **WHEN** the system generates an automated test stub
-- **THEN** the test SHALL include a comment: `// Spec: user-auth > Requirement: Login Validation > Scenario: Valid credentials succeed`
+When Constitution § Testing declares no framework, the apply phase SHALL NOT produce a separate manual test checklist artifact. Instead, audit.md SHALL verify each Gherkin scenario in the affected specs against implementation evidence (diff content as primary, codebase keyword search as fallback). This is the verification path defined by the quality-gates spec's Testing dimension. Manual verification checklists are no longer part of the standard flow.
 
-#### Scenario: Python test uses correct comment syntax
-- **GIVEN** a pytest project with a scenario from capability `data-export`
-- **WHEN** the system generates a Python test stub
-- **THEN** the traceability comment SHALL use `#` prefix instead of `//`
+**User Story:** As a developer on a project without an automated test framework I want scenario coverage verified directly from my specs during audit, so that I do not need to maintain a separate tests.md checklist.
 
-### Requirement: Manual Test Plan Generation
+#### Scenario: No-framework project relies on audit scenario verification
+- **GIVEN** a project whose Constitution § Testing declares "None"
+- **AND** affected specs containing 5 Gherkin scenarios
+- **WHEN** the apply phase produces audit.md
+- **THEN** audit.md's Testing dimension SHALL verify each of the 5 scenarios against implementation evidence
+- **AND** no tests.md artifact SHALL be produced for the change
 
-The system SHALL ALWAYS generate a manual test plan section in `tests.md`, regardless of whether a test framework is configured. Each applicable scenario SHALL be converted to a checkbox item with Setup (from GIVEN), Action (from WHEN), and Verify (from THEN/AND) sub-items. When a framework IS configured, the manual test plan SHALL include only scenarios that cannot be automated (user judgment, visual verification, multi-system E2E workflows). When no framework is configured, the manual test plan SHALL include ALL scenarios.
+#### Scenario: Manual checklist not produced
+- **GIVEN** any change progressing through the pipeline under the current six-stage flow
+- **WHEN** the apply phase completes
+- **THEN** no `tests.md` checklist artifact SHALL be produced
 
-**User Story:** As a developer without an automated test framework I want a structured verification checklist derived from my specs, so that I can systematically verify each scenario during implementation.
+### Requirement: Manual Edit Preservation for Generated Tests
 
-#### Scenario: Manual plan without framework (all scenarios)
-- **GIVEN** a project with no test framework configured
-- **AND** a spec with 5 scenarios across 2 requirements
-- **WHEN** the tests stage generates the manual test plan
-- **THEN** `tests.md` SHALL contain 5 checkbox items with Setup/Action/Verify sub-items
-- **AND** no automated test files SHALL be generated
-
-#### Scenario: Manual plan with framework (non-automatable only)
-- **GIVEN** a project with Vitest configured
-- **AND** a spec with 5 scenarios, 2 of which involve visual verification
-- **WHEN** the tests stage generates the manual test plan
-- **THEN** `tests.md` SHALL contain 2 manual checkbox items for the visual scenarios
-- **AND** 3 automated test stubs SHALL be generated in test files
-
-#### Scenario: Manual checklist item format
-- **GIVEN** a scenario with GIVEN "a user on the login page", WHEN "the user submits valid credentials", THEN "the dashboard loads"
-- **WHEN** the system generates a manual test item
-- **THEN** the checkbox item SHALL follow the format:
-  - `- [ ] **Scenario: <name>**`
-  - `  - Setup: a user on the login page`
-  - `  - Action: the user submits valid credentials`
-  - `  - Verify: the dashboard loads`
-
-### Requirement: Test Manifest Artifact
-
-The system SHALL produce a `tests.md` artifact in the change workspace containing: a configuration table (mode, framework), an automated tests section with a file traceability table (when applicable), a manual test plan section with checkbox items (always), and a traceability summary with counts of automated and manual test items. The `tests.md` artifact SHALL serve as the pipeline artifact tracked by the dependency chain.
-
-#### Scenario: Manifest with framework configured
-- **GIVEN** a project with Vitest configured and a change with 8 scenarios
-- **WHEN** the tests stage completes
-- **THEN** `tests.md` SHALL contain a configuration table showing mode "Dual (automated + manual)"
-- **AND** an automated tests section listing generated files with scenario mappings
-- **AND** a manual test plan section with non-automatable scenarios
-- **AND** a summary showing total, automated, and manual counts
-
-#### Scenario: Manifest without framework
-- **GIVEN** a project with no test framework
-- **AND** a change with 5 scenarios
-- **WHEN** the tests stage completes
-- **THEN** `tests.md` SHALL contain a configuration table showing mode "Manual only"
-- **AND** no automated tests section
-- **AND** a manual test plan section with all 5 scenarios as checkbox items
-- **AND** a summary showing 0 automated, 5 manual
-
-### Requirement: Manual Edit Preservation
-
-When regenerating tests for a change that modifies existing scenarios, the system SHALL check existing test files for an `@manual` marker (language-appropriate: `// @manual`, `# @manual`). Test cases marked with `@manual` SHALL be preserved as-is during regeneration. The tests.md manifest SHALL report which tests were preserved versus regenerated.
+When the apply phase regenerates tests for a change that modifies existing scenarios, the system SHALL check existing test files for an `@manual` marker (language-appropriate: `// @manual`, `# @manual`). Test cases marked with `@manual` SHALL be preserved as-is during regeneration.
 
 #### Scenario: Preserve manually edited test
 - **GIVEN** an existing test file with a test case containing `// @manual` at the top of the test block
-- **WHEN** the tests stage regenerates tests for the same capability
+- **WHEN** the apply phase regenerates tests for the same capability
 - **THEN** the marked test case SHALL be preserved unchanged
-- **AND** the tests.md manifest SHALL note it as "Preserved (@manual)"
 
 #### Scenario: Regenerate unmarked test
 - **GIVEN** an existing test file with a test case that has no `@manual` marker
-- **WHEN** the tests stage regenerates tests for the same capability
+- **WHEN** the apply phase regenerates tests for the same capability
 - **THEN** the test case SHALL be regenerated from the current scenario
+
+### Requirement: Backward Compatibility With Legacy tests.md
+
+Legacy change directories that contain a `tests.md` artifact (created under the previous eight-stage pipeline that included a Tests stage) SHALL retain that file unchanged. The current pipeline SHALL NOT produce new `tests.md` files. Tooling that reads change artifacts (e.g., audit cross-checks) SHALL handle the legacy shape gracefully by accepting the presence of `tests.md` without requiring it.
+
+#### Scenario: Legacy change retains tests.md
+- **GIVEN** a completed change directory that contains a `tests.md` file produced by the previous Tests stage
+- **WHEN** downstream tooling reads the change
+- **THEN** the tooling SHALL accept the legacy file without requiring migration
+- **AND** SHALL NOT regenerate or overwrite it
+
+#### Scenario: New change does not produce tests.md
+- **GIVEN** a new change progressing through the current six-stage pipeline
+- **WHEN** the apply phase completes
+- **THEN** no `tests.md` file SHALL be created in the change directory
 
 ## Edge Cases
 
-- **Spec with no scenarios**: If a requirement has no scenarios (spec format violation), the system SHALL skip that requirement and note it as a warning in tests.md.
+- **Spec with no scenarios**: If a requirement has no scenarios (spec format violation), the apply phase SHALL skip that requirement and note it as a warning in audit.md.
 - **Empty Edge Cases section**: If a spec's Edge Cases section contains no items, no additional edge case tests are generated.
 - **Duplicate scenario names**: If two scenarios across different requirements have the same name, the system SHALL disambiguate by prefixing with the requirement name in the test function name.
 - **Very long scenario names**: Test function names derived from scenario names SHALL be truncated or abbreviated to fit language conventions (e.g., max identifier length).
 - **Test directory does not exist**: The system SHALL create the test directory if it does not exist.
 - **Existing test file with unrelated tests**: When writing to an existing test file, the system SHALL append new tests without modifying existing unrelated test cases.
-- **No capabilities in proposal**: If the proposal lists no capabilities, the tests stage SHALL produce a minimal tests.md noting "No capabilities to test."
+- **No capabilities in proposal**: If the proposal lists no capabilities, the apply phase SHALL skip automated test generation entirely.
 - **Framework not recognized**: If the constitution specifies an unknown framework name, the system SHALL fall back to generating generic test stubs with comments indicating the intended framework.
 
 ## Assumptions
 
-- Gherkin scenarios in specs follow the format defined in the spec-format spec (#### Scenario: heading with GIVEN/WHEN/THEN clauses). <!-- ASSUMPTION: Gherkin format compliance -->
-- The LLM generating test stubs has sufficient knowledge of mainstream test frameworks to produce syntactically correct stubs. <!-- ASSUMPTION: LLM framework knowledge -->
-- The distinction between automatable and non-automatable scenarios can be determined by the LLM from scenario content (user judgment, visual verification, multi-system interaction). <!-- ASSUMPTION: Automatable vs manual classification -->
+- Gherkin scenarios in specs follow the format defined in the spec-format spec (`#### Scenario:` heading with GIVEN/WHEN/THEN clauses). <!-- ASSUMPTION: Gherkin format compliance -->
+- The agent generating tests has sufficient knowledge of mainstream test frameworks to produce syntactically correct code. <!-- ASSUMPTION: Framework knowledge -->
+- The constitution's `## Testing` section is authoritative for whether automated test generation is in scope for a project. <!-- ASSUMPTION: Constitution authority over test mode -->
