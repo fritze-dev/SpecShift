@@ -3,6 +3,44 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v0.2.9-beta] — 2026-04-29
+
+### Review Artifact Pipeline Overhead
+
+Restructures the artifact pipeline from 8 stages to 6 (`[proposal, specs, design, preflight, tasks, audit]`): research is absorbed into proposal as a fixed Discovery block, and tests is eliminated as a separate stage — apply-phase test generation is now driven by the project Constitution § Testing. The router (`SKILL.md`) replaces "read all change artifacts" with per-stage `requires:`-based context contracts, and a new `## Sub-Agent Dispatch` section documents the optional sub-agent dispatch pattern (extending the proven review-self-check model from v0.2.8) to apply, finalize, and propose-internal stage generation. Finalize is scoped: capability-list passthrough from proposal frontmatter; ADR generation gated on `design.md` `has_decisions: true`. ADR template is streamlined (Context 2-6 sentences with anti-padding guidance, Consequences optional). `.claudeignore`/`.codexignore` were declined as out-of-scope (target-specific, asymmetric across Claude Code and Codex). Backward compatibility is preserved: legacy change directories with `research.md`/`tests.md` retain their structure and are tolerated by enrichment tooling. Closes #15.
+
+#### Added
+- `docs/specs/workflow-contract.md` v10 → v11: NEW Requirements "Per-Stage Context Contract" (each pipeline stage loads only its `requires:` chain; apply reads only proposal/design/tasks/affected specs; finalize reads only proposal/design/audit/listed-capability-specs) and "Sub-Agent Dispatch for Pipeline Stages" (router MAY spawn a sub-agent that invokes the workflow skill on bounded artifact context for apply, finalize, and propose-internal stage generation; described tool-agnostically; references the review-self-check pattern as proven precedent)
+- `src/skills/specshift/SKILL.md`: NEW top-level `## Sub-Agent Dispatch` section documenting the optional dispatch pattern in tool-agnostic intent, applicable to apply, finalize, and propose-internal stage generation
+- `docs/decisions/adr-004-six-stage-pipeline-and-sub-agent-dispatch.md`: NEW ADR consolidating the seven decisions from `design.md` (six-stage pipeline shape, research-into-proposal merge, tests elimination, preflight retention, design Non-Goals refinement, sub-agent dispatch optionality, `.claudeignore` decline)
+
+#### Changed
+- **`docs/specs/artifact-pipeline.md` v7 → v8:** Requirement "Pipeline Stages and Dependencies" now declares the six-stage list `[proposal, specs, design, preflight, tasks, audit]` with research absorbed into proposal § Discovery and apply-phase test generation replacing the tests stage. NEW backward-compat note + scenario covers legacy change directories with `research.md`/`tests.md`.
+- **`docs/specs/quality-gates.md` v3 → v4:** Preflight `requires: [design]` clause grammar polish; audit Testing dimension reworded to reference "specs (direct scenario verification)" plus apply-phase tests; fallback-source guidance added for absent preflight (`design.md § Validation` → `tasks.md § Validation Notes`); four test-coverage scenarios rewritten as scenario-verification-against-specs; "Preflight Side-Effect Cross-Check" generalized to "Pre-Implementation Side-Effect Cross-Check" with absent-preflight fallback; positional refs `tasks.md step 3.2` / `step 3.5` replaced with semantic anchors (`tasks.md § Standard Tasks (Post-Implementation)`, "post-implementation QA loop").
+- **`docs/specs/test-generation.md` v1 → v2:** Full rewrite. Replaces "Tests stage producing tests.md" with apply-phase test generation. NEW Requirements: Framework Configuration via Constitution, Apply-Phase Automated Test Generation, Scenario Verification Without a Framework, Manual Edit Preservation for Generated Tests, Backward Compatibility With Legacy tests.md.
+- **`docs/specs/documentation.md` v2 → v3:** Capability-doc enrichment source updated from `proposal.md + research.md + design.md + preflight.md` to `proposal.md (incl. § Discovery) + design.md + preflight.md` with backward-compat tolerance for legacy `research.md`. ADR generation gated on `design.md` `has_decisions: true`. ADR Context 2-6 sentences with anti-padding; Consequences optional for straightforward decisions. NEW "Auto-dispatch from apply" sub-section: when auto_approve dispatches finalize, the dispatching action passes the capability list from `proposal.md` frontmatter (union of new/modified/removed); finalize regenerates only those capabilities.
+- **`docs/specs/workflow-contract.md` v11:** Step 5 of "Router Dispatch Pattern" cross-references the new Per-Stage Context Contract and Sub-Agent Dispatch requirements. Two stale scenario references fixed (Smart-Template example using `research.md`; pipeline-array example listing `research`).
+- **`docs/specs/project-init.md`:** Two scenario examples ("Unchanged template updated silently", "User-customized template preserved") use `proposal.md` instead of `research.md` as the illustrative template name (research.md no longer exists in the standard layout).
+- **`docs/specs/change-workspace.md`:** Active-change detection example dropped `research.md` (only `proposal.md (status: active) but no tasks.md` per the new pipeline).
+- **`src/templates/workflow.md` template-version 13 → 14:** `pipeline:` array shortened to six stages. `## Action: propose` instruction adds per-stage context-contract language. `## Action: apply` adds the apply contract (read only proposal+design+tasks+affected specs). `## Action: finalize` adds the capability-list passthrough.
+- **`src/templates/changes/proposal.md` template-version 3 → 4:** Absorbs Discovery sections (Current State, External Research, Approaches, Coverage Assessment, Decisions) from the deleted research template; `requires: []`.
+- **`src/templates/changes/design.md` template-version 1 → 2:** Non-Goals instruction refined to capability-limitations only (references Proposal § Scope for change-level boundaries).
+- **`src/templates/changes/tasks.md` template-version 5 → 6:** `requires: [preflight]`; apply-phase test guidance added (framework configured → automated tests; "None" → audit-driven scenario verification); Conditional Validation Notes guidance for design-skipped changes.
+- **`src/templates/changes/audit.md` template-version 3 → 4:** preflight references → "design.md § Validation when preflight present, else tasks.md § Validation Notes"; tests references → "specs (direct scenario verification)".
+- **`src/templates/docs/adr.md` template-version 1 → 2:** Context 2-6 sentences with anti-padding guidance; Consequences section optional for straightforward decisions.
+- **`src/templates/docs/capability.md` template-version 2 → 3:** Enrichment source updated to `proposal.md § Discovery + design.md` with legacy `research.md` fallback.
+- **`.specshift/WORKFLOW.md` template-version 13 → 14:** Mirror update; documented overrides preserved (`review.request_review: copilot`, `Compile` step in finalize).
+- **`.specshift/templates/changes/{proposal,design,tasks,audit}.md`** and **`.specshift/templates/docs/{adr,capability}.md`:** Re-synced from `src/templates/`.
+- **`src/actions/propose.md`:** Link to renamed `artifact-pipeline.md` requirement updated `Pipeline Stages and Dependencies` → `Six-Stage Pipeline` so the compile-skills.sh requirement extraction continues to resolve.
+- **`src/skills/specshift/SKILL.md`:** Propose dispatch replaces "Read all change artifacts" with "Read only the change artifacts named by the next stage's `requires:` chain"; apply dispatch reads only proposal+design+tasks+affected specs; finalize dispatch reads only proposal+design+audit+listed specs.
+- Compile script (`bash scripts/compile-skills.sh`) regenerates `./skills/specshift/` (5 actions / 43 requirements, 0 warnings) and stamps `0.2.9-beta` into the three root manifest/marketplace files.
+
+#### Removed
+- `src/templates/changes/research.md` (research stage absorbed into proposal § Discovery)
+- `src/templates/changes/tests.md` (tests stage replaced by apply-phase test generation)
+- `.specshift/templates/changes/research.md` (project-mirror deletion)
+- `.specshift/templates/changes/tests.md` (project-mirror deletion)
+
 ## [v0.2.8-beta] — 2026-04-28
 
 ### Workflow/Spec-Hygiene Bundle (semantic headings + self-check enforcement)

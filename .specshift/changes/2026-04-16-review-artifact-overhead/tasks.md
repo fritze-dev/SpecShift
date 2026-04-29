@@ -63,8 +63,8 @@
 
 ## Standard Tasks (Post-Implementation)
 
-- [ ] Run `specshift finalize` (generates changelog, regenerates affected capability docs, conditional ADR generation, version bump, compile)
-- [ ] Bump version (per Constitution § Conventions § Post-apply version bump — patch increment in `src/VERSION`; compile-skills.sh propagates to per-target manifests)
+- [x] Run `specshift finalize` (generates changelog, regenerates affected capability docs, conditional ADR generation, version bump, compile)
+- [x] Bump version (per Constitution § Conventions § Post-apply version bump — patch increment in `src/VERSION`; compile-skills.sh propagates to per-target manifests)
 - [ ] Commit and push to remote
 - [ ] Update PR: mark ready for review, update body with change summary and `Closes #15`
 - [ ] Reply to and resolve all PR review comments (fixed / declined with reason / not applicable)
