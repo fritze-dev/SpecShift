@@ -154,7 +154,7 @@ Actions that operate on active changes (propose, apply) SHALL filter to active c
 
 #### Scenario: Change without tasks.md is active
 
-- **GIVEN** a change at `.specshift/changes/2026-04-01-add-auth/` with research.md and proposal.md (`status: active`) but no tasks.md
+- **GIVEN** a change at `.specshift/changes/2026-04-01-add-auth/` with proposal.md (`status: active`) but no tasks.md
 - **WHEN** `specshift propose` lists available changes
 - **THEN** the change is shown as available for artifact generation
 

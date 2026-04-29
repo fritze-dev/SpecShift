@@ -1,6 +1,6 @@
 ---
 id: design
-template-version: 1
+template-version: 2
 description: Architecture, success metrics, and non-goals
 generates: design.md
 requires: [specs]
@@ -17,7 +17,7 @@ instruction: |
   - **Context**: Background, current state, constraints, stakeholders
   - **Architecture & Components**: Specific modules/files affected and interactions
   - **Goals & Success Metrics**: Hard, measurable criteria verified as PASS/FAIL during QA. Every metric needs a concrete threshold.
-  - **Non-Goals**: What is explicitly out of scope
+  - **Non-Goals**: NEW technical capability-limitations that emerged during design — things the architecture explicitly will not support (e.g., "no streaming response support", "no multi-tenant isolation"). Do NOT copy-paste change-level Out-of-Scope items from Proposal § Scope; reference Proposal § Scope for those instead. If no new technical limitations emerged, state "No new design-level non-goals — see Proposal § Scope for change-level boundaries."
   - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered for each decision.
   - **Risks & Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
   - **Migration Plan**: Steps to deploy, rollback strategy (if applicable). Remove section if not needed.
@@ -49,7 +49,10 @@ has_decisions: false
 * [Metric, e.g. "API response < 200ms"]
 
 ## Non-Goals
-<!-- What explicitly will NOT be built -->
+<!-- NEW technical capability-limitations that emerged during design.
+     Do NOT copy-paste change-level Out-of-Scope items from Proposal § Scope.
+     If no new technical limitations emerged, state:
+     "No new design-level non-goals — see Proposal § Scope for change-level boundaries." -->
 
 ## Decisions
 <!-- Key technical choices with rationale. Include alternatives considered. -->

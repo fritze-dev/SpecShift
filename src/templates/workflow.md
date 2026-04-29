@@ -1,8 +1,8 @@
 ---
-template-version: 13
+template-version: 14
 plugin-version: ""
 templates_dir: .specshift/templates
-pipeline: [research, proposal, specs, design, preflight, tests, tasks, audit]
+pipeline: [proposal, specs, design, preflight, tasks, audit]
 
 actions: [init, propose, apply, finalize, review]
 # Add custom actions here (e.g. qa-review) and define matching
@@ -20,12 +20,12 @@ review:
 
 # Workflow
 
-Research → Propose → Specs → Design → Pre-Flight → Tests → Tasks → Apply → Audit → Finalize → Review
+Propose → Specs → Design → Pre-Flight → Tasks → Apply → Audit → Finalize → Review
 
 ## Context
 
 Always read and follow .specshift/CONSTITUTION.md before proceeding.
-All workflow artifacts (research, proposal, specs, design, preflight, tests, tasks, audit)
+All workflow artifacts (proposal, specs, design, preflight, tasks, audit)
 must be written in English regardless of docs_language.
 
 ## Action: propose
@@ -35,6 +35,7 @@ must be written in English regardless of docs_language.
 Create change workspace if needed, then traverse the pipeline generating artifacts.
 If no change exists: ask user what to build, derive kebab-case name, create the change directory under `.specshift/changes/`.
 Checkpoint/resume: skip completed artifacts, resume from first incomplete step.
+Per-stage context contracts: each Smart Template declares its `requires:` and `generates:` fields. When generating an artifact, read ONLY the artifacts named in that stage's `requires:` chain plus the specs the stage explicitly needs — do not pre-load the full change directory. The proposal stage has `requires: []` and absorbs Discovery sections (Current State, External Research, Approaches, Coverage Assessment, Decisions) directly into the proposal body.
 Design review checkpoint: when auto_approve is false, pause after design for user alignment. When auto_approve is true, skip the design checkpoint and continue.
 Preflight checkpoint: PASS → continue, PASS WITH WARNINGS → pause for acknowledgment, BLOCKED → stop.
 audit artifact: stop before audit and suggest specshift apply.
@@ -56,6 +57,7 @@ Report findings, suggest specshift propose for changes needed.
 ### Instruction
 
 Implement tasks from tasks.md, then generate audit.md.
+Apply context contract: read only proposal.md (capabilities and scope), design.md (architecture and success metrics), tasks.md, and the affected specs from `proposal.md` frontmatter `capabilities:`. Do not pre-load preflight, audit, or unrelated change artifacts.
 QA loop: implement → generate audit.md → fix if FAIL → regenerate audit.md → until PASS.
 Delete existing audit.md before starting implementation.
 When auto_approve is false, pause at user testing gate. When auto_approve is true and audit.md verdict is PASS, skip user testing pause.
@@ -72,7 +74,7 @@ After audit.md PASS, commit and push implementation.
 
 Post-approval finalization, executed sequentially in the order below:
 - **Changelog**: incremental entries from completed change.
-- **Docs**: regenerate affected capability docs, ADRs, README.
+- **Docs**: regenerate affected capability docs, ADRs, README. Receive the affected capability list from the dispatching action (apply) via the proposal frontmatter `capabilities:` field — only regenerate docs for those capabilities. ADR generation is conditional on design.md frontmatter `has_decisions: true`.
 - **Version-bump**: if the constitution defines a version-bump convention, follow it; otherwise skip.
 On error in one step: continue with next, report failures at end.
 Check audit.md exists with verdict PASS before proceeding.

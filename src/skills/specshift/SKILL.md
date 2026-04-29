@@ -62,9 +62,9 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 
 ### `propose` — Pipeline Traversal
 
-1. Read all change artifacts (if change exists).
+1. Read only the change artifacts named by the next stage's `requires:` chain (from the Smart Template frontmatter at `<templates_dir>/changes/<id>.md`). Do not pre-load the entire change directory.
 2. Execute the action using the `### Instruction` (from Load Configuration) as your primary directive, bounded by the strict requirements extracted in `actions/propose.md`.
-3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/changes/<id>.md`, check artifact status, generate if ready
+3. For each step in `pipeline` array: read Smart Template at `<templates_dir>/changes/<id>.md`, check artifact status, generate if ready. When generating an artifact, honor that template's `requires:` field as the read-context contract — read those artifacts and the specs the stage explicitly needs, nothing more.
 4. **After each artifact**, commit and push:
    - Stage the change artifacts and specs
    - Commit with message `specshift(<change-name>): <artifact-id>`
@@ -76,15 +76,15 @@ For built-in actions: read the compiled requirements file at `actions/<action>.m
 
 ### `apply` — Implementation
 
-1. Read all change artifacts (research, proposal, design, tasks, specs)
+1. Read proposal.md (for capabilities and scope), design.md (for architecture and success metrics), tasks.md, and the affected specs identified by `proposal.md` frontmatter `capabilities:` (`new`, `modified`, `removed`). Do NOT read preflight, audit, or unrelated change artifacts during apply.
 2. Execute the action using the `### Instruction` (from Load Configuration) as your primary directive, bounded by the strict requirements extracted in `actions/apply.md`. Use the change directory and artifact paths for context.
 3. Implement tasks, generate audit.md, run the QA loop
-4. **Auto-dispatch to finalize**: If `auto_approve` is `true` and audit.md verdict is PASS (no CRITICAL, no WARNING), automatically dispatch the next stage by running `specshift finalize` using the same change context. Do NOT pause for user approval — proceed directly.
+4. **Auto-dispatch to finalize**: If `auto_approve` is `true` and audit.md verdict is PASS (no CRITICAL, no WARNING), automatically dispatch the next stage by running `specshift finalize` using the same change context. Pass the affected capability list (from proposal frontmatter `capabilities:`) to finalize so it can scope its work. Do NOT pause for user approval — proceed directly.
 
 ### `finalize` — Post-Approval
 
-1. Read change artifacts for context (proposal, audit.md)
-2. Execute the action using the `### Instruction` (from Load Configuration) bounded by the strict requirements in `actions/finalize.md`.
+1. Receive the affected capability list from the dispatching action (apply) — the list comes from `proposal.md` frontmatter `capabilities:`. Read only proposal.md, design.md, audit.md, and the spec files for the listed capabilities. Do NOT scan all historical changes or read every spec.
+2. Execute the action using the `### Instruction` (from Load Configuration) bounded by the strict requirements in `actions/finalize.md`. ADR generation is conditional on design.md frontmatter `has_decisions: true`. Capability-doc regeneration is restricted to the capabilities passed in.
 3. **Auto-dispatch to review**: If `auto_approve` is `true` and finalize completed successfully, and `review` is listed in the `actions` array (from Load Configuration), automatically dispatch by running `specshift review` using the same change context. If `review` is not in the `actions` array, stop after finalize.
 
 ### `review` — PR Review-to-Merge Lifecycle
@@ -105,6 +105,30 @@ For any action not listed above (propose, apply, finalize, init, review):
 3. If the `## Action: <name>` section was not found during Load Configuration: report the error and stop
 4. Execute the instruction directly with change directory context
 5. No spec requirements are loaded (custom actions are self-contained via their instruction)
+
+## Sub-Agent Dispatch
+
+The router MAY use sub-agent dispatch to execute pipeline stages with bounded context. This is OPTIONAL — the router is also free to execute inline when sub-agent overhead would exceed the isolation benefit (e.g., trivial changes). When dispatched, each stage runs inside a sub-agent boundary that provides context isolation.
+
+The pattern (described in tool-agnostic terms — concrete spawning syntax depends on the host):
+
+1. The router prepares a sub-agent prompt that:
+   - Names the target action (e.g., `apply`, `finalize`) or pipeline stage (e.g., `proposal`, `design`).
+   - Identifies the change directory.
+   - Declares the read-context contract via the stage's `requires:` field (Smart Template frontmatter) and the action's documented context contract (apply: proposal + design + tasks + affected specs; finalize: proposal + design + audit + listed-capability specs; propose-internal stage generation: the next stage's `requires:` chain).
+   - Declares the write contract via the stage's `generates:` field.
+   - Instructs the sub-agent to invoke the workflow skill on that bounded context.
+2. The router SHALL NOT pre-load artifact bodies into the sub-agent prompt — the sub-agent reads only what its declared contract names.
+3. The sub-agent executes the action and returns a completion report. The router records the result and, where appropriate, auto-dispatches the next stage.
+
+This pattern applies to:
+- **`apply`** — implementation with the apply context contract.
+- **`finalize`** — capability-scoped finalization receiving the capability list from apply.
+- **propose-internal stage generation** — each pipeline stage executes inside its own sub-agent boundary, honoring the stage's `requires:`/`generates:` contract.
+
+The proven model is the `review` action's self-check: a sub-agent prompt that invokes the `review` skill on the current HEAD, with the boundary providing context isolation. Pipeline-stage dispatch follows the same shape.
+
+The router MAY use sub-agent dispatch but is not required to. Templates and instructions describe intent; they do not enforce a specific execution mode. Hosts that lack a sub-agent primitive can execute the same instructions inline and remain conformant.
 
 ## Guardrails
 

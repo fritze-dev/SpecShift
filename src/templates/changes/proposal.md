@@ -1,11 +1,12 @@
 ---
 id: proposal
-template-version: 3
-description: Problem statement, proposed solution, and expected impact
+template-version: 4
+description: Problem statement, proposed solution, expected impact, and Discovery
 generates: proposal.md
-requires: [research]
+requires: []
 instruction: |
-  Create the proposal document that establishes WHY this change is needed.
+  Create the proposal document that establishes WHY this change is needed and
+  records the Discovery work that informs it.
 
   Sections:
   - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
@@ -15,6 +16,12 @@ instruction: |
     - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each edits the existing spec file in place. Check `docs/specs/` for existing spec names. Leave empty if no requirement changes.
   - **Impact**: Affected code, APIs, dependencies, or systems.
   - **Scope & Boundaries**: Explicitly state what is and isn't part of this change.
+  - **Discovery**: Always present (not optional). Captures the research that motivates the proposal. Subsections:
+    - **Current State**: Affected code, modules, architecture, relevant patterns
+    - **External Research**: API docs, libraries, patterns, reference implementations (if applicable)
+    - **Approaches**: Possible solutions with trade-offs (table: Approach / Pro / Contra)
+    - **Coverage Assessment**: Rate each category as Clear/Partial/Missing — Scope, Behavior, Data Model, UX, Integration, Edge Cases, Constraints, Terminology, Non-Functional. Only ask the user clarifying questions for Partial/Missing categories (max 5, prioritized by Impact × Uncertainty). If everything is Clear, state that and move on.
+    - **Decisions**: Record decisions with rationale and alternatives considered after the user responds (table: # / Decision / Rationale / Alternatives Considered). If no clarifying questions were needed, state "No discovery decisions required."
 
   Capability Granularity Rules:
   - A "capability" is a cohesive domain of behavior that a user or system
@@ -42,7 +49,17 @@ instruction: |
   4. Verify each proposed capability will have 3+ distinct requirements.
      Single-requirement "capabilities" should be folded into a related spec.
 
-  Keep it concise (1-2 pages). Focus on the "why" not the "how" —
+  Discovery context loading:
+  - Always read: docs/specs/*.md (source of truth),
+    docs/README.md (architecture overview and Key Design Decisions index)
+  - When relevant: docs/decisions/adr-*.md — use the Key Design
+    Decisions table in docs/README.md as index; deep-dive into
+    specific ADRs only when the proposed change touches an area
+    with a prior decision
+  - Do not read: docs/capabilities/*.md (derived from specs, redundant)
+
+  Keep Why/What/Impact/Scope concise (1-2 pages). Discovery may be longer
+  when the change is non-trivial. Focus on the "why" not the "how" —
   implementation details belong in design.md.
 ---
 <!-- Proposal tracking frontmatter — set by skills at generation time.
@@ -97,3 +114,40 @@ capabilities:
 ## Scope & Boundaries
 
 <!-- What is part of this change, what is not? -->
+
+## Discovery
+
+<!-- Always present. Captures the research that motivates the proposal. -->
+
+### Current State
+<!-- Affected code, modules, architecture, relevant patterns -->
+
+### External Research
+<!-- API docs, libraries, patterns, reference implementations (if applicable) -->
+
+### Approaches
+<!-- Possible solutions with trade-offs -->
+
+| Approach | Pro | Contra |
+|----------|-----|--------|
+
+### Coverage Assessment
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| Scope | Clear / Partial / Missing | |
+| Behavior | Clear / Partial / Missing | |
+| Data Model | Clear / Partial / Missing | |
+| UX | Clear / Partial / Missing | |
+| Integration | Clear / Partial / Missing | |
+| Edge Cases | Clear / Partial / Missing | |
+| Constraints | Clear / Partial / Missing | |
+| Terminology | Clear / Partial / Missing | |
+| Non-Functional | Clear / Partial / Missing | |
+
+### Decisions
+<!-- Filled after user feedback for Partial/Missing categories.
+     If everything was Clear, state "No discovery decisions required." -->
+
+| # | Decision | Rationale | Alternatives Considered |
+|---|----------|-----------|------------------------|
