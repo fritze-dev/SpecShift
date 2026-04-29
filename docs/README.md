@@ -6,14 +6,15 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 
 1. **Constitution Layer** (`.specshift/CONSTITUTION.md`): Global project rules — Tech Stack, Architecture Rules, Code Style, Constraints, and Conventions. All AI actions read the constitution before performing any work.
 2. **Schema Layer** (`.specshift/WORKFLOW.md` + `.specshift/templates/`): Declarative pipeline orchestration via YAML frontmatter and Smart Templates. Defines the artifact pipeline (research, proposal, specs, design, preflight, tests, tasks, audit), action instructions, and artifact generation rules.
-3. **Router + Actions Layer** (`.claude/skills/specshift/`): A single router SKILL.md dispatches to 5 built-in actions (init, propose, apply, finalize, review) plus consumer-defined custom actions. Built-in actions read compiled requirements from AOT-extracted action files.
+3. **Router + Actions Layer** (`./skills/specshift/`): A single router SKILL.md dispatches to 5 built-in actions (init, propose, apply, finalize, review) plus consumer-defined custom actions. Built-in actions read compiled requirements from AOT-extracted action files. The same compiled skill tree is consumed by both Claude Code and Codex CLI via their respective root manifests.
 
 ## Tech Stack
 
 - **Primary format**: Markdown (artifacts, specs, skills, documentation)
-- **Configuration**: YAML (WORKFLOW.md frontmatter, Smart Template frontmatter)
-- **Shell**: Bash (skill command execution)
-- **Platform**: Claude Code plugin system
+- **Configuration**: YAML (WORKFLOW.md frontmatter, Smart Template frontmatter), JSON (per-target plugin manifests and marketplace catalogs)
+- **Shell**: Bash (skill command execution, AOT compile script)
+- **Build dependencies**: `jq` (in-place per-target manifest version stamping)
+- **Platforms**: Claude Code plugin system + OpenAI Codex CLI plugin system (multi-target distribution from one repository)
 
 ## Key Design Decisions
 
@@ -24,6 +25,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 | Detection signals as observable facts for tier classification | Reduces subjectivity; agents can check signals mechanically before choosing tier | [ADR-001](decisions/adr-001-tiered-re-entry-classification-for-fix-loop.md) |
 | Update apply instruction rather than adding a new action | Fix loop is part of apply; a new action would fragment UX | [ADR-001](decisions/adr-001-tiered-re-entry-classification-for-fix-loop.md) |
 | Changelog version headers with orphan consolidation | Enables version-to-entry mapping; orphan entries belong under the release that includes them | [ADR-002](decisions/adr-002-changelog-version-header-format.md) |
+| Shopify-flat multi-target distribution with `src/VERSION` as agnostic version SoT | Ships SpecShift to Claude Code + Codex CLI from one repo; symmetric jq-stamped manifests at the root; bootstrap content lives once in `AGENTS.md` | [ADR-003](decisions/adr-003-shopify-flat-multi-target-distribution.md) |
 
 ### Notable Trade-offs
 
@@ -34,8 +36,8 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 ## Conventions
 
 - **Commits**: Imperative present tense with category prefix (e.g., `Fix: ...`, `Refactor: ...`)
-- **Post-apply version bump**: Auto-increment patch version in `src/.claude-plugin/plugin.json`, sync to `.claude-plugin/marketplace.json`
-- **Plugin source layout**: Source in `src/`, release in `.claude/skills/specshift/` (built via `bash scripts/compile-skills.sh`)
+- **Post-apply version bump**: Auto-increment patch version in `src/VERSION` (single agnostic source of truth, plain text, SemVer); the compile script propagates the value into `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.codex-plugin/plugin.json` via `jq` with a post-stamp cross-check
+- **Plugin source layout**: Source in `src/` (`src/VERSION`, `src/skills/`, `src/templates/`, `src/actions/`); per-target manifests + Claude marketplace + Codex marketplace catalog hand-edited at the repository root (`.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/marketplace.json`); shared compiled release tree at `./skills/specshift/` (built via `bash scripts/compile-skills.sh`)
 - **AOT compilation**: After editing specs, run `bash scripts/compile-skills.sh` to regenerate the release directory
 - **Template synchronization**: `src/templates/` is authoritative; `.specshift/` is synced from it
 - **Tool-agnostic instructions**: Describe intent, not specific CLI tools
@@ -73,6 +75,7 @@ SpecShift uses a three-layer architecture where each layer has distinct responsi
 |---|---|
 | [Review Lifecycle](capabilities/review-lifecycle.md) | Re-entrant PR review-to-merge state machine with comment processing, summary posting, and mandatory merge confirmation |
 | [Release Workflow](capabilities/release-workflow.md) | Version management, automated releases, and plugin distribution |
+| [Multi-Target Distribution](capabilities/multi-target-distribution.md) | Ship to Claude Code + Codex CLI from one repository: per-target manifests at the root, one shared skill tree, agnostic `src/VERSION` source of truth |
 
 ### Documentation
 
