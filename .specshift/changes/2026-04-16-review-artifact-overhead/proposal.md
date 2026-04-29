@@ -1,6 +1,6 @@
 <!--
 ---
-status: active
+status: review
 branch: claude/merge-main-specshift-pr43-t5XZH
 capabilities:
   new: []
