@@ -1,6 +1,6 @@
 ---
 id: proposal
-template-version: 1
+template-version: 3
 description: Problem statement, proposed solution, and expected impact
 generates: proposal.md
 requires: [research]
